@@ -4,6 +4,10 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-poppins)", "Poppins", "sans-serif"],
+        poppins: ["var(--font-poppins)", "Poppins", "sans-serif"],
+      },
       colors: {
         brand: {
           50: "#eefcfb",
@@ -25,3 +29,4 @@ const config: Config = {
 };
 
 export default config;
+

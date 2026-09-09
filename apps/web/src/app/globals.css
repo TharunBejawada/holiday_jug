@@ -5,4 +5,13 @@
 html,
 body {
   height: 100%;
+  font-weight: 500;
+}
+
+
+/* Hide Next.js Dev Tools badge */
+[data-next-badge="true"],
+#next-logo,
+[data-nextjs-dev-tools-button="true"] {
+  display: none !important;
 }

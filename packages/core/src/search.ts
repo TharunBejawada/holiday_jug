@@ -20,38 +20,44 @@ export async function searchPackages(input: SearchPackagesInput) {
     isActive: true,
     ...(destination
       ? {
-          destination: {
-            OR: [
-              { slug: destination },
-              { name: { contains: destination, mode: "insensitive" as const } },
-            ],
-          },
-        }
+        destination: {
+          OR: [
+            { slug: destination },
+            { name: { contains: destination, mode: "insensitive" as const } },
+          ],
+        },
+      }
       : {}),
     ...(nights ? { nights } : {}),
     ...(minPrice !== undefined || maxPrice !== undefined
       ? {
-          basePriceGbp: {
-            ...(minPrice !== undefined ? { gte: minPrice } : {}),
-            ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
-          },
-        }
+        basePriceGbp: {
+          ...(minPrice !== undefined ? { gte: minPrice } : {}),
+          ...(maxPrice !== undefined ? { lte: maxPrice } : {}),
+        },
+      }
       : {}),
     ...(departAfter
       ? { departures: { some: { departDate: { gte: departAfter } } } }
       : {}),
   };
 
-  const [items, total] = await Promise.all([
-    prisma.package.findMany({
-      where,
-      include: { destination: true, hotel: true, departures: { take: 3, orderBy: { departDate: "asc" } } },
-      orderBy: { basePriceGbp: "asc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.package.count({ where }),
-  ]);
+  try {
+    const [items, total] = await Promise.all([
+      prisma.package.findMany({
+        where,
+        include: { destination: true, hotel: true, departures: { take: 3, orderBy: { departDate: "asc" } } },
+        orderBy: { basePriceGbp: "asc" },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.package.count({ where }),
+    ]);
 
-  return { items, total, page, pageSize };
+    return { items, total, page, pageSize };
+  } catch {
+    // Database connection or query failed - return empty result gracefully
+    return { items: [], total: 0, page, pageSize };
+  }
 }
+
