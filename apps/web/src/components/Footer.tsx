@@ -11,7 +11,7 @@ import {
 
 export function Footer() {
     return (
-        <footer className="bg-[#071746] text-white mt-8 font-medium">
+        <footer className="bg-[#071746] text-white font-medium">
             {/* MAIN FOOTER CONTENT */}
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
