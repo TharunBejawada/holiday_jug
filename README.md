@@ -11,8 +11,10 @@ UK package-holiday booking site (think onthebeach.co.uk) — search, browse and 
 | Backend     | Next.js Route Handlers (`apps/web/src/app/api/**`)             |
 | Domain/data logic | `packages/core` (zod validation + query logic), shared by API routes |
 | Database    | Aurora PostgreSQL (Serverless v2) via Prisma (`packages/db`)  |
-| Auth        | NextAuth.js (credentials provider, JWT sessions)               |
-| API security| Rate limiting + security headers (`middleware.ts`), session guard, internal shared-secret guard for server-to-server calls |
+| Auth        | NextAuth.js — passwordless email sign-in (magic link via SES) as the primary flow, credentials provider kept for admin accounts |
+| Email       | AWS SES — sends sign-in links |
+| File storage| AWS S3 — destination/hotel images and promo videos, uploaded via presigned URLs |
+| API security| Rate limiting + security headers (`middleware.ts`), session guard, admin-role guard, internal shared-secret guard for server-to-server calls |
 | Hosting     | AWS Amplify Hosting (SSR + API routes) |
 
 See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for the full AWS deployment plan and the reasoning behind Aurora over DynamoDB.

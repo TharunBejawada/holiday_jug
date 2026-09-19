@@ -12,6 +12,17 @@ export async function requireSession() {
   return { session, response: null };
 }
 
+// Gate a route handler behind an authenticated ADMIN session. Use for
+// content-management endpoints like asset uploads.
+export async function requireAdmin() {
+  const session = await getServerSession(authOptions);
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session?.user || role !== "ADMIN") {
+    return { session: null, response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return { session, response: null };
+}
+
 // Gate server-to-server routes (e.g. called from admin tooling or another
 // service) behind a shared secret instead of a browser session.
 export function requireInternalSecret(request: NextRequest) {

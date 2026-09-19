@@ -10,8 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.658.1",
+    "@aws-sdk/client-sesv2": "^3.658.1",
+    "@aws-sdk/s3-request-presigner": "^3.658.1",
     "@holiday-jug/core": "*",
     "@holiday-jug/db": "*",
+    "@next-auth/prisma-adapter": "^1.0.7",
     "bcryptjs": "^2.4.3",
     "next": "15.5.25",
     "next-auth": "^4.24.8",
