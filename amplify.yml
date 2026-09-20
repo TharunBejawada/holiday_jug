@@ -10,26 +10,24 @@ applications:
             - npm run db:generate
         build:
           commands:
-            # Diagnostic only (prints presence/length, never the value
-            # itself) — confirms whether Amplify's build shell actually has
-            # this var before we bother writing it anywhere.
-            - 'if [ -z "$DATABASE_URL" ]; then echo "DIAGNOSTIC DATABASE_URL_EMPTY_IN_BUILD_SHELL"; else echo "DIAGNOSTIC DATABASE_URL_SET length=${#DATABASE_URL}"; fi'
+            - npm run build --workspace=@holiday-jug/web
             # Amplify injects console-configured env vars into the build
             # shell, but the deployed SSR Lambda's runtime doesn't
-            # automatically inherit them — writing them into .env.production
-            # here makes Next.js bundle them into the server output so
-            # they're actually present at request time (e.g. for Prisma).
-            - echo "DATABASE_URL=$DATABASE_URL" > .env.production
-            - 'echo "DIAGNOSTIC ENV_FILE_LINES=$(wc -l < .env.production) DATABASE_URL_LINE_NONEMPTY=$(grep -c ''^DATABASE_URL=.'' .env.production)"'
-            - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env.production
-            - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
-            - echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .env.production
-            - echo "SES_REGION=$SES_REGION" >> .env.production
-            - echo "SES_FROM_EMAIL=$SES_FROM_EMAIL" >> .env.production
-            - echo "S3_REGION=$S3_REGION" >> .env.production
-            - echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> .env.production
-            - echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .env.production
-            - npm run build --workspace=@holiday-jug/web
+            # automatically inherit them. AWS's documented workaround is to
+            # write a .env.production file INSIDE the artifact directory
+            # (artifacts.baseDirectory below is .next, so this file must
+            # live under .next/, not the project root) so Next.js picks it
+            # up at request time. Must run AFTER `next build` — .next/
+            # doesn't exist yet before that.
+            - echo "DATABASE_URL=$DATABASE_URL" > .next/.env.production
+            - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .next/.env.production
+            - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .next/.env.production
+            - echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .next/.env.production
+            - echo "SES_REGION=$SES_REGION" >> .next/.env.production
+            - echo "SES_FROM_EMAIL=$SES_FROM_EMAIL" >> .next/.env.production
+            - echo "S3_REGION=$S3_REGION" >> .next/.env.production
+            - echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> .next/.env.production
+            - echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .next/.env.production
       artifacts:
         baseDirectory: .next
         files:
