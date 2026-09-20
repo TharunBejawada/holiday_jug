@@ -10,6 +10,20 @@ applications:
             - npm run db:generate
         build:
           commands:
+            # Amplify injects console-configured env vars into the build
+            # shell, but the deployed SSR Lambda's runtime doesn't
+            # automatically inherit them — writing them into .env.production
+            # here makes Next.js bundle them into the server output so
+            # they're actually present at request time (e.g. for Prisma).
+            - echo "DATABASE_URL=$DATABASE_URL" > .env.production
+            - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env.production
+            - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
+            - echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .env.production
+            - echo "SES_REGION=$SES_REGION" >> .env.production
+            - echo "SES_FROM_EMAIL=$SES_FROM_EMAIL" >> .env.production
+            - echo "S3_REGION=$S3_REGION" >> .env.production
+            - echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> .env.production
+            - echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .env.production
             - npm run build --workspace=@holiday-jug/web
       artifacts:
         baseDirectory: .next
