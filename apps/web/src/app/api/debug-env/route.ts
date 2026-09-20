@@ -27,5 +27,13 @@ export async function GET() {
     totalEnvKeyCount: allEnvKeys.length,
     allEnvKeys,
     nodeEnv: process.env.NODE_ENV,
+    // Safe to expose: AWS resource identifiers, not secrets.
+    lambdaFunctionName: process.env.AWS_LAMBDA_FUNCTION_NAME,
+    lambdaFunctionVersion: process.env.AWS_LAMBDA_FUNCTION_VERSION,
+    lambdaRegion: process.env.AWS_REGION,
+    amplifyDeploymentId: process.env.AWS_AMPLIFY_DEPLOYMENT_ID,
+    nextDeploymentId: process.env.NEXT_DEPLOYMENT_ID,
+    handler: process.env._HANDLER,
+    taskRoot: process.env.LAMBDA_TASK_ROOT,
   });
 }
