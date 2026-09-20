@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma } from "@holiday-jug/db";
+import { prisma, ensureEnvLoaded } from "@holiday-jug/db";
 
 export const searchPackagesSchema = z.object({
   destination: z.string().optional(),
@@ -14,6 +14,8 @@ export const searchPackagesSchema = z.object({
 export type SearchPackagesInput = z.infer<typeof searchPackagesSchema>;
 
 export async function searchPackages(input: SearchPackagesInput) {
+  await ensureEnvLoaded();
+
   const { destination, minPrice, maxPrice, nights, departAfter, page, pageSize } = input;
 
   const where = {

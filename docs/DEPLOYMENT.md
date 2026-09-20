@@ -7,8 +7,20 @@
   - `main` → production
   - `develop` → staging
   - PR branches → ephemeral preview environments (enable "Pull request previews")
-- Set environment variables per branch in Amplify Console (Hosting → Environment variables): `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `API_INTERNAL_SECRET`, `SES_REGION`, `SES_FROM_EMAIL`, `S3_REGION`, `S3_BUCKET_NAME`. Store the actual secret values in **AWS Secrets Manager** and reference them from Amplify (or inject via Amplify's built-in env var encryption) — never commit real secrets.
-- **Important**: Amplify injects these console-configured variables into the *build* shell, but the deployed SSR Lambda's *runtime* doesn't automatically inherit them — server code (like Prisma) would see `undefined` for `process.env.DATABASE_URL` at request time even though the build succeeded. `amplify.yml`'s build phase works around this by writing the injected vars into `.env.production` — **after** `next build` runs, and **inside** `.next/` (the `artifacts.baseDirectory`) rather than the project root, since only what's inside that directory actually gets deployed. Writing it before the build, or outside `.next/`, silently produces a file that's correct during the build but never makes it into the deployed artifact (confirmed via build-log diagnostics — the file existed with the right content locally in the build container, but the deployed Lambda still saw `undefined`). **Any new env var used at runtime must be added to both** the Amplify Console *and* the `echo` list in `amplify.yml`'s build phase, or it'll silently be `undefined` in production while working fine locally.
+### Runtime secrets — why Console env vars don't work here, and what to do instead
+
+**Amplify Console's "Environment variables" only reliably reach the *build* shell, not the deployed SSR compute's runtime, for this app.** This was confirmed empirically (not assumed): a temporary debug endpoint dumped `process.env` from the live Lambda and found zero custom variables present — no `DATABASE_URL`, nothing — at both app-level and branch-level scoping, across multiple fresh deployments triggered directly via the Amplify API. Several documented workarounds (writing `.env.production` into the build output, in various locations) were tried and also failed, because this app's compute wrapper (`run.sh`, invoking pre-compiled route handlers directly) doesn't run Next.js's normal bootstrap/env-loading sequence.
+
+**What actually works**: secrets are stored in **SSM Parameter Store** under `/holidayjug/*`, and fetched via the AWS SDK at the top of any code path that needs them (`packages/db/src/env-bootstrap.ts#ensureEnvLoaded`), writing them into `process.env` before anything else reads it. This works because Amplify's compute *does* correctly provide AWS credentials to the runtime (confirmed via the presence of `AWS_AMPLIFY_CREDENTIAL_LISTENER_*` env vars) — it's specifically Console-configured env vars that don't propagate, not AWS SDK/IAM access in general.
+
+Setup:
+1. **Create an IAM role** for the app's SSR compute — trust policy allowing `amplify.amazonaws.com` to assume it (see `iamServiceRoleArn`'s existing logging role for the exact trust policy shape to copy). Name it e.g. `AmplifySSRComputeRole-holidayjug`.
+2. Attach an inline policy granting `ssm:GetParameter`/`ssm:GetParameters` on `arn:aws:ssm:<region>:<account>:parameter/holidayjug/*`, plus `ses:SendEmail`/`ses:SendRawEmail` and `s3:PutObject` on the assets bucket (see those sections below) — one role covers all three.
+3. Attach it to the app: `aws amplify update-app --app-id <id> --compute-role-arn <role-arn>` (there's no Console UI field for this at the time of writing — API/CLI only).
+4. Store each secret: `aws ssm put-parameter --name /holidayjug/DATABASE_URL --value "..." --type SecureString --overwrite` (use `SecureString` for actual secrets like `DATABASE_URL`/`NEXTAUTH_SECRET`, plain `String` is fine for non-sensitive config like `NEXTAUTH_URL`/`SES_REGION`).
+5. Any new runtime secret needs both: a parameter under `/holidayjug/` **and** a consumer that calls `await ensureEnvLoaded()` before reading `process.env.<KEY>` — it will not simply work by being added to Amplify Console, that path is confirmed non-functional for this app.
+
+Amplify Console env vars are still fine to set for anything genuinely only needed at **build time** (e.g. build-only flags) — just don't rely on them for anything read by server/API code at request time.
 
 ## Database — Aurora PostgreSQL (Serverless v2)
 
@@ -44,12 +56,8 @@ Sends the passwordless sign-in link (`apps/web/src/lib/ses.ts`). Production acce
 3. Also add an **SPF** record (`TXT` on `holidayjug.com`): `v=spf1 include:amazonses.com ~all` — if a TXT record already exists there, merge the `include:amazonses.com` into it rather than adding a second TXT record (only one SPF TXT record is allowed per domain).
 4. Optionally add a **DMARC** record (`TXT` on `_dmarc.holidayjug.com`): `v=DMARC1; p=none; rua=mailto:dmarc-reports@holidayjug.com` — start with `p=none` (monitor only) before tightening to `p=quarantine`/`p=reject` once you've confirmed legitimate mail isn't failing.
 5. Wait for the domain identity to show **Verified** in SES Console (DNS propagation, usually well under an hour).
-6. Set `SES_FROM_EMAIL=no-reply@holidayjug.com` and `SES_REGION=eu-west-2` in Amplify's environment variables.
-7. **IAM permission** (no static access keys needed): attach a policy to Amplify's compute/service role granting:
-   ```json
-   { "Effect": "Allow", "Action": ["ses:SendEmail", "ses:SendRawEmail"], "Resource": "*" }
-   ```
-   Find the role under Amplify Console → App settings → General, or IAM → Roles (search for the Amplify app's auto-created role).
+6. Store `SES_FROM_EMAIL=no-reply@holidayjug.com` and `SES_REGION=eu-west-2` as SSM parameters under `/holidayjug/` (see "Runtime secrets" above) — **not** Amplify Console env vars, those don't reach the runtime here.
+7. **IAM permission** (no static access keys needed): already covered by the shared `AmplifySSRComputeRole-holidayjug` role's inline policy (see "Runtime secrets" above) — `ses:SendEmail`/`ses:SendRawEmail`.
 
 ## File storage — AWS S3
 
@@ -80,11 +88,8 @@ Stores destination/hotel images and promo videos, uploaded via the admin asset l
      "AllowedHeaders": ["*"]
    }]
    ```
-4. Set `S3_BUCKET_NAME=holidayjug-assets-prod` and `S3_REGION=eu-west-2` in Amplify's environment variables.
-5. **IAM permission**: attach a policy to the same Amplify compute role granting:
-   ```json
-   { "Effect": "Allow", "Action": ["s3:PutObject"], "Resource": "arn:aws:s3:::holidayjug-assets-prod/*" }
-   ```
+4. Store `S3_BUCKET_NAME=holidayjug-assets-prod` and `S3_REGION=eu-west-2` as SSM parameters under `/holidayjug/` (see "Runtime secrets" above) — not Amplify Console env vars.
+5. **IAM permission**: already covered by the shared `AmplifySSRComputeRole-holidayjug` role's inline policy — `s3:PutObject` scoped to this bucket.
 6. Uploads are currently gated to users with the `ADMIN` role (`requireAdmin` in `src/lib/api-auth.ts`) — this is a content-management tool for the team, not a public user-upload feature.
 
 ## API security
