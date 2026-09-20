@@ -10,12 +10,17 @@ applications:
             - npm run db:generate
         build:
           commands:
+            # Diagnostic only (prints presence/length, never the value
+            # itself) — confirms whether Amplify's build shell actually has
+            # this var before we bother writing it anywhere.
+            - if [ -z "$DATABASE_URL" ]; then echo "DIAGNOSTIC: DATABASE_URL is EMPTY in build shell"; else echo "DIAGNOSTIC: DATABASE_URL is set in build shell, length=${#DATABASE_URL}"; fi
             # Amplify injects console-configured env vars into the build
             # shell, but the deployed SSR Lambda's runtime doesn't
             # automatically inherit them — writing them into .env.production
             # here makes Next.js bundle them into the server output so
             # they're actually present at request time (e.g. for Prisma).
             - echo "DATABASE_URL=$DATABASE_URL" > .env.production
+            - echo "DIAGNOSTIC: .env.production written, $(wc -l < .env.production) lines, DATABASE_URL line length=$(grep -c '^DATABASE_URL=.' .env.production)"
             - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env.production
             - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env.production
             - echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .env.production
