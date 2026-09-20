@@ -10,13 +10,14 @@ applications:
             - npm run db:generate
         build:
           commands:
-            # Amplify's shell session persists across phases — preBuild's
-            # `cd ../../` carries into this phase too, so every command
-            # here is explicit about its directory rather than assuming
-            # cwd == appRoot (that assumption caused a "No such file or
-            # directory" writing .next/.env.production, since the shell
-            # was actually still sitting at the repo root at this point).
-            - cd apps/web && npm run build
+            # Amplify runs every command across every phase in ONE
+            # continuous shell session (confirmed the hard way) — preBuild's
+            # `cd ../../` is still in effect here, so `cd apps/web` (once)
+            # is what actually gets us into the right place. Do NOT repeat
+            # `cd apps/web` on later lines: by then we're already there,
+            # and there's no nested apps/web inside apps/web to cd into.
+            - cd apps/web
+            - npm run build
             # Amplify injects console-configured env vars into the build
             # shell, but the deployed SSR Lambda's runtime doesn't
             # automatically inherit them. AWS's documented workaround is to
@@ -25,15 +26,15 @@ applications:
             # live under .next/, not the project root) so Next.js picks it
             # up at request time. Must run AFTER `next build` — .next/
             # doesn't exist yet before that.
-            - cd apps/web && echo "DATABASE_URL=$DATABASE_URL" > .next/.env.production
-            - cd apps/web && echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .next/.env.production
-            - cd apps/web && echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .next/.env.production
-            - cd apps/web && echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .next/.env.production
-            - cd apps/web && echo "SES_REGION=$SES_REGION" >> .next/.env.production
-            - cd apps/web && echo "SES_FROM_EMAIL=$SES_FROM_EMAIL" >> .next/.env.production
-            - cd apps/web && echo "S3_REGION=$S3_REGION" >> .next/.env.production
-            - cd apps/web && echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> .next/.env.production
-            - cd apps/web && echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .next/.env.production
+            - echo "DATABASE_URL=$DATABASE_URL" > .next/.env.production
+            - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .next/.env.production
+            - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .next/.env.production
+            - echo "API_INTERNAL_SECRET=$API_INTERNAL_SECRET" >> .next/.env.production
+            - echo "SES_REGION=$SES_REGION" >> .next/.env.production
+            - echo "SES_FROM_EMAIL=$SES_FROM_EMAIL" >> .next/.env.production
+            - echo "S3_REGION=$S3_REGION" >> .next/.env.production
+            - echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> .next/.env.production
+            - echo "S3_PUBLIC_BASE_URL=$S3_PUBLIC_BASE_URL" >> .next/.env.production
       artifacts:
         baseDirectory: .next
         files:
