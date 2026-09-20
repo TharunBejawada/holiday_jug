@@ -55,8 +55,11 @@ export async function searchPackages(input: SearchPackagesInput) {
     ]);
 
     return { items, total, page, pageSize };
-  } catch {
-    // Database connection or query failed - return empty result gracefully
+  } catch (err) {
+    // Database connection or query failed - return empty result gracefully,
+    // but log so a real failure is visible (e.g. in Amplify's CloudWatch
+    // logs) instead of looking identical to "no results".
+    console.error("searchPackages failed:", err);
     return { items: [], total: 0, page, pageSize };
   }
 }
