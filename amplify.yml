@@ -18,6 +18,15 @@ applications:
             # and there's no nested apps/web inside apps/web to cd into.
             - cd apps/web
             - npm run build
+            # Diagnostic: reveal the actual .next output structure, since
+            # __NEXT_PRIVATE_STANDALONE_CONFIG being present at runtime
+            # suggests Amplify packages Next's standalone output mode,
+            # which has its own separate directory and does NOT
+            # auto-copy .env files into it the way a plain .next/ does.
+            - find .next -maxdepth 3 -type d | sort
+            - echo "--- standalone dir, if any ---"
+            - ls -la .next/standalone 2>&1 || echo "no .next/standalone"
+            - find .next/standalone -maxdepth 4 -type d 2>&1 | sort || true
             # Amplify injects console-configured env vars into the build
             # shell, but the deployed SSR Lambda's runtime doesn't
             # automatically inherit them. AWS's documented workaround is to
