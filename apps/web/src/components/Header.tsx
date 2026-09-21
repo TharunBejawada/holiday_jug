@@ -20,8 +20,8 @@ import {
     FaBars,
     FaTimes,
     FaSearch,
-    FaUser,
 } from "react-icons/fa";
+import { UserAccountMenu } from "@/components/UserAccountMenu";
 
 export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -238,13 +238,7 @@ export function Header() {
                         <br className="hidden xl:inline" /> / Hotel
                     </Link>
 
-                    {/* Sign in */}
-                    <Link
-                        href="/login"
-                        className="flex items-center gap-2 rounded-full border border-[#1D1248]/15 px-4 py-2 text-sm font-semibold text-[#1D1248] hover:border-[#F7941D] hover:text-[#F7941D] transition-colors"
-                    >
-                        <FaUser className="text-xs" /> Sign in
-                    </Link>
+                    <UserAccountMenu />
                 </div>
 
                 {/* MOBILE MENU TOGGLE BUTTON */}
@@ -407,13 +401,9 @@ export function Header() {
                         >
                             <FaSearch className="text-xs" /> Find a Holiday / Hotel
                         </Link>
-                        <Link
-                            href="/login"
-                            className="flex items-center justify-center gap-2 rounded-xl border border-[#1D1248]/15 px-4 py-2.5 text-center text-sm font-semibold text-[#1D1248]"
-                            onClick={() => setMobileMenuOpen(false)}
-                        >
-                            <FaUser className="text-xs" /> Sign in
-                        </Link>
+                        <div onClick={() => setMobileMenuOpen(false)}>
+                            <UserAccountMenu variant="mobile" />
+                        </div>
                     </div>
                 </div>
             )}
