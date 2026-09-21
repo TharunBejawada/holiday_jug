@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiLock, FiMail, FiAlertCircle, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { AdminLoginBackground } from "@/components/admin/AdminLoginBackground";
@@ -114,16 +115,20 @@ export default function AdminLoginPage() {
             className="flex flex-col items-center mb-8"
           >
             <motion.div
-              className="relative w-24 h-24 mb-4"
+              className="relative mb-4"
+              style={{ width: 220, aspectRatio: "750 / 334" }}
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Image
-                src="/assets/Holiday_Jug_Logo.png"
-                alt="Holiday Jug"
-                fill
-                className="object-contain drop-shadow-sm"
-              />
+              <Link href="/" className="absolute inset-0" aria-label="Go to Holiday Jug homepage">
+                <Image
+                  src="/assets/Holiday_Jug_Logo.png"
+                  alt="Holiday Jug"
+                  fill
+                  priority
+                  className="object-contain drop-shadow-sm"
+                />
+              </Link>
             </motion.div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
             <p className="text-sm text-gray-500 mt-1">Sign in to manage Holiday Jug</p>

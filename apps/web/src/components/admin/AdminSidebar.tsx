@@ -33,18 +33,26 @@ export function AdminSidebar() {
     <motion.aside
       animate={{ width: collapsed ? 84 : 252 }}
       transition={{ type: "spring", stiffness: 260, damping: 28 }}
-      className="relative flex flex-col shrink-0 h-screen sticky top-0 bg-brand-900 text-white overflow-visible"
+      className="relative z-20 flex flex-col shrink-0 h-screen sticky top-0 bg-brand-900 text-white overflow-visible"
     >
       <div className="overflow-hidden h-full flex flex-col">
-        <div className="flex items-center gap-3 px-4 h-20 border-b border-white/10">
-          <Link href="/admin" className="relative w-12 h-12 shrink-0">
-            <Image src="/assets/Holiday_Jug_Logo.png" alt="Holiday Jug" fill className="object-contain" />
+        <div className="flex items-center justify-center px-3 h-24 border-b border-white/10">
+          <Link href="/admin" className="relative block">
+            <motion.div
+              animate={{ width: collapsed ? 48 : 156 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              style={{ aspectRatio: "750 / 334" }}
+              className="relative"
+            >
+              <Image
+                src="/assets/Holiday_Jug_Logo.png"
+                alt="Holiday Jug"
+                fill
+                priority
+                className="object-contain"
+              />
+            </motion.div>
           </Link>
-          {!collapsed && (
-            <Link href="/admin" className="font-bold text-base tracking-wide whitespace-nowrap hover:text-sun-300 transition-colors">
-              Holiday Jug
-            </Link>
-          )}
         </div>
 
         <nav className="flex-1 px-3 py-5 space-y-1">
@@ -74,11 +82,13 @@ export function AdminSidebar() {
       </div>
 
       {/* Circular collapse toggle floating on the sidebar's edge, so it
-          slides along with the width animation above rather than jumping. */}
+          slides along with the width animation above rather than jumping.
+          Solid brand fill + white ring keeps it visible whether it's
+          sitting over the dark sidebar or the light content area. */}
       <button
         onClick={() => setCollapsed((c) => !c)}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className="absolute top-8 -right-3.5 w-7 h-7 rounded-full bg-white text-brand-700 shadow-lg border border-gray-100 flex items-center justify-center hover:bg-sun-400 hover:text-white transition-colors z-10"
+        className="absolute top-9 -right-4 w-8 h-8 rounded-full bg-brand-600 text-white shadow-lg ring-2 ring-white flex items-center justify-center hover:bg-sun-400 transition-colors z-30"
       >
         {collapsed ? <FiChevronRight className="text-sm" /> : <FiChevronLeft className="text-sm" />}
       </button>
