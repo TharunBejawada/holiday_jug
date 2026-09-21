@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiLock, FiMail, FiAlertCircle, FiEye, FiEyeOff, FiSend } from "react-icons/fi";
-import { FaPlane } from "react-icons/fa";
+import { FiLock, FiMail, FiAlertCircle, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+import { AdminLoginBackground } from "@/components/admin/AdminLoginBackground";
 
 const REMEMBER_KEY = "holidayjug-admin-remember-email";
+const FLY_DURATION_MS = 750;
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +21,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [flyOrigin, setFlyOrigin] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     try {
@@ -54,36 +57,47 @@ export default function AdminLoginPage() {
       // best-effort only
     }
 
-    router.push("/admin");
-    router.refresh();
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (rect) {
+      setFlyOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      setTimeout(() => {
+        router.push("/admin");
+        router.refresh();
+      }, FLY_DURATION_MS);
+    } else {
+      router.push("/admin");
+      router.refresh();
+    }
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500 flex items-center justify-center px-4 py-16">
-      {/* Ambient animated blobs */}
-      <motion.div
-        className="absolute -top-32 -left-24 w-96 h-96 rounded-full bg-sun-400/20 blur-3xl"
-        animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.6, 0.4] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute -bottom-40 -right-24 w-[28rem] h-[28rem] rounded-full bg-brand-400/25 blur-3xl"
-        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      />
+    <div className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-16">
+      <AdminLoginBackground />
 
-      {/* Flying plane */}
-      <motion.div
-        className="absolute text-white/25 text-5xl pointer-events-none"
-        initial={{ x: "-10vw", y: "70vh", rotate: -8 }}
-        animate={{ x: "110vw", y: "5vh", rotate: -8 }}
-        transition={{ duration: 14, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-      >
-        <FaPlane />
-      </motion.div>
+      {/* Arrow that flies from the button to the top-right, echoing the
+          account menu's position once inside the dashboard. */}
+      <AnimatePresence>
+        {flyOrigin && typeof window !== "undefined" && (
+          <motion.div
+            className="fixed z-[100] flex items-center justify-center w-11 h-11 rounded-full bg-sun-400 text-brand-900 shadow-2xl"
+            style={{ left: flyOrigin.x - 22, top: flyOrigin.y - 22 }}
+            initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: 0 }}
+            animate={{
+              x: window.innerWidth - flyOrigin.x - 24,
+              y: -(flyOrigin.y - 32),
+              opacity: [1, 1, 0],
+              scale: [1, 1.15, 0.4],
+              rotate: 90,
+            }}
+            transition={{ duration: FLY_DURATION_MS / 1000, ease: "easeInOut" }}
+          >
+            <FiArrowRight className="text-xl" />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <motion.div
-        className="w-full max-w-md relative"
+        className="w-full max-w-md relative z-10"
         animate={shake ? { x: [0, -10, 10, -8, 8, -4, 4, 0] } : {}}
         transition={{ duration: 0.5 }}
       >
@@ -100,7 +114,7 @@ export default function AdminLoginPage() {
             className="flex flex-col items-center mb-8"
           >
             <motion.div
-              className="relative w-14 h-14 mb-4"
+              className="relative w-24 h-24 mb-4"
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -108,7 +122,7 @@ export default function AdminLoginPage() {
                 src="/assets/Holiday_Jug_Logo.png"
                 alt="Holiday Jug"
                 fill
-                className="object-contain"
+                className="object-contain drop-shadow-sm"
               />
             </motion.div>
             <h1 className="text-2xl font-bold text-gray-900">Admin Portal</h1>
@@ -193,6 +207,7 @@ export default function AdminLoginPage() {
             </motion.label>
 
             <motion.button
+              ref={buttonRef}
               type="submit"
               disabled={loading}
               whileHover={{ scale: loading ? 1 : 1.02 }}
@@ -209,7 +224,7 @@ export default function AdminLoginPage() {
                   transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
                 />
               ) : (
-                <FiSend />
+                <FiArrowRight />
               )}
               {loading ? "Signing in..." : "Sign in"}
             </motion.button>
