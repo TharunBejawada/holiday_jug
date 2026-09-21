@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { ScrollToTop } from "@/components/ScrollToTop";
 import { Providers } from "./providers";
 
 const poppins = Poppins({
@@ -27,17 +24,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-GB" className={poppins.variable}>
-      <body className={`${poppins.className} bg-white text-gray-900 font-medium antialiased flex flex-col min-h-screen relative`}>
-        <Providers>
-          <Header />
-          <div className="flex-1">{children}</div>
-          <Footer />
-          <ScrollToTop />
-        </Providers>
+      <body className={`${poppins.className} bg-white text-gray-900 font-medium antialiased min-h-screen relative`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
-
-
-
