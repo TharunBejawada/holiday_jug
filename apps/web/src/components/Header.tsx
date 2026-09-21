@@ -20,6 +20,7 @@ import {
     FaBars,
     FaTimes,
     FaSearch,
+    FaUser,
 } from "react-icons/fa";
 
 export function Header() {
@@ -236,6 +237,14 @@ export function Header() {
                         Find a Holiday
                         <br className="hidden xl:inline" /> / Hotel
                     </Link>
+
+                    {/* Sign in */}
+                    <Link
+                        href="/login"
+                        className="flex items-center gap-2 rounded-full border border-[#1D1248]/15 px-4 py-2 text-sm font-semibold text-[#1D1248] hover:border-[#F7941D] hover:text-[#F7941D] transition-colors"
+                    >
+                        <FaUser className="text-xs" /> Sign in
+                    </Link>
                 </div>
 
                 {/* MOBILE MENU TOGGLE BUTTON */}
@@ -397,6 +406,13 @@ export function Header() {
                             onClick={() => setMobileMenuOpen(false)}
                         >
                             <FaSearch className="text-xs" /> Find a Holiday / Hotel
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="flex items-center justify-center gap-2 rounded-xl border border-[#1D1248]/15 px-4 py-2.5 text-center text-sm font-semibold text-[#1D1248]"
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            <FaUser className="text-xs" /> Sign in
                         </Link>
                     </div>
                 </div>

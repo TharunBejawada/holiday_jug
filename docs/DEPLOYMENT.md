@@ -43,10 +43,11 @@ Why Aurora over DynamoDB: the domain (destinations, hotels, packages, departures
 
 - One cluster, multiple logical databases/schemas for `dev`, `staging`, `prod`, or a separate small cluster per environment if budget allows — either way, each environment gets its own `DATABASE_URL` value, same variable name.
 - Prisma migrations (`packages/db`) run via `npm run db:deploy` in CI/CD (or as an Amplify build step) against the target environment's `DATABASE_URL`.
+- `npm run db:seed` upserts sample destination/hotel/package data plus the `superadmin@holidayjug.com` admin account (password `HolidayJug2026!` — change it after first login). Safe to re-run; every row is an upsert.
 
 ## Email — AWS SES
 
-Sends the passwordless sign-in link (`apps/web/src/lib/ses.ts`). Production access is assumed already approved (no more sandbox restriction).
+Sends the 6-digit signup verification code (`apps/web/src/lib/ses.ts`). Production access is assumed already approved (no more sandbox restriction).
 
 1. **SES Console → Verified identities → Create identity**
    - Identity type: **Domain**

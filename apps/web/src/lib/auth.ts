@@ -1,10 +1,8 @@
 import { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@holiday-jug/db";
 import { compare } from "bcryptjs";
-import { sendVerificationEmail } from "./ses";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -12,36 +10,39 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
-    verifyRequest: "/login/check-email",
   },
   providers: [
-    // Passwordless sign-up/sign-in: we email a one-time link instead of
-    // asking for an SMS OTP, which is far costlier and less reliable to
-    // verify across international numbers than email.
-    EmailProvider({
-      from: process.env.SES_FROM_EMAIL,
-      maxAge: 15 * 60, // magic link valid for 15 minutes
-      sendVerificationRequest: async ({ identifier, url }) => {
-        await sendVerificationEmail(identifier, url);
-      },
-    }),
-    // Kept for admin/back-office accounts that need a traditional password.
+    // Used by both customers (after the OTP-verified signup flow sets a
+    // password) and admin/back-office accounts.
     CredentialsProvider({
       name: "Email and password",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });
         if (!user?.passwordHash) return null;
+        if (user.status !== "ACTIVE") return null;
 
         const valid = await compare(credentials.password, user.passwordHash);
         if (!valid) return null;
+
+        const ip =
+          req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? null;
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            loginCount: { increment: 1 },
+            lastLoginAt: new Date(),
+            lastLoginIp: ip,
+          },
+        });
 
         return { id: user.id, email: user.email, name: user.name, role: user.role };
       },

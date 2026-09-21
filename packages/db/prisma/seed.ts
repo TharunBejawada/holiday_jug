@@ -1,6 +1,22 @@
+import { hash } from "bcryptjs";
 import { prisma } from "../src/index";
 
 async function main() {
+  const adminPasswordHash = await hash("HolidayJug2026!", 12);
+
+  await prisma.user.upsert({
+    where: { email: "superadmin@holidayjug.com" },
+    update: {},
+    create: {
+      email: "superadmin@holidayjug.com",
+      name: "Super Admin",
+      role: "ADMIN",
+      status: "ACTIVE",
+      passwordHash: adminPasswordHash,
+      emailVerified: new Date(),
+    },
+  });
+
   const destination = await prisma.destination.upsert({
     where: { slug: "benidorm-spain" },
     update: {},

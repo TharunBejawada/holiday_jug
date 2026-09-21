@@ -11,8 +11,8 @@ UK package-holiday booking site (think onthebeach.co.uk) — search, browse and 
 | Backend     | Next.js Route Handlers (`apps/web/src/app/api/**`)             |
 | Domain/data logic | `packages/core` (zod validation + query logic), shared by API routes |
 | Database    | Aurora PostgreSQL (Serverless v2) via Prisma (`packages/db`)  |
-| Auth        | NextAuth.js — passwordless email sign-in (magic link via SES) as the primary flow, credentials provider kept for admin accounts |
-| Email       | AWS SES — sends sign-in links |
+| Auth        | NextAuth.js credentials provider — signup verifies the email with a 6-digit SES code, then the user sets a password; admin accounts use the same provider via a separate `/admin/login` screen |
+| Email       | AWS SES — sends signup verification codes |
 | File storage| AWS S3 — destination/hotel images and promo videos, uploaded via presigned URLs |
 | API security| Rate limiting + security headers (`middleware.ts`), session guard, admin-role guard, internal shared-secret guard for server-to-server calls |
 | Hosting     | AWS Amplify Hosting (SSR + API routes) |
