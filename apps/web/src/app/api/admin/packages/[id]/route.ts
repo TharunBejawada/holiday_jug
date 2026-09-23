@@ -50,20 +50,23 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
   if (response) return response;
 
   const { id } = await params;
+
+  // Checked up front rather than relying on catching the DB's error shape —
+  // see the comment in places/[id]/route.ts's DELETE for why.
+  const bookingCount = await prisma.booking.count({ where: { packageId: id } });
+  if (bookingCount > 0) {
+    return NextResponse.json(
+      { error: `This deal has ${bookingCount} booking${bookingCount === 1 ? "" : "s"} linked to it and can't be deleted.` },
+      { status: 409 }
+    );
+  }
+
   try {
     await prisma.package.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError) {
-      if (err.code === "P2025") {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-      }
-      if (err.code === "P2003") {
-        return NextResponse.json(
-          { error: "This deal has bookings linked to it and can't be deleted." },
-          { status: 409 }
-        );
-      }
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     throw err;
   }
