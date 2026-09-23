@@ -12,12 +12,14 @@ import {
   FiImage,
   FiUsers,
   FiSettings,
+  FiMapPin,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: FiGrid },
+  { href: "/admin/destinations", label: "Destinations", icon: FiMapPin },
   { href: "/admin/packages", label: "Packages", icon: FiPackage },
   { href: "/admin/bookings", label: "Bookings", icon: FiCalendar },
   { href: "/admin/assets", label: "Assets", icon: FiImage },
@@ -57,7 +59,8 @@ export function AdminSidebar() {
 
         <nav className="flex-1 px-3 py-5 space-y-1">
           {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
+            const active =
+              item.href === "/admin" ? pathname === item.href : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (
               <Link

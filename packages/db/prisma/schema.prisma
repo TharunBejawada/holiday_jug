@@ -122,6 +122,117 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+enum DestinationRegion {
+  EUROPE
+  MEDITERRANEAN
+  MIDDLE_EAST
+  INDIAN_OCEAN
+  ASIA
+  CARIBBEAN
+  AMERICAS
+}
+
+enum FlightTimeBand {
+  UNDER_4H
+  FOUR_TO_SIX_H
+  SIX_TO_TEN_H
+  TEN_PLUS_H
+}
+
+enum BestForTag {
+  FAMILIES
+  COUPLES
+  ADULTS_ONLY
+  LUXURY
+  ADVENTURE
+  RELAXATION
+}
+
+// The country/region-level CMS landing page (e.g. "Turkey Holidays") shown
+// at /destinations/[slug] — distinct from Destination below, which is the
+// city/resort level place (Antalya, Bodrum...) shown as a card within it.
+model Country {
+  id             String            @id @default(cuid())
+  slug           String            @unique
+  name           String
+  region         DestinationRegion
+  flightTimeBand FlightTimeBand
+  bestFor        BestForTag[]
+
+  heroImageUrl      String?
+  heroDescription   String? @db.Text // RTE
+  whyVisitIntro     String? @db.Text // RTE
+  whyVisitHighlights String[] @default([])
+  thingsToDoContent String? @db.Text // RTE — sub-nav tab
+  whenToGoContent   String? @db.Text // RTE — sub-nav tab
+  travelGuideContent String? @db.Text // RTE — sub-nav tab
+
+  featuredOnOverview Boolean @default(false) // shows in "Trending Now"
+  isPublished        Boolean @default(false)
+  sortOrder          Int     @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  destinations Destination[]
+  holidayTypes CountryHolidayType[]
+
+  @@index([region])
+  @@map("countries")
+}
+
+// Taxonomy tag shown both as a filter facet on the overview page and as a
+// per-country card ("Holiday Types in Turkey") via CountryHolidayType.
+model HolidayType {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  iconUrl     String?
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  countries CountryHolidayType[]
+
+  @@map("holiday_types")
+}
+
+// Join table carrying a per-country override description/order, since the
+// same holiday type reads differently per destination (e.g. "Relax on
+// Turkey's stunning coastlines" vs the generic HolidayType description).
+model CountryHolidayType {
+  countryId     String
+  holidayTypeId String
+  description   String?
+  sortOrder     Int     @default(0)
+
+  country     Country     @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  holidayType HolidayType @relation(fields: [holidayTypeId], references: [id], onDelete: Cascade)
+
+  @@id([countryId, holidayTypeId])
+  @@map("country_holiday_types")
+}
+
+model Faq {
+  id          String  @id @default(cuid())
+  category    String // "destinations-overview", "global", etc.
+  question    String
+  answer      String  @db.Text
+  sortOrder   Int     @default(0)
+  isPublished Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("faqs")
+}
+
 model Destination {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -130,12 +241,22 @@ model Destination {
   region      String?
   description String?
   heroImageUrl String?
+  sortOrder   Int      @default(0)
+
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[] @default([])
+
+  countryId String?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  packages Package[]
+  countryPage Country?  @relation(fields: [countryId], references: [id])
+  packages    Package[]
 
   @@index([country])
+  @@index([countryId])
   @@map("destinations")
 }
 
