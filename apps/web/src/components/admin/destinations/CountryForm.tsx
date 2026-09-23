@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { CountryPlacesManager } from "@/components/admin/destinations/CountryPlacesManager";
+import { CountryFaqsManager } from "@/components/admin/destinations/CountryFaqsManager";
 import { uploadAssetImage } from "@/lib/upload-asset";
 
 const REGIONS = ["EUROPE", "MEDITERRANEAN", "MIDDLE_EAST", "INDIAN_OCEAN", "ASIA", "CARIBBEAN", "AMERICAS"];
@@ -480,6 +481,19 @@ export function CountryForm({ countryId }: { countryId?: string }) {
         ) : (
           <p className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 rounded-lg px-4 py-3">
             <FiMapPin /> Save this destination first to add places.
+          </p>
+        )}
+      </section>
+
+      {/* FAQs */}
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="font-semibold text-gray-900 mb-1">FAQs</h2>
+        <p className="text-sm text-gray-500 mb-4">Shown at the bottom of this destination page.</p>
+        {countryId ? (
+          <CountryFaqsManager countryId={countryId} />
+        ) : (
+          <p className="text-sm text-gray-400 bg-gray-50 rounded-lg px-4 py-3">
+            Save this destination first to add FAQs.
           </p>
         )}
       </section>

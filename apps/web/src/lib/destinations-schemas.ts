@@ -65,6 +65,7 @@ export const holidayTypeSchema = z.object({
 
 export const faqSchema = z.object({
   category: z.string().min(1).max(60),
+  countryId: z.string().nullable().optional(),
   question: z.string().min(1).max(300),
   answer: z.string().min(1),
   sortOrder: z.number().int().default(0),

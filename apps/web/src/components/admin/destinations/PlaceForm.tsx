@@ -2,9 +2,11 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
-import { FiAlertCircle, FiCheckCircle, FiUpload } from "react-icons/fi";
+import { FiAlertCircle, FiCheckCircle, FiUpload, FiPlus } from "react-icons/fi";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { PackagesList } from "@/components/admin/packages/PackagesList";
 import { uploadAssetImage } from "@/lib/upload-asset";
 
 type CountryOption = { id: string; name: string };
@@ -251,6 +253,31 @@ export function PlaceForm({ placeId, initialCountryId }: { placeId?: string; ini
           onChange={(html) => setData((d) => ({ ...d, description: html }))}
           placeholder="Beautiful beaches, luxury resorts and a vibrant old town."
         />
+      </section>
+
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-semibold text-gray-900">Deals for this place</h2>
+          {placeId && (
+            <Link
+              href={`/admin/packages/new?destinationId=${placeId}`}
+              className="flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline"
+            >
+              <FiPlus /> Add deal
+            </Link>
+          )}
+        </div>
+        <p className="text-sm text-gray-500 mb-4">
+          Itineraries with their own price per person, nights and board type — these drive the
+          &ldquo;From £XXX pp&rdquo; shown for this place and its &ldquo;Best Holiday Deals&rdquo;.
+        </p>
+        {placeId ? (
+          <PackagesList destinationId={placeId} />
+        ) : (
+          <p className="text-sm text-gray-400 bg-gray-50 rounded-lg px-4 py-3">
+            Save this place first to add deals.
+          </p>
+        )}
       </section>
 
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

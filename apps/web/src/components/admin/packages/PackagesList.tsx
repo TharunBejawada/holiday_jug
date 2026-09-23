@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { FiEdit2, FiTrash2, FiPackage } from "react-icons/fi";
+
+type PackageRow = {
+  id: string;
+  title: string;
+  slug: string;
+  nights: number;
+  boardType: string;
+  basePriceGbp: string;
+  originalPriceGbp: string | null;
+  isActive: boolean;
+  destination: { id: string; name: string };
+};
+
+export function PackagesList({ destinationId }: { destinationId?: string }) {
+  const [items, setItems] = useState<PackageRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    const url = destinationId ? `/api/admin/packages?destinationId=${destinationId}` : "/api/admin/packages";
+    const res = await fetch(url);
+    if (!res.ok) {
+      setError("Could not load deals.");
+      return;
+    }
+    const data = await res.json();
+    setItems(data.items);
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destinationId]);
+
+  async function handleDelete(id: string, title: string) {
+    if (!confirm(`Delete "${title}"?`)) return;
+    const res = await fetch(`/api/admin/packages/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setItems((prev) => prev?.filter((i) => i.id !== id) ?? null);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error ?? "Could not delete.");
+    }
+  }
+
+  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (!items) return <p className="text-sm text-gray-400">Loading...</p>;
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center">
+        <FiPackage className="text-3xl text-gray-300 mx-auto mb-2" />
+        <p className="text-gray-500 text-sm">No deals yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <th className="px-5 py-3">Title</th>
+            {!destinationId && <th className="px-5 py-3">Place</th>}
+            <th className="px-5 py-3">Nights / Board</th>
+            <th className="px-5 py-3">Price</th>
+            <th className="px-5 py-3">Status</th>
+            <th className="px-5 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {items.map((p) => (
+            <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
+              <td className="px-5 py-3.5">
+                <p className="font-semibold text-gray-900">{p.title}</p>
+                <p className="text-xs text-gray-400">/{p.slug}</p>
+              </td>
+              {!destinationId && <td className="px-5 py-3.5 text-gray-600">{p.destination.name}</td>}
+              <td className="px-5 py-3.5 text-gray-600">
+                {p.nights} nights • {p.boardType.replace(/_/g, " ")}
+              </td>
+              <td className="px-5 py-3.5">
+                <span className="font-semibold text-gray-900">£{Number(p.basePriceGbp).toFixed(0)}</span>
+                {p.originalPriceGbp && (
+                  <span className="ml-1.5 text-xs text-gray-400 line-through">
+                    £{Number(p.originalPriceGbp).toFixed(0)}
+                  </span>
+                )}
+              </td>
+              <td className="px-5 py-3.5">
+                {p.isActive ? (
+                  <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                    Inactive
+                  </span>
+                )}
+              </td>
+              <td className="px-5 py-3.5">
+                <div className="flex items-center justify-end gap-2">
+                  <Link
+                    href={`/admin/packages/${p.id}`}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-600 transition-colors"
+                    aria-label="Edit"
+                  >
+                    <FiEdit2 />
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(p.id, p.title)}
+                    className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                    aria-label="Delete"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

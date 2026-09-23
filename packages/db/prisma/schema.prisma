@@ -180,6 +180,7 @@ model Country {
 
   destinations Destination[]
   holidayTypes CountryHolidayType[]
+  faqs         Faq[]
 
   @@index([region])
   @@map("countries")
@@ -220,16 +221,20 @@ model CountryHolidayType {
 
 model Faq {
   id          String  @id @default(cuid())
-  category    String // "destinations-overview", "global", etc.
+  category    String // "destinations-overview", "global", etc. — for FAQs not tied to one destination
+  countryId   String? // set instead of (or alongside) category for a destination-specific FAQ
   question    String
   answer      String  @db.Text
   sortOrder   Int     @default(0)
   isPublished Boolean @default(true)
 
+  country Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([category])
+  @@index([countryId])
   @@map("faqs")
 }
 
@@ -290,17 +295,27 @@ model Package {
   slug          String    @unique
   title         String
   destinationId String
-  hotelId       String
+  hotelId       String?
   boardType     BoardType @default(BED_AND_BREAKFAST)
   nights        Int
   basePriceGbp  Decimal   @db.Decimal(10, 2)
+  // The pre-discount price shown struck-through, driving the "SAVE £X" badge
+  // on deal cards. Null means no advertised saving.
+  originalPriceGbp Decimal? @db.Decimal(10, 2)
   departureAirport String?
   isActive      Boolean   @default(true)
+
+  // Seeded social-proof numbers for launch, before there's enough real
+  // Review data — a deal card falls back to these only when the package has
+  // zero actual reviews (see packages/core's rating helper).
+  ratingOverride      Decimal? @db.Decimal(2, 1)
+  reviewCountOverride Int?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   destination Destination @relation(fields: [destinationId], references: [id])
-  hotel       Hotel        @relation(fields: [hotelId], references: [id])
+  hotel       Hotel?       @relation(fields: [hotelId], references: [id])
   departures  Departure[]
   bookings    Booking[]
   reviews     Review[]

@@ -24,9 +24,9 @@ export function CountryPlacesManager({ countryId }: { countryId: string }) {
     setLoading(false);
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countryId]);
 
   async function addPlace(placeId: string) {

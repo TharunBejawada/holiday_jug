@@ -8,8 +8,12 @@ export async function GET(request: NextRequest) {
   if (response) return response;
 
   const category = request.nextUrl.searchParams.get("category");
+  const countryId = request.nextUrl.searchParams.get("countryId");
+
+  const where = countryId ? { countryId } : { category: category ?? undefined, countryId: null };
+
   const items = await prisma.faq.findMany({
-    where: category ? { category } : undefined,
+    where,
     orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
   });
   return NextResponse.json({ items });
