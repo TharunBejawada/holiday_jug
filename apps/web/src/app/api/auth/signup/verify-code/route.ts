@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { ensureEnvLoaded } from "@holiday-jug/db";
 import { verifySignupOtp } from "@/lib/otp";
 
 const schema = z.object({
@@ -15,6 +16,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export async function POST(request: NextRequest) {
+  await ensureEnvLoaded();
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "A valid email and 6-digit code are required." }, { status: 400 });

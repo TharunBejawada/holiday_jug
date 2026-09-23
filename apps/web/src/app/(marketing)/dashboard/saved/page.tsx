@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/api-auth";
 import { FiHeart, FiArrowLeft } from "react-icons/fi";
 
 export default async function SavedHolidaysPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   if (!session?.user) redirect("/login");
 
   return (

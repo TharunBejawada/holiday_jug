@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@holiday-jug/db";
+import { prisma, ensureEnvLoaded } from "@holiday-jug/db";
 import { createSignupOtp, isOtpRequestRateLimited } from "@/lib/otp";
 import { sendOtpEmail } from "@/lib/ses";
 
 const schema = z.object({ email: z.string().email() });
 
 export async function POST(request: NextRequest) {
+  await ensureEnvLoaded();
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: "A valid email is required." }, { status: 400 });

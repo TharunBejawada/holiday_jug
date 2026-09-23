@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/api-auth";
 import { prisma } from "@holiday-jug/db";
 import { ProfileView } from "@/components/dashboard/ProfileView";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
   if (!session?.user) redirect("/login");
 
   const userId = (session.user as { id?: string }).id;

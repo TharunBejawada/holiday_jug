@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/api-auth";
 import { FiPackage, FiCalendar, FiUsers, FiImage } from "react-icons/fi";
 
 const STAT_CARDS = [
@@ -10,7 +9,7 @@ const STAT_CARDS = [
 ];
 
 export default async function AdminDashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getCurrentSession();
 
   return (
     <div>

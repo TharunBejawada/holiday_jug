@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { hash } from "bcryptjs";
-import { prisma } from "@holiday-jug/db";
+import { prisma, ensureEnvLoaded } from "@holiday-jug/db";
 import { hasRecentVerifiedOtp } from "@/lib/otp";
 
 const schema = z.object({
@@ -18,6 +18,8 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  await ensureEnvLoaded();
+
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
