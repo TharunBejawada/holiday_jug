@@ -9,6 +9,7 @@ type PlaceRow = {
   name: string;
   slug: string;
   country: string;
+  priceFrom: number | null;
   sortOrder: number;
   countryPage: { id: string; name: string } | null;
 };
@@ -60,6 +61,7 @@ export function PlacesList() {
         <thead>
           <tr className="bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
             <th className="px-5 py-3">Name</th>
+            <th className="px-5 py-3">From Price</th>
             <th className="px-5 py-3">Country field</th>
             <th className="px-5 py-3">Linked destination page</th>
             <th className="px-5 py-3 text-right">Actions</th>
@@ -71,6 +73,17 @@ export function PlacesList() {
               <td className="px-5 py-3.5">
                 <p className="font-semibold text-gray-900">{p.name}</p>
                 <p className="text-xs text-gray-400">/{p.slug}</p>
+              </td>
+              <td className="px-5 py-3.5">
+                {p.priceFrom != null ? (
+                  <span className="inline-flex items-center gap-1 text-sm font-medium bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-100">
+                    <span className="text-xs font-bold text-[#F7941D]">From</span>
+                    <span className="font-extrabold text-[#1D1248]">£{Number(p.priceFrom)}</span>
+                    <span className="text-xs text-gray-500 font-medium">pp</span>
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-400">—</span>
+                )}
               </td>
               <td className="px-5 py-3.5 text-gray-600">{p.country}</td>
               <td className="px-5 py-3.5">

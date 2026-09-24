@@ -17,6 +17,7 @@ type PlaceData = {
   country: string;
   region: string;
   description: string;
+  priceFrom: number | null;
   heroImageUrl: string;
   sortOrder: number;
   countryId: string;
@@ -31,6 +32,7 @@ const EMPTY: PlaceData = {
   country: "",
   region: "",
   description: "",
+  priceFrom: null,
   heroImageUrl: "",
   sortOrder: 0,
   countryId: "",
@@ -76,6 +78,7 @@ export function PlaceForm({ placeId, initialCountryId }: { placeId?: string; ini
           country: p.country,
           region: p.region ?? "",
           description: p.description ?? "",
+          priceFrom: p.priceFrom != null ? Number(p.priceFrom) : null,
           heroImageUrl: p.heroImageUrl ?? "",
           sortOrder: p.sortOrder,
           countryId: p.countryId ?? "",
@@ -201,6 +204,40 @@ export function PlaceForm({ placeId, initialCountryId }: { placeId?: string; ini
               placeholder="Costa Blanca"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Starting From price (£ / person)</label>
+            <div className="relative rounded-lg shadow-xs">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <span className="text-gray-500 sm:text-sm">£</span>
+              </div>
+              <input
+                type="number"
+                min={0}
+                step="1"
+                value={data.priceFrom ?? ""}
+                onChange={(e) =>
+                  setData((d) => ({
+                    ...d,
+                    priceFrom: e.target.value === "" ? null : Number(e.target.value),
+                  }))
+                }
+                placeholder="145"
+                className="w-full pl-7 pr-12 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition text-sm font-medium"
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <span className="text-xs text-gray-400 font-medium">pp</span>
+              </div>
+            </div>
+            {data.priceFrom != null && (
+              <p className="mt-1.5 text-xs flex items-center gap-1.5 text-gray-500">
+                Badge preview:{" "}
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-50 border border-gray-200">
+                  <span className="font-bold text-[#F7941D]">From</span>{" "}
+                  <span className="font-extrabold text-[#1D1248]">£{data.priceFrom} pp</span>
+                </span>
+              </p>
+            )}
           </div>
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Linked destination page</label>

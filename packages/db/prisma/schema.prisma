@@ -158,6 +158,7 @@ model Country {
   region         DestinationRegion
   flightTimeBand FlightTimeBand
   bestFor        BestForTag[]
+  priceFrom      Decimal?          @db.Decimal(10, 2)
 
   heroImageUrl      String?
   heroDescription   String? @db.Text // RTE
@@ -246,6 +247,7 @@ model Destination {
   region      String?
   description String?
   heroImageUrl String?
+  priceFrom   Decimal? @db.Decimal(10, 2)
   sortOrder   Int      @default(0)
 
   seoTitle       String?
