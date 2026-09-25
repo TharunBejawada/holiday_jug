@@ -308,13 +308,13 @@ export default function CookiePolicyPage() {
             subtitle="Our commitment to a safe, transparent and trusted travel experience."
         >
             <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#071746]  border-b border-slate-200 pb-3">
                     USE OF COOKIES
                 </h2>
 
                 {/* COOKIES AND SIMILAR TECHNOLOGY */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] ">
                         Cookies and Similar Technology
                     </h3>
                     <p>
@@ -505,7 +505,7 @@ export default function CookiePolicyPage() {
 
                 {/* SECTION A: OUR COOKIES */}
                 <section className="pt-6 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-200 pb-2">
                         A) Our Cookies
                     </h3>
                     <p>
@@ -554,7 +554,7 @@ export default function CookiePolicyPage() {
 
                 {/* SECTION B: THIRD-PARTY COOKIES */}
                 <section className="pt-6 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-200 pb-2">
                         B) Third-Party Cookies
                     </h3>
                     <p>
@@ -694,7 +694,7 @@ export default function CookiePolicyPage() {
 
                 {/* SIMILAR TECHNOLOGIES */}
                 <section className="pt-6 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-200 pb-2">
                         Similar Technologies
                     </h3>
                     <p>

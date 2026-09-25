@@ -14,7 +14,7 @@ export default function BookingConditionsPage() {
             subtitle="Our commitment to a safe, transparent and trusted travel experience."
         >
             <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#071746]  border-b border-slate-200 pb-3">
                     BOOKING CONDITIONS
                 </h2>
 
@@ -71,7 +71,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 1 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         1. Your Contract
                     </h3>
                     <p>
@@ -107,7 +107,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 2 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         2. Booking Details
                     </h3>
                     <p>
@@ -196,7 +196,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 3 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         3. Payment
                     </h3>
                     <p>
@@ -229,7 +229,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 4 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         4. Credit Card Fraud Protection
                     </h3>
                     <p>
@@ -253,7 +253,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 5 */}
                 <section className="pt-2 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         5. Low Deposit / Instalment Plan
                     </h3>
                     <p>
@@ -309,7 +309,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 6 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         6. Amendments by You
                     </h3>
                     <p>
@@ -334,7 +334,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 7 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         7. Cancellations by You
                     </h3>
                     <p>
@@ -357,7 +357,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTION 8: ADMINISTRATION FEES TABLE */}
                 <section className="pt-2 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         8. Our Administration Fees
                     </h3>
                     <p>
@@ -438,7 +438,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTIONS 9 TO 15 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         9. Changes and Cancellations by the Supplier
                     </h3>
                     <p>
@@ -449,7 +449,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         10. Your Financial Protection
                     </h3>
                     <p>
@@ -460,7 +460,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         11. Where We Are the Package Organiser
                     </h3>
                     <p>
@@ -471,7 +471,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         12. Insurance
                     </h3>
                     <p>
@@ -482,7 +482,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         13. Health Advice
                     </h3>
                     <p>
@@ -493,7 +493,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         14. Passports and Visas
                     </h3>
                     <p>
@@ -505,7 +505,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         15. Local Taxes and In-Resort Fees
                     </h3>
                     <p>
@@ -516,7 +516,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTIONS 16 TO 24 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         16–23. Delivery, Eligibility &amp; Delays
                     </h3>
                     <p>
@@ -528,7 +528,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         24. Force Majeure
                     </h3>
                     <p>
@@ -541,7 +541,7 @@ export default function BookingConditionsPage() {
 
                 {/* SECTIONS 25 TO 40 */}
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         25–39. General Conditions &amp; Entry Requirements
                     </h3>
                     <p>
@@ -552,7 +552,7 @@ export default function BookingConditionsPage() {
                 </section>
 
                 <section className="pt-2 space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         40. Price Match Promise
                     </h3>
                     <p>

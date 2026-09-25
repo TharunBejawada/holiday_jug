@@ -58,7 +58,7 @@ export function HomeBottomSections() {
                             >
                                 {/* LEFT TEXT CONTENT */}
                                 <div className="flex flex-col justify-center px-5 sm:px-8 lg:px-8 py-5 sm:py-7 z-20 w-[45%] shrink-0 text-left">
-                                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white tracking-tight leading-snug mb-1.5 sm:mb-2">
+                                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white  leading-snug mb-1.5 sm:mb-2">
                                         {banner.title}
                                     </h3>
                                     <p className="text-xs sm:text-sm lg:text-[15px] font-normal text-white/90 leading-relaxed mb-4 sm:mb-6 max-w-xs">

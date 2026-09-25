@@ -14,7 +14,7 @@ export default function TermsOfUsePage() {
             subtitle="Our commitment to a safe, transparent and trusted travel experience."
         >
             <div className="space-y-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-3 mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#071746]  border-b border-slate-200 pb-3 mb-6">
                     WEBSITE TERMS OF USE
                 </h2>
 
@@ -70,7 +70,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 1 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         1. General
                     </h3>
                     <p>
@@ -119,7 +119,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 2 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         2. Our Services
                     </h3>
                     <p>
@@ -155,7 +155,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 3 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         3. Permitted Use
                     </h3>
                     <p>
@@ -231,7 +231,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 4 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         4. Intellectual Property Rights
                     </h3>
                     <p>
@@ -257,7 +257,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 5 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         5. Our Liability
                     </h3>
                     <p>
@@ -347,7 +347,7 @@ export default function TermsOfUsePage() {
 
                 {/* SECTION 6 */}
                 <section className="pt-4 space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         6. Law &amp; Jurisdiction
                     </h3>
                     <p>

@@ -14,13 +14,13 @@ export default function PrivacyPolicyPage() {
             subtitle="Our commitment to a safe, transparent and trusted travel experience."
         >
             <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#071746]  border-b border-slate-200 pb-3">
                     HOLIDAY JUG PRIVACY NOTICE
                 </h2>
 
                 {/* SECTION 1 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         1. Introduction
                     </h3>
                     <p>Welcome to the Holiday Jug Privacy Notice.</p>
@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* SECTION 2 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         2. Important Information and Who We Are
                     </h3>
                     <div>
@@ -109,7 +109,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* SECTION 3 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         3. The Data We Collect About You
                     </h3>
                     <p>
@@ -161,7 +161,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* SECTION 4 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         4. How Your Personal Data Is Collected
                     </h3>
                     <ul className="list-none space-y-3 pl-2">
@@ -194,7 +194,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* SECTION 5 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         5. How We Use Your Personal Data
                     </h3>
                     <p>
@@ -216,7 +216,7 @@ export default function PrivacyPolicyPage() {
 
                 {/* SECTION 6 TO 11 */}
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         6–8. Disclosures, International Transfers &amp; Data Security
                     </h3>
                     <p>
@@ -228,7 +228,7 @@ export default function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         9. Data Retention
                     </h3>
                     <p>
@@ -239,7 +239,7 @@ export default function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         10. Your Legal Rights
                     </h3>
                     <p>
@@ -250,7 +250,7 @@ export default function PrivacyPolicyPage() {
                 </section>
 
                 <section className="space-y-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         11. Glossary
                     </h3>
                     <p>

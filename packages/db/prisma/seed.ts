@@ -68,6 +68,65 @@ async function main() {
     },
   });
 
+  const holidayTypesData = [
+    {
+      slug: "beach-escapes",
+      name: "Beach Escapes",
+      description: "Sun, sea and sand. Sun...",
+      iconUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 1,
+      isPublished: true,
+    },
+    {
+      slug: "all-inclusive",
+      name: "All-Inclusive",
+      description: "Relax with everything taken care of.",
+      iconUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 2,
+      isPublished: true,
+    },
+    {
+      slug: "family-holidays",
+      name: "Family Holidays",
+      description: "Fun-filled breaks for everyone.",
+      iconUrl: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 3,
+      isPublished: true,
+    },
+    {
+      slug: "luxury-getaways",
+      name: "Luxury Getaways",
+      description: "Beautiful stays and exceptional experiences.",
+      iconUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 4,
+      isPublished: true,
+    },
+    {
+      slug: "couple-getaways",
+      name: "Couple Getaways",
+      description: "Make memories together.",
+      iconUrl: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 5,
+      isPublished: true,
+    },
+    {
+      slug: "last-minute-escapes",
+      name: "Last-Minute Escapes",
+      description: "Spontaneous holidays at great prices.",
+      iconUrl: "https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=800&q=80",
+      sortOrder: 6,
+      isPublished: true,
+    },
+  ];
+
+  for (const item of holidayTypesData) {
+    await prisma.holidayType.upsert({
+      where: { slug: item.slug },
+      update: item,
+      create: item,
+    });
+  }
+
   console.log("Seed complete");
 }
 

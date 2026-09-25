@@ -41,6 +41,7 @@ type CountryData = {
   heroDescription: string;
   whyVisitIntro: string;
   whyVisitHighlights: string[];
+  whyVisitImageUrl: string;
   thingsToDoContent: string;
   whenToGoContent: string;
   travelGuideContent: string;
@@ -65,6 +66,7 @@ const EMPTY: CountryData = {
   heroDescription: "",
   whyVisitIntro: "",
   whyVisitHighlights: [],
+  whyVisitImageUrl: "",
   thingsToDoContent: "",
   whenToGoContent: "",
   travelGuideContent: "",
@@ -93,7 +95,8 @@ export function CountryForm({ countryId }: { countryId?: string }) {
   const [keywordsInput, setKeywordsInput] = useState("");
   const [highlightInput, setHighlightInput] = useState("");
   const [uploadingHero, setUploadingHero] = useState(false);
-  const [uploadingBasic, setUploadingBasic] = useState(false);
+  const [uploadingCard, setUploadingCard] = useState(false);
+  const [uploadingWhyVisit, setUploadingWhyVisit] = useState(false);
   const [loading, setLoading] = useState(!!countryId);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -123,6 +126,7 @@ export function CountryForm({ countryId }: { countryId?: string }) {
           heroDescription: c.heroDescription ?? "",
           whyVisitIntro: c.whyVisitIntro ?? "",
           whyVisitHighlights: c.whyVisitHighlights ?? [],
+          whyVisitImageUrl: c.whyVisitImageUrl ?? "",
           thingsToDoContent: c.thingsToDoContent ?? "",
           whenToGoContent: c.whenToGoContent ?? "",
           travelGuideContent: c.travelGuideContent ?? "",
@@ -176,21 +180,33 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       const url = await uploadAssetImage(file);
       setData((d) => ({ ...d, heroImageUrl: url }));
     } catch {
-      setErrorMsg("Hero image upload failed.");
+      setErrorMsg("Hero banner image upload failed.");
     } finally {
       setUploadingHero(false);
     }
   }
 
-  async function handleBasicImageUpload(file: File) {
-    setUploadingBasic(true);
+  async function handleCardUpload(file: File) {
+    setUploadingCard(true);
     try {
       const url = await uploadAssetImage(file);
       setData((d) => ({ ...d, cardImageUrl: url }));
     } catch {
       setErrorMsg("Card image upload failed.");
     } finally {
-      setUploadingBasic(false);
+      setUploadingCard(false);
+    }
+  }
+
+  async function handleWhyVisitUpload(file: File) {
+    setUploadingWhyVisit(true);
+    try {
+      const url = await uploadAssetImage(file);
+      setData((d) => ({ ...d, whyVisitImageUrl: url }));
+    } catch {
+      setErrorMsg("Why visit image upload failed.");
+    } finally {
+      setUploadingWhyVisit(false);
     }
   }
 
@@ -257,37 +273,6 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       {/* Basic info */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h2 className="font-semibold text-gray-900 mb-4">Basic info</h2>
-
-        {/* Basic Info Image Upload */}
-        <div className="mb-6 p-4 rounded-xl bg-gray-50 border border-gray-100">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Card display image (Overview &amp; Listing grid)</label>
-          <div className="flex items-start gap-4">
-            <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
-              {data.cardImageUrl ? (
-                <Image src={data.cardImageUrl} alt="Card Preview" fill className="object-cover" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400 text-xs">No card image</div>
-              )}
-            </div>
-            <div>
-              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
-                <FiUpload /> {uploadingBasic ? "Uploading..." : "Upload card image"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingBasic}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleBasicImageUpload(file);
-                    e.target.value = "";
-                  }}
-                />
-              </label>
-              <p className="text-xs text-gray-400 mt-2">Card image shown on overview cards & destination grids.</p>
-            </div>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -383,7 +368,34 @@ export function CountryForm({ countryId }: { countryId?: string }) {
           </div>
         </div>
 
-        <div className="mt-4">
+        {/* Holiday Types selection in Basic Info */}
+        <div className="mt-5">
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Holiday types</label>
+          <div className="flex flex-wrap gap-2">
+            {holidayTypeOptions.map((ht) => {
+              const selected = data.holidayTypes.some((h) => h.holidayTypeId === ht.id);
+              return (
+                <button
+                  type="button"
+                  key={ht.id}
+                  onClick={() => toggleHolidayType(ht.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected
+                      ? "bg-brand-600 text-white border-brand-600 shadow-xs"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
+                    }`}
+                >
+                  {selected ? `✓ ${ht.name}` : `+ ${ht.name}`}
+                </button>
+              );
+            })}
+            {holidayTypeOptions.length === 0 && (
+              <p className="text-xs text-gray-400">No holiday types created yet.</p>
+            )}
+          </div>
+          <p className="text-xs text-gray-400 mt-1.5">Select the holiday styles applicable to this destination.</p>
+        </div>
+
+        <div className="mt-5">
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Best for</label>
           <div className="flex flex-wrap gap-2">
             {BEST_FOR_OPTIONS.map((tag) => (
@@ -391,9 +403,9 @@ export function CountryForm({ countryId }: { countryId?: string }) {
                 type="button"
                 key={tag}
                 onClick={() => toggleBestFor(tag)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${data.bestFor.includes(tag)
-                  ? "bg-brand-600 text-white border-brand-600"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-brand-400"
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${data.bestFor.includes(tag)
+                    ? "bg-brand-600 text-white border-brand-600 shadow-xs"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
                   }`}
               >
                 {tag.replace(/_/g, " ")}
@@ -403,37 +415,79 @@ export function CountryForm({ countryId }: { countryId?: string }) {
         </div>
       </section>
 
-      {/* Hero */}
+      {/* Hero & Images section */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-semibold text-gray-900 mb-4">Hero section</h2>
-        <div className="flex items-start gap-4">
-          <div className="relative w-40 h-28 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
-            {data.heroImageUrl ? (
-              <Image src={data.heroImageUrl} alt="" fill className="object-cover" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-300 text-xs">No hero image</div>
-            )}
-          </div>
-          <div>
-            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors">
-              <FiUpload /> {uploadingHero ? "Uploading..." : "Upload hero image"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploadingHero}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleHeroUpload(file);
-                  e.target.value = "";
-                }}
-              />
+        <h2 className="font-semibold text-gray-900 mb-4">Hero &amp; Destination Images</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* 1. Card Image Upload (Overview Page Destination Image) */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Overview page destination image (Card image)
             </label>
-            <p className="text-xs text-gray-400 mt-2">Recommended: wide landscape header image, at least 1600px.</p>
+            <div className="flex items-start gap-4">
+              <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+                {data.cardImageUrl ? (
+                  <Image src={data.cardImageUrl} alt="Overview Card Preview" fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-xs text-center px-2">No card image</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                  <FiUpload /> {uploadingCard ? "Uploading..." : "Upload card image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingCard}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleCardUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <p className="text-xs text-gray-400 mt-2">Image shown on overview destination cards &amp; grids.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Destination Landing Page Banner Image Upload */}
+          <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Banner image (Destination landing page banner)
+            </label>
+            <div className="flex items-start gap-4">
+              <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+                {data.heroImageUrl ? (
+                  <Image src={data.heroImageUrl} alt="Hero Banner Preview" fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-xs text-center px-2">No banner image</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                  <FiUpload /> {uploadingHero ? "Uploading..." : "Upload banner image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingHero}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleHeroUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <p className="text-xs text-gray-400 mt-2">Wide landscape banner header used on the destination landing page.</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-5">
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Hero description</label>
           <RichTextEditor
             value={data.heroDescription}
@@ -446,6 +500,42 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       {/* Why visit */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h2 className="font-semibold text-gray-900 mb-4">Why visit</h2>
+
+        {/* Why Visit Image Upload */}
+        <div className="mb-5 p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Upload &quot;Why Visit&quot; Section Image
+          </label>
+          <div className="flex items-start gap-4">
+            <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+              {data.whyVisitImageUrl ? (
+                <Image src={data.whyVisitImageUrl} alt="Why Visit Image Preview" fill className="object-cover" />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400 text-xs text-center px-2">No image selected</div>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                <FiUpload /> {uploadingWhyVisit ? "Uploading..." : "Upload why visit image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingWhyVisit}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleWhyVisitUpload(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <p className="text-xs text-gray-400 mt-2">
+                Featured image displayed on the right side of the &quot;Why Visit&quot; section on the destination landing page.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Intro</label>
         <RichTextEditor
           value={data.whyVisitIntro}
@@ -516,11 +606,11 @@ export function CountryForm({ countryId }: { countryId?: string }) {
         </div>
       </section>
 
-      {/* Holiday types */}
+      {/* Holiday types override descriptions */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-semibold text-gray-900 mb-1">Holiday types</h2>
+        <h2 className="font-semibold text-gray-900 mb-1">Holiday type details</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Select which apply, and optionally override the description shown on this page.
+          Optionally override the description shown for selected holiday types on this destination page.
         </p>
         <div className="space-y-3">
           {holidayTypeOptions.map((ht) => {

@@ -1,99 +1,59 @@
 import { NextResponse } from "next/server";
+import sanitizeHtml from "sanitize-html";
 import { prisma } from "@holiday-jug/db";
 
-// Fallback trending destinations if DB is not configured, column missing, or query returns empty
-const DEFAULT_TRENDING_DESTINATIONS = [
-    {
-        id: "turkey",
-        name: "Turkey",
-        slug: "turkey",
-        priceFrom: 95,
-        heroImageUrl: "/assets/Antalya.jpg",
-        href: "/destinations/turkey",
-        featuredOnOverview: true,
-    },
-    {
-        id: "greece",
-        name: "Greece",
-        slug: "greece",
-        priceFrom: 382,
-        heroImageUrl: "/assets/Santorini.jpg",
-        href: "/destinations/greece",
-        featuredOnOverview: true,
-    },
-    {
-        id: "dubai",
-        name: "Dubai",
-        slug: "dubai",
-        priceFrom: 516,
-        heroImageUrl: "/assets/Dubai.jpg",
-        href: "/destinations/dubai",
-        featuredOnOverview: true,
-    },
-    {
-        id: "spain",
-        name: "Spain",
-        slug: "spain",
-        priceFrom: 145,
-        heroImageUrl: "/assets/Tenerife.jpg",
-        href: "/destinations/spain",
-        featuredOnOverview: true,
-    },
-    {
-        id: "antalya",
-        name: "Antalya",
-        slug: "antalya",
-        priceFrom: 129,
-        heroImageUrl: "/assets/All_Inclusive_holidays.jpg",
-        href: "/destinations/antalya",
-        featuredOnOverview: true,
-    },
-    {
-        id: "portugal",
-        name: "Portugal",
-        slug: "portugal",
-        priceFrom: 189,
-        heroImageUrl: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=800&q=80",
-        href: "/destinations/portugal",
-        featuredOnOverview: true,
-    },
-];
+function toPlainText(html: string | null, maxLength = 120): string {
+    if (!html) return "";
+    const text = sanitizeHtml(html, { allowedTags: [], allowedAttributes: {} }).replace(/\s+/g, " ").trim();
+    return text.length > maxLength ? `${text.slice(0, maxLength - 1).trimEnd()}…` : text;
+}
+
+function resolveImageUrl(cardImg?: string | null, heroImg?: string | null): string | null {
+    if (cardImg && cardImg.trim() !== "") return cardImg.trim();
+    if (heroImg && heroImg.trim() !== "") return heroImg.trim();
+    return null;
+}
 
 export async function GET() {
-    if (!process.env.DATABASE_URL) {
-        return NextResponse.json({ items: DEFAULT_TRENDING_DESTINATIONS, source: "default" });
-    }
+    const dbCountries = await prisma.country.findMany({
+        where: { isPublished: true },
+        orderBy: [{ featuredOnOverview: "desc" }, { sortOrder: "asc" }],
+        select: {
+            id: true,
+            name: true,
+            slug: true,
+            priceFrom: true,
+            cardImageUrl: true,
+            heroImageUrl: true,
+            heroDescription: true,
+            featuredOnOverview: true,
+            region: true,
+            flightTimeBand: true,
+            bestFor: true,
+            sortOrder: true,
+            holidayTypes: { select: { holidayType: { select: { slug: true } } } },
+        },
+    });
 
-    try {
-        const dbCountries = await prisma.country.findMany({
-            where: { isPublished: true },
-            orderBy: [{ featuredOnOverview: "desc" }, { sortOrder: "asc" }],
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                priceFrom: true,
-                cardImageUrl: true,
-                heroImageUrl: true,
-                featuredOnOverview: true,
-            },
-        });
+    const items = dbCountries.map((c) => {
+        const imageUrl = resolveImageUrl(c.cardImageUrl, c.heroImageUrl);
+        return {
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            priceFrom: c.priceFrom ? Number(c.priceFrom) : null,
+            cardImageUrl: imageUrl,
+            heroImageUrl: imageUrl,
+            href: `/destinations/${c.slug}`,
+            featuredOnOverview: c.featuredOnOverview,
+            sortOrder: c.sortOrder,
+            description: toPlainText(c.heroDescription),
+            region: c.region,
+            flightTimeBand: c.flightTimeBand,
+            bestFor: c.bestFor,
+            holidayTypes: c.holidayTypes.map((ht) => ht.holidayType.slug),
+        };
+    });
 
-        if (dbCountries && dbCountries.length > 0) {
-            const formatted = dbCountries.map((c) => ({
-                id: c.id,
-                name: c.name,
-                slug: c.slug,
-                priceFrom: c.priceFrom ? Number(c.priceFrom) : null,
-                heroImageUrl: c.cardImageUrl || c.heroImageUrl || null,
-                href: `/destinations/${c.slug}`,
-                featuredOnOverview: c.featuredOnOverview,
-            }));
-            return NextResponse.json({ items: formatted, source: "database" });
-        }
-    } catch (error) {
-        // Catch any DB query errors (e.g. missing column or connection issues)
-    }
-
-    return NextResponse.json({ items: DEFAULT_TRENDING_DESTINATIONS, source: "default" });
+    return NextResponse.json({ items, source: "database" });
 }

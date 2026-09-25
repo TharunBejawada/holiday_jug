@@ -38,7 +38,7 @@ export function DestinationsBanner() {
                     </span>
 
                     {/* Main Headline */}
-                    <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight uppercase leading-[1.1] mb-3 sm:mb-4 drop-shadow-sm">
+                    <h1 className="text-white text-3xl sm:text-5xl lg:text-6xl font-extrabold  uppercase leading-[1.1] mb-3 sm:mb-4 drop-shadow-sm">
                         NEXT HOLIDAY TAKE YOU?
                     </h1>
 

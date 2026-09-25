@@ -33,14 +33,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
   }
 
-  const { holidayTypes, ...data } = parsed.data;
+  const { holidayTypes, whyVisitImageUrl, ...data } = parsed.data;
 
   try {
-    const country = await prisma.$transaction(async (tx) => {
-      const updated = await tx.country.update({
+    let updated: any;
+    try {
+      updated = await prisma.country.update({
         where: { id },
         data: {
           ...data,
+          ...(whyVisitImageUrl !== undefined && { whyVisitImageUrl }),
           ...(data.heroDescription !== undefined && { heroDescription: sanitizeRichText(data.heroDescription) }),
           ...(data.whyVisitIntro !== undefined && { whyVisitIntro: sanitizeRichText(data.whyVisitIntro) }),
           ...(data.thingsToDoContent !== undefined && { thingsToDoContent: sanitizeRichText(data.thingsToDoContent) }),
@@ -48,24 +50,48 @@ export async function PATCH(request: NextRequest, { params }: Params) {
           ...(data.travelGuideContent !== undefined && { travelGuideContent: sanitizeRichText(data.travelGuideContent) }),
         },
       });
-
-      if (holidayTypes) {
-        await tx.countryHolidayType.deleteMany({ where: { countryId: id } });
-        if (holidayTypes.length > 0) {
-          await tx.countryHolidayType.createMany({
-            data: holidayTypes.map((h) => ({
-              countryId: id,
-              holidayTypeId: h.holidayTypeId,
-              description: h.description || null,
-              sortOrder: h.sortOrder,
-            })),
-          });
+    } catch (err: any) {
+      if (err?.message?.includes("whyVisitImageUrl") || err?.name === "PrismaClientValidationError") {
+        // Fallback if running Next.js dev server holds an older in-memory Prisma client schema
+        updated = await prisma.country.update({
+          where: { id },
+          data: {
+            ...data,
+            ...(data.heroDescription !== undefined && { heroDescription: sanitizeRichText(data.heroDescription) }),
+            ...(data.whyVisitIntro !== undefined && { whyVisitIntro: sanitizeRichText(data.whyVisitIntro) }),
+            ...(data.thingsToDoContent !== undefined && { thingsToDoContent: sanitizeRichText(data.thingsToDoContent) }),
+            ...(data.whenToGoContent !== undefined && { whenToGoContent: sanitizeRichText(data.whenToGoContent) }),
+            ...(data.travelGuideContent !== undefined && { travelGuideContent: sanitizeRichText(data.travelGuideContent) }),
+          },
+        });
+        if (whyVisitImageUrl !== undefined) {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "countries" SET "whyVisitImageUrl" = $1 WHERE "id" = $2`,
+            whyVisitImageUrl,
+            id
+          );
+          updated.whyVisitImageUrl = whyVisitImageUrl;
         }
+      } else {
+        throw err;
       }
+    }
 
-      return updated;
-    });
-    return NextResponse.json(country);
+    if (holidayTypes !== undefined) {
+      await prisma.countryHolidayType.deleteMany({ where: { countryId: id } });
+      if (holidayTypes.length > 0) {
+        await prisma.countryHolidayType.createMany({
+          data: holidayTypes.map((h) => ({
+            countryId: id,
+            holidayTypeId: h.holidayTypeId,
+            description: h.description || null,
+            sortOrder: h.sortOrder,
+          })),
+        });
+      }
+    }
+
+    return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
       if (err.code === "P2002") {

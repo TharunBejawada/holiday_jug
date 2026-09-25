@@ -15,7 +15,7 @@ export default function ComplaintsProcedurePage() {
             subtitle="We’re Here to Help"
         >
             <div className="space-y-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#071746] tracking-tight border-b border-slate-200 pb-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#071746]  border-b border-slate-200 pb-3">
                     COMPLAINTS PROCEDURE
                 </h2>
 
@@ -35,7 +35,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 1 */}
                 <section className="space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         1. Complaints During Your Holiday
                     </h3>
                     <p>
@@ -66,7 +66,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 2 */}
                 <section className="space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         2. Complaints After Your Holiday
                     </h3>
                     <p>
@@ -143,7 +143,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 3 */}
                 <section className="space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         3. Supplier Responsibility
                     </h3>
                     <p>
@@ -160,7 +160,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 4 */}
                 <section className="space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         4. Complaints Received After 28 Days
                     </h3>
                     <p>
@@ -177,7 +177,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 5 */}
                 <section className="space-y-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         5. Alternative Dispute Resolution
                     </h3>
                     <p>
@@ -188,7 +188,7 @@ export default function ComplaintsProcedurePage() {
 
                 {/* SECTION 6 */}
                 <section className="space-y-4 pt-2">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#071746] tracking-tight border-b border-slate-100 pb-2">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#071746]  border-b border-slate-100 pb-2">
                         6. Contact Us
                     </h3>
                     <p>

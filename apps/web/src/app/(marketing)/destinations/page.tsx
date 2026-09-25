@@ -1,6 +1,7 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { DestinationsBanner } from "@/components/destinations/DestinationsBanner";
-import { TrendingDestinationsSection } from "@/components/destinations/TrendingDestinationsSection";
+import { DestinationsExplorer } from "@/components/destinations/DestinationsExplorer";
 
 export const metadata: Metadata = {
     title: "Destinations Overview | HolidayJug",
@@ -13,8 +14,10 @@ export default function DestinationsPage() {
             {/* 1. Banner Section */}
             <DestinationsBanner />
 
-            {/* 2. Trending Destinations Section */}
-            <TrendingDestinationsSection />
+            {/* 2. Trending Grid + Filter sidebar + Popular destinations grid + Holiday style section + Dream to Departure */}
+            <Suspense fallback={null}>
+                <DestinationsExplorer />
+            </Suspense>
         </main>
     );
 }

@@ -203,7 +203,7 @@ export function StaysSection() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 {/* HEADER */}
                 <div className="text-center max-w-3xl mx-auto">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-[#F7941D] tracking-tight">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-[#F7941D] ">
                         STAYS FOR EVERY KIND OF HOLIDAY
                     </h2>
                     <p className="mt-2 text-sm sm:text-base font-semibold text-[#1D1248]">

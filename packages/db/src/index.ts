@@ -7,8 +7,20 @@ declare global {
 
 function getPrismaClient(): PrismaClient {
   if (global.__prisma) {
-    return global.__prisma;
+    const fields = (global.__prisma as any)?._runtimeDataModel?.models?.Country?.fields;
+    const hasWhyVisitImg = Array.isArray(fields) && fields.some((f: any) => f.name === "whyVisitImageUrl");
+    if (hasWhyVisitImg) {
+      return global.__prisma;
+    }
+    // Outdated global client in memory — recreate with latest schema
+    try {
+      (global.__prisma as any).$disconnect();
+    } catch {
+      // Ignore disconnect errors on stale client
+    }
+    global.__prisma = undefined;
   }
+
   try {
     const client = new PrismaClient();
     if (process.env.NODE_ENV !== "production") {
@@ -40,4 +52,3 @@ export const prisma = new Proxy({} as PrismaClient, {
 
 export * from "@prisma/client";
 export { ensureEnvLoaded } from "./env-bootstrap";
-

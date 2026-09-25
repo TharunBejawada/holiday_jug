@@ -229,7 +229,7 @@ export function Header() {
                         <span className="text-[11px] font-medium text-gray-600">Call us at</span>
                         <a
                             href="tel:040XXXXXXXX"
-                            className="text-base font-semibold text-[#F7941D] hover:underline tracking-tight"
+                            className="text-base font-semibold text-[#F7941D] hover:underline "
                         >
                             040 xxxxxxxxx
                         </a>

@@ -28,7 +28,7 @@ export function DealsOfTheWeekSection() {
 
                         {/* MIDDLE TEXT CONTENT */}
                         <div className="flex-1 flex flex-col justify-center px-6 lg:px-8 py-4 sm:py-5 z-10 bg-white">
-                            <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#1D1248] tracking-tight mb-1.5 group-hover:text-[#F7941D] transition-colors">
+                            <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-[#1D1248]  mb-1.5 group-hover:text-[#F7941D] transition-colors">
                                 Get away with a September steal
                             </h3>
                             <p className="text-xs sm:text-sm lg:text-[15px] font-semibold text-[#1D1248]/85 leading-relaxed max-w-lg">

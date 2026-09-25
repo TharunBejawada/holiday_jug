@@ -11,6 +11,8 @@ type HolidayType = {
   name: string;
   iconUrl: string | null;
   description: string | null;
+  sortOrder: number;
+  isPublished: boolean;
 };
 
 function slugify(text: string) {
@@ -27,7 +29,14 @@ function HolidayTypeEditForm({
   onCancel,
 }: {
   initial: Partial<HolidayType>;
-  onSave: (data: { name: string; slug: string; iconUrl: string; description: string }) => void;
+  onSave: (data: {
+    name: string;
+    slug: string;
+    iconUrl: string;
+    description: string;
+    sortOrder: number;
+    isPublished: boolean;
+  }) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(initial.name ?? "");
@@ -35,6 +44,8 @@ function HolidayTypeEditForm({
   const [slugTouched, setSlugTouched] = useState(!!initial.slug);
   const [iconUrl, setIconUrl] = useState(initial.iconUrl ?? "");
   const [description, setDescription] = useState(initial.description ?? "");
+  const [sortOrder, setSortOrder] = useState(initial.sortOrder ?? 0);
+  const [isPublished, setIsPublished] = useState(initial.isPublished ?? true);
   const [uploading, setUploading] = useState(false);
 
   async function handleUpload(file: File) {
@@ -95,12 +106,28 @@ function HolidayTypeEditForm({
           placeholder="Default description"
           className="sm:col-span-2 px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-100 outline-none"
         />
+        <input
+          type="number"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(Number(e.target.value))}
+          placeholder="Order"
+          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-100 outline-none"
+        />
+        <label className="flex items-center gap-2 text-sm text-gray-600 px-3 py-1.5">
+          <input
+            type="checkbox"
+            checked={isPublished}
+            onChange={(e) => setIsPublished(e.target.checked)}
+            className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          Show on site
+        </label>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <button
           type="button"
           disabled={!name || !slug || uploading}
-          onClick={() => onSave({ name, slug, iconUrl, description })}
+          onClick={() => onSave({ name, slug, iconUrl, description, sortOrder, isPublished })}
           className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
           aria-label="Save"
         >
@@ -134,7 +161,14 @@ export function HolidayTypesManager() {
     load();
   }, []);
 
-  async function handleCreate(data: { name: string; slug: string; iconUrl: string; description: string }) {
+  async function handleCreate(data: {
+    name: string;
+    slug: string;
+    iconUrl: string;
+    description: string;
+    sortOrder: number;
+    isPublished: boolean;
+  }) {
     await fetch("/api/admin/holiday-types", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -144,7 +178,10 @@ export function HolidayTypesManager() {
     load();
   }
 
-  async function handleUpdate(id: string, data: { name: string; slug: string; iconUrl: string; description: string }) {
+  async function handleUpdate(
+    id: string,
+    data: { name: string; slug: string; iconUrl: string; description: string; sortOrder: number; isPublished: boolean }
+  ) {
     await fetch(`/api/admin/holiday-types/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -181,6 +218,11 @@ export function HolidayTypesManager() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-900">{ht.name}</p>
                 {ht.description && <p className="text-xs text-gray-500 truncate">{ht.description}</p>}
+                {!ht.isPublished && (
+                  <span className="inline-block mt-1 text-[10px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                    Hidden
+                  </span>
+                )}
               </div>
               <button
                 onClick={() => setEditingId(ht.id)}

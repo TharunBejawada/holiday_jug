@@ -16,6 +16,7 @@ export const countrySchema = z.object({
   heroDescription: z.string().default(""),
   whyVisitIntro: z.string().default(""),
   whyVisitHighlights: z.array(z.string().min(1)).default([]),
+  whyVisitImageUrl: z.string().url().optional().or(z.literal("")),
   thingsToDoContent: z.string().default(""),
   whenToGoContent: z.string().default(""),
   travelGuideContent: z.string().default(""),
@@ -64,6 +65,8 @@ export const holidayTypeSchema = z.object({
   name: z.string().min(1).max(120),
   iconUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().optional().or(z.literal("")),
+  sortOrder: z.number().int().default(0),
+  isPublished: z.boolean().default(true),
 });
 
 export const faqSchema = z.object({

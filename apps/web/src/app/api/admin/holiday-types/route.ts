@@ -7,7 +7,7 @@ export async function GET() {
   const { response } = await requireAdmin();
   if (response) return response;
 
-  const items = await prisma.holidayType.findMany({ orderBy: { name: "asc" } });
+  const items = await prisma.holidayType.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
   return NextResponse.json({ items });
 }
 
