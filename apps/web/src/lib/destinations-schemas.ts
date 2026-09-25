@@ -11,6 +11,7 @@ export const countrySchema = z.object({
   flightTimeBand: z.enum(["UNDER_4H", "FOUR_TO_SIX_H", "SIX_TO_TEN_H", "TEN_PLUS_H"]),
   bestFor: z.array(z.enum(["FAMILIES", "COUPLES", "ADULTS_ONLY", "LUXURY", "ADVENTURE", "RELAXATION"])).default([]),
   priceFrom: z.number().min(0).nullable().optional(),
+  cardImageUrl: z.string().url().optional().or(z.literal("")),
   heroImageUrl: z.string().url().optional().or(z.literal("")),
   heroDescription: z.string().default(""),
   whyVisitIntro: z.string().default(""),

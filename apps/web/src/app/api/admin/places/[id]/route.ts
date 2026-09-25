@@ -47,17 +47,12 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
 
   const { id } = await params;
 
-  // Checked up front rather than relying on catching the DB's error shape:
-  // Postgres reports a RESTRICT-constraint violation as SQLSTATE 23001,
-  // which Prisma does NOT wrap as its usual P2003 known-request error, so
-  // catching P2003 alone let this leak through as an unhandled 500.
   const packageCount = await prisma.package.count({ where: { destinationId: id } });
   if (packageCount > 0) {
     return NextResponse.json(
       {
-        error: `This place has ${packageCount} deal${packageCount === 1 ? "" : "s"} linked to it. Delete or reassign ${
-          packageCount === 1 ? "it" : "them"
-        } first.`,
+        error: `This place has ${packageCount} deal${packageCount === 1 ? "" : "s"} linked to it. Delete or reassign ${packageCount === 1 ? "it" : "them"
+          } first.`,
       },
       { status: 409 }
     );

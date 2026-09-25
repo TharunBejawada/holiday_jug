@@ -11,6 +11,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
   if (response) return response;
 
   const { id } = await params;
+
   const country = await prisma.country.findUnique({
     where: { id },
     include: {

@@ -160,6 +160,7 @@ model Country {
   bestFor        BestForTag[]
   priceFrom      Decimal?          @db.Decimal(10, 2)
 
+  cardImageUrl      String?
   heroImageUrl      String?
   heroDescription   String? @db.Text // RTE
   whyVisitIntro     String? @db.Text // RTE

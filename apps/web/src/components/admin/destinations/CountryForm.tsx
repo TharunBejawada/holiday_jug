@@ -36,6 +36,7 @@ type CountryData = {
   flightTimeBand: string;
   bestFor: string[];
   priceFrom: number | null;
+  cardImageUrl: string;
   heroImageUrl: string;
   heroDescription: string;
   whyVisitIntro: string;
@@ -59,6 +60,7 @@ const EMPTY: CountryData = {
   flightTimeBand: "UNDER_4H",
   bestFor: [],
   priceFrom: null,
+  cardImageUrl: "",
   heroImageUrl: "",
   heroDescription: "",
   whyVisitIntro: "",
@@ -91,6 +93,7 @@ export function CountryForm({ countryId }: { countryId?: string }) {
   const [keywordsInput, setKeywordsInput] = useState("");
   const [highlightInput, setHighlightInput] = useState("");
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingBasic, setUploadingBasic] = useState(false);
   const [loading, setLoading] = useState(!!countryId);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -115,6 +118,7 @@ export function CountryForm({ countryId }: { countryId?: string }) {
           flightTimeBand: c.flightTimeBand,
           bestFor: c.bestFor ?? [],
           priceFrom: c.priceFrom != null ? Number(c.priceFrom) : null,
+          cardImageUrl: c.cardImageUrl ?? "",
           heroImageUrl: c.heroImageUrl ?? "",
           heroDescription: c.heroDescription ?? "",
           whyVisitIntro: c.whyVisitIntro ?? "",
@@ -175,6 +179,18 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       setErrorMsg("Hero image upload failed.");
     } finally {
       setUploadingHero(false);
+    }
+  }
+
+  async function handleBasicImageUpload(file: File) {
+    setUploadingBasic(true);
+    try {
+      const url = await uploadAssetImage(file);
+      setData((d) => ({ ...d, cardImageUrl: url }));
+    } catch {
+      setErrorMsg("Card image upload failed.");
+    } finally {
+      setUploadingBasic(false);
     }
   }
 
@@ -241,6 +257,38 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       {/* Basic info */}
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h2 className="font-semibold text-gray-900 mb-4">Basic info</h2>
+
+        {/* Basic Info Image Upload */}
+        <div className="mb-6 p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Card display image (Overview &amp; Listing grid)</label>
+          <div className="flex items-start gap-4">
+            <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+              {data.cardImageUrl ? (
+                <Image src={data.cardImageUrl} alt="Card Preview" fill className="object-cover" />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400 text-xs">No card image</div>
+              )}
+            </div>
+            <div>
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                <FiUpload /> {uploadingBasic ? "Uploading..." : "Upload card image"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingBasic}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleBasicImageUpload(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              <p className="text-xs text-gray-400 mt-2">Card image shown on overview cards & destination grids.</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Name</label>
@@ -363,7 +411,7 @@ export function CountryForm({ countryId }: { countryId?: string }) {
             {data.heroImageUrl ? (
               <Image src={data.heroImageUrl} alt="" fill className="object-cover" />
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-300 text-xs">No image</div>
+              <div className="flex items-center justify-center h-full text-gray-300 text-xs">No hero image</div>
             )}
           </div>
           <div>
@@ -381,7 +429,7 @@ export function CountryForm({ countryId }: { countryId?: string }) {
                 }}
               />
             </label>
-            <p className="text-xs text-gray-400 mt-2">Recommended: wide landscape, at least 1600px.</p>
+            <p className="text-xs text-gray-400 mt-2">Recommended: wide landscape header image, at least 1600px.</p>
           </div>
         </div>
 

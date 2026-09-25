@@ -118,14 +118,20 @@ export function Header() {
 
                     {/* Destinations */}
                     <div className="relative group">
-                        <button
-                            onClick={() => toggleDropdown("destinations")}
+                        <Link
+                            href="/destinations"
                             className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
                         >
                             Destinations
                             <FaChevronDown className="text-[10px] text-[#F7941D] transition-transform duration-200 group-hover:rotate-180" />
-                        </button>
-                        <div className="absolute left-0 top-full hidden group-hover:block w-52 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                        </Link>
+                        <div className="absolute left-0 top-full hidden group-hover:block w-60 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                            <Link
+                                href="/destinations"
+                                className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#F7941D] hover:bg-amber-50 transition-colors border-b border-gray-100 mb-1"
+                            >
+                                <FaMapMarkerAlt className="text-[#F7941D]" /> All Destinations Overview
+                            </Link>
                             <Link
                                 href="/destinations/spain"
                                 className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
@@ -320,6 +326,9 @@ export function Header() {
                             </button>
                             {activeDropdown === "destinations" && (
                                 <div className="pl-4 pb-2 space-y-2 flex flex-col text-sm font-normal text-gray-700 animate-in fade-in">
+                                    <Link href="/destinations" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-1 font-semibold text-[#F7941D]">
+                                        <FaMapMarkerAlt className="text-[#F7941D]" /> All Destinations Overview
+                                    </Link>
                                     <Link href="/destinations/spain" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 py-1 hover:text-[#F7941D]">
                                         <FaMapMarkerAlt className="text-[#F7941D]" /> Spain &amp; Canaries
                                     </Link>
