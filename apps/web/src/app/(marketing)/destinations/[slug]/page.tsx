@@ -5,6 +5,7 @@ import { DestinationSubNav } from "@/components/destinations/DestinationSubNav";
 import { WhyVisitSection } from "@/components/destinations/WhyVisitSection";
 import { TopDestinationsSection } from "@/components/destinations/TopDestinationsSection";
 import { HolidayTypesSection } from "@/components/destinations/HolidayTypesSection";
+import { BestHolidayDealsSection } from "@/components/destinations/BestHolidayDealsSection";
 
 type PageParams = { params: Promise<{ slug: string }> };
 
@@ -118,6 +119,9 @@ export default async function DestinationLandingPage({ params }: PageParams) {
 
             {/* Holiday Types Section */}
             <HolidayTypesSection country={country} />
+
+            {/* Best Holiday Deals Section */}
+            <BestHolidayDealsSection countryName={country.name} countrySlug={country.slug} />
         </main>
     );
 }

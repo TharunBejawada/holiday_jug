@@ -183,10 +183,48 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
 
   if (loading) return <p className="text-sm text-gray-400">Loading...</p>;
 
+  const saveAmount =
+    data.originalPriceGbp !== null && data.originalPriceGbp > data.basePriceGbp
+      ? Number((data.originalPriceGbp - data.basePriceGbp).toFixed(2))
+      : null;
+
   const savingPct =
     data.originalPriceGbp && data.originalPriceGbp > data.basePriceGbp
       ? Math.round(((data.originalPriceGbp - data.basePriceGbp) / data.originalPriceGbp) * 100)
       : null;
+
+  function handleFromPriceChange(newFromPrice: number) {
+    setData((d) => {
+      const currentSave =
+        d.originalPriceGbp !== null && d.originalPriceGbp > d.basePriceGbp
+          ? d.originalPriceGbp - d.basePriceGbp
+          : null;
+      const newOriginal =
+        currentSave !== null && currentSave > 0 ? Number((newFromPrice + currentSave).toFixed(2)) : d.originalPriceGbp;
+      return {
+        ...d,
+        basePriceGbp: newFromPrice,
+        originalPriceGbp: newOriginal,
+      };
+    });
+  }
+
+  function handleSavePriceChange(newSaveAmount: number | null) {
+    setData((d) => ({
+      ...d,
+      originalPriceGbp:
+        newSaveAmount !== null && newSaveAmount > 0
+          ? Number((d.basePriceGbp + newSaveAmount).toFixed(2))
+          : null,
+    }));
+  }
+
+  function handleWasPriceChange(newWasPrice: number | null) {
+    setData((d) => ({
+      ...d,
+      originalPriceGbp: newWasPrice,
+    }));
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 pb-16">
@@ -352,19 +390,42 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
 
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <h2 className="font-semibold text-gray-900 mb-4">Pricing</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Price per person (£)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              From price (£ / person)
+            </label>
             <input
               type="number"
               required
               min={0}
               step="0.01"
-              value={data.basePriceGbp}
-              onChange={(e) => setData((d) => ({ ...d, basePriceGbp: Number(e.target.value) }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition"
+              value={data.basePriceGbp || ""}
+              onChange={(e) => handleFromPriceChange(Number(e.target.value))}
+              placeholder="299"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition font-semibold text-gray-900"
             />
+            <p className="text-xs text-gray-400 mt-1">Current deal price per person.</p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Save price (£) <span className="text-gray-400 font-normal">optional</span>
+            </label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={saveAmount ?? ""}
+              onChange={(e) =>
+                handleSavePriceChange(e.target.value === "" ? null : Number(e.target.value))
+              }
+              placeholder="100"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition font-semibold text-green-700"
+            />
+            <p className="text-xs text-gray-400 mt-1">Discount amount saved (auto-updates Was Price).</p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Was price (£) <span className="text-gray-400 font-normal">optional</span>
@@ -375,19 +436,33 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
               step="0.01"
               value={data.originalPriceGbp ?? ""}
               onChange={(e) =>
-                setData((d) => ({ ...d, originalPriceGbp: e.target.value === "" ? null : Number(e.target.value) }))
+                handleWasPriceChange(e.target.value === "" ? null : Number(e.target.value))
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition"
+              placeholder="399"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition text-gray-500 line-through"
             />
-          </div>
-          <div className="flex items-end">
-            {savingPct !== null && (
-              <span className="text-sm font-semibold text-sun-600 bg-sun-400/10 px-3 py-2.5 rounded-lg">
-                SAVE {savingPct}% (£{(data.originalPriceGbp! - data.basePriceGbp).toFixed(0)})
-              </span>
-            )}
+            <p className="text-xs text-gray-400 mt-1">Original price before discount.</p>
           </div>
         </div>
+
+        {data.basePriceGbp > 0 && (
+          <div className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Badge preview:</span>
+            <span className="font-extrabold text-[#1D1248] text-base">
+              From £{data.basePriceGbp} <span className="text-xs font-normal text-gray-500">pp</span>
+            </span>
+            {data.originalPriceGbp !== null && data.originalPriceGbp > data.basePriceGbp && (
+              <>
+                <span className="text-xs text-gray-400 line-through font-medium">
+                  Was £{data.originalPriceGbp}
+                </span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-[#F7941D] text-white">
+                  SAVE £{saveAmount} ({savingPct}%)
+                </span>
+              </>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">

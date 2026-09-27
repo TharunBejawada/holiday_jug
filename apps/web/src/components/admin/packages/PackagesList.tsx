@@ -97,11 +97,16 @@ export function PackagesList({ destinationId }: { destinationId?: string }) {
                 {p.nights} nights • {p.boardType.replace(/_/g, " ")}
               </td>
               <td className="px-5 py-3.5">
-                <span className="font-semibold text-gray-900">£{Number(p.basePriceGbp).toFixed(0)}</span>
-                {p.originalPriceGbp && (
-                  <span className="ml-1.5 text-xs text-gray-400 line-through">
-                    £{Number(p.originalPriceGbp).toFixed(0)}
-                  </span>
+                <span className="font-semibold text-gray-900">From £{Number(p.basePriceGbp).toFixed(0)}</span>
+                {p.originalPriceGbp && Number(p.originalPriceGbp) > Number(p.basePriceGbp) && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-xs text-gray-400 line-through">
+                      Was £{Number(p.originalPriceGbp).toFixed(0)}
+                    </span>
+                    <span className="text-[11px] font-bold text-[#F7941D] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">
+                      Save £{(Number(p.originalPriceGbp) - Number(p.basePriceGbp)).toFixed(0)}
+                    </span>
+                  </div>
                 )}
               </td>
               <td className="px-5 py-3.5">
