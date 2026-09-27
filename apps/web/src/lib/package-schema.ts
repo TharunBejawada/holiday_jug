@@ -13,6 +13,7 @@ export const packageSchema = z.object({
   basePriceGbp: z.number().positive(),
   originalPriceGbp: z.number().positive().nullable().optional(),
   departureAirport: z.string().optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")).nullable(),
   isActive: z.boolean().default(true),
   ratingOverride: z.number().min(0).max(5).nullable().optional(),
   reviewCountOverride: z.number().int().nonnegative().nullable().optional(),

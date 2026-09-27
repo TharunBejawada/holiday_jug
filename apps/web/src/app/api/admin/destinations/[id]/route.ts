@@ -33,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
   }
 
-  const { holidayTypes, whyVisitImageUrl, ...data } = parsed.data;
+  const { holidayTypes, whyVisitImageUrl, thingsToDoImageUrl, whenToGoImageUrl, ...data } = parsed.data;
 
   try {
     let updated: any;
@@ -42,7 +42,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         where: { id },
         data: {
           ...data,
-          ...(whyVisitImageUrl !== undefined && { whyVisitImageUrl }),
+          ...(whyVisitImageUrl !== undefined && { whyVisitImageUrl: whyVisitImageUrl || null }),
+          ...(thingsToDoImageUrl !== undefined && { thingsToDoImageUrl: thingsToDoImageUrl || null }),
+          ...(whenToGoImageUrl !== undefined && { whenToGoImageUrl: whenToGoImageUrl || null }),
           ...(data.heroDescription !== undefined && { heroDescription: sanitizeRichText(data.heroDescription) }),
           ...(data.whyVisitIntro !== undefined && { whyVisitIntro: sanitizeRichText(data.whyVisitIntro) }),
           ...(data.thingsToDoContent !== undefined && { thingsToDoContent: sanitizeRichText(data.thingsToDoContent) }),
@@ -71,6 +73,22 @@ export async function PATCH(request: NextRequest, { params }: Params) {
             id
           );
           updated.whyVisitImageUrl = whyVisitImageUrl;
+        }
+        if (thingsToDoImageUrl !== undefined) {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "countries" SET "thingsToDoImageUrl" = $1 WHERE "id" = $2`,
+            thingsToDoImageUrl,
+            id
+          );
+          updated.thingsToDoImageUrl = thingsToDoImageUrl;
+        }
+        if (whenToGoImageUrl !== undefined) {
+          await prisma.$executeRawUnsafe(
+            `UPDATE "countries" SET "whenToGoImageUrl" = $1 WHERE "id" = $2`,
+            whenToGoImageUrl,
+            id
+          );
+          updated.whenToGoImageUrl = whenToGoImageUrl;
         }
       } else {
         throw err;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FiEdit2, FiTrash2, FiPackage } from "react-icons/fi";
 
 type PackageRow = {
@@ -12,6 +13,7 @@ type PackageRow = {
   boardType: string;
   basePriceGbp: string;
   originalPriceGbp: string | null;
+  imageUrl?: string | null;
   isActive: boolean;
   destination: { id: string; name: string };
 };
@@ -76,8 +78,19 @@ export function PackagesList({ destinationId }: { destinationId?: string }) {
           {items.map((p) => (
             <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
               <td className="px-5 py-3.5">
-                <p className="font-semibold text-gray-900">{p.title}</p>
-                <p className="text-xs text-gray-400">/{p.slug}</p>
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-10 rounded-lg bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+                    {p.imageUrl ? (
+                      <Image src={p.imageUrl} alt="" fill className="object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-300 text-[10px]">No img</div>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{p.title}</p>
+                    <p className="text-xs text-gray-400">/{p.slug}</p>
+                  </div>
+                </div>
               </td>
               {!destinationId && <td className="px-5 py-3.5 text-gray-600">{p.destination.name}</td>}
               <td className="px-5 py-3.5 text-gray-600">

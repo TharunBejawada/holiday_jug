@@ -2,7 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
+import Image from "next/image";
+import { FiAlertCircle, FiCheckCircle, FiUpload } from "react-icons/fi";
+import { uploadAssetImage } from "@/lib/upload-asset";
 
 const BOARD_TYPES = [
   { value: "SELF_CATERING", label: "Self Catering" },
@@ -12,7 +14,8 @@ const BOARD_TYPES = [
   { value: "ALL_INCLUSIVE", label: "All Inclusive" },
 ];
 
-type PlaceOption = { id: string; name: string };
+type DestinationOption = { id: string; name: string };
+type PlaceOption = { id: string; name: string; countryId?: string | null };
 
 type PackageData = {
   title: string;
@@ -23,6 +26,7 @@ type PackageData = {
   basePriceGbp: number;
   originalPriceGbp: number | null;
   departureAirport: string;
+  imageUrl: string;
   isActive: boolean;
   ratingOverride: number | null;
   reviewCountOverride: number | null;
@@ -47,44 +51,108 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
     basePriceGbp: 0,
     originalPriceGbp: null,
     departureAirport: "",
+    imageUrl: "",
     isActive: true,
     ratingOverride: null,
     reviewCountOverride: null,
   });
   const [slugTouched, setSlugTouched] = useState(!!packageId);
-  const [places, setPlaces] = useState<PlaceOption[]>([]);
-  const [loading, setLoading] = useState(!!packageId);
+  const [destinations, setDestinations] = useState<DestinationOption[]>([]);
+  const [allPlaces, setAllPlaces] = useState<PlaceOption[]>([]);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/places")
-      .then((r) => r.json())
-      .then((d) => setPlaces((d.items ?? []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))));
-  }, []);
+    async function loadInitialData() {
+      setLoading(true);
+      try {
+        const [destRes, placesRes] = await Promise.all([
+          fetch("/api/admin/destinations"),
+          fetch("/api/admin/places"),
+        ]);
+        const destData = await destRes.json();
+        const placesData = await placesRes.json();
 
-  useEffect(() => {
-    if (!packageId) return;
-    fetch(`/api/admin/packages/${packageId}`)
-      .then((r) => r.json())
-      .then((p) => {
-        setData({
-          title: p.title,
-          slug: p.slug,
-          destinationId: p.destinationId,
-          boardType: p.boardType,
-          nights: p.nights,
-          basePriceGbp: Number(p.basePriceGbp),
-          originalPriceGbp: p.originalPriceGbp ? Number(p.originalPriceGbp) : null,
-          departureAirport: p.departureAirport ?? "",
-          isActive: p.isActive,
-          ratingOverride: p.ratingOverride ? Number(p.ratingOverride) : null,
-          reviewCountOverride: p.reviewCountOverride ?? null,
-        });
+        const destList: DestinationOption[] = (destData.items ?? []).map((d: { id: string; name: string }) => ({
+          id: d.id,
+          name: d.name,
+        }));
+        const placesList: PlaceOption[] = (placesData.items ?? []).map((p: { id: string; name: string; countryId?: string | null }) => ({
+          id: p.id,
+          name: p.name,
+          countryId: p.countryId,
+        }));
+
+        setDestinations(destList);
+        setAllPlaces(placesList);
+
+        let targetPlaceId = initialDestinationId ?? "";
+
+        if (packageId) {
+          const pkgRes = await fetch(`/api/admin/packages/${packageId}`);
+          if (pkgRes.ok) {
+            const p = await pkgRes.json();
+            targetPlaceId = p.destinationId ?? "";
+            setData({
+              title: p.title,
+              slug: p.slug,
+              destinationId: p.destinationId,
+              boardType: p.boardType,
+              nights: p.nights,
+              basePriceGbp: Number(p.basePriceGbp),
+              originalPriceGbp: p.originalPriceGbp ? Number(p.originalPriceGbp) : null,
+              departureAirport: p.departureAirport ?? "",
+              imageUrl: p.imageUrl ?? "",
+              isActive: p.isActive,
+              ratingOverride: p.ratingOverride ? Number(p.ratingOverride) : null,
+              reviewCountOverride: p.reviewCountOverride ?? null,
+            });
+          }
+        }
+
+        if (targetPlaceId) {
+          const matchingPlace = placesList.find((pl) => pl.id === targetPlaceId);
+          if (matchingPlace?.countryId) {
+            setSelectedDestinationId(matchingPlace.countryId);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load package form data:", err);
+      } finally {
         setLoading(false);
-      });
-  }, [packageId]);
+      }
+    }
+
+    loadInitialData();
+  }, [packageId, initialDestinationId]);
+
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const url = await uploadAssetImage(file);
+      setData((d) => ({ ...d, imageUrl: url }));
+    } catch {
+      setErrorMsg("Image upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleDestinationChange(newDestId: string) {
+    setSelectedDestinationId(newDestId);
+    const currentPlace = allPlaces.find((p) => p.id === data.destinationId);
+    if (!currentPlace || currentPlace.countryId !== newDestId) {
+      setData((d) => ({ ...d, destinationId: "" }));
+    }
+  }
+
+  const filteredPlaces = selectedDestinationId
+    ? allPlaces.filter((p) => p.countryId === selectedDestinationId)
+    : [];
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -164,15 +232,37 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Destination</label>
+            <select
+              value={selectedDestinationId}
+              onChange={(e) => handleDestinationChange(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
+            >
+              <option value="">Select a destination...</option>
+              {destinations.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Place</label>
             <select
               required
+              disabled={!selectedDestinationId}
               value={data.destinationId}
               onChange={(e) => setData((d) => ({ ...d, destinationId: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white disabled:bg-gray-100 disabled:text-gray-400 cursor-pointer disabled:cursor-not-allowed"
             >
-              <option value="">Select a place...</option>
-              {places.map((p) => (
+              <option value="">
+                {!selectedDestinationId
+                  ? "Select a destination first..."
+                  : filteredPlaces.length === 0
+                    ? "No places available for this destination"
+                    : "Select a place..."}
+              </option>
+              {filteredPlaces.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
                 </option>
@@ -213,6 +303,49 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
               placeholder="LGW"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition"
             />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="font-semibold text-gray-900 mb-4">Deal image</h2>
+        <div className="flex items-start gap-4">
+          <div className="relative w-44 h-28 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200">
+            {data.imageUrl ? (
+              <Image src={data.imageUrl} alt="Deal Image" fill className="object-cover" />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-300 text-xs font-medium">No image</div>
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors">
+              <FiUpload /> {uploading ? "Uploading..." : "Upload image"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {data.imageUrl && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setData((d) => ({ ...d, imageUrl: "" }))}
+                  className="text-xs text-red-600 hover:underline font-medium"
+                >
+                  Remove image
+                </button>
+              </div>
+            )}
+            <p className="text-xs text-gray-400">
+              Upload a deal photo (resort, hotel, or destination image) displayed on deal cards.
+            </p>
           </div>
         </div>
       </section>

@@ -166,8 +166,10 @@ model Country {
   whyVisitIntro     String? @db.Text // RTE
   whyVisitHighlights String[] @default([])
   whyVisitImageUrl   String?
-  thingsToDoContent String? @db.Text // RTE — sub-nav tab
-  whenToGoContent   String? @db.Text // RTE — sub-nav tab
+  thingsToDoContent  String? @db.Text // RTE — sub-nav tab
+  thingsToDoImageUrl String?
+  whenToGoContent    String? @db.Text // RTE — sub-nav tab
+  whenToGoImageUrl   String?
   travelGuideContent String? @db.Text // RTE — sub-nav tab
 
   featuredOnOverview Boolean @default(false) // shows in "Trending Now"
@@ -309,6 +311,7 @@ model Package {
   // on deal cards. Null means no advertised saving.
   originalPriceGbp Decimal? @db.Decimal(10, 2)
   departureAirport String?
+  imageUrl         String?
   isActive      Boolean   @default(true)
 
   // Seeded social-proof numbers for launch, before there's enough real

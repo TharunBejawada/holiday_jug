@@ -25,11 +25,15 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
   }
 
-  const { departureAirport, ...rest } = parsed.data;
+  const { departureAirport, imageUrl, ...rest } = parsed.data;
   try {
     const item = await prisma.package.update({
       where: { id },
-      data: { ...rest, ...(departureAirport !== undefined && { departureAirport: departureAirport || null }) },
+      data: {
+        ...rest,
+        ...(departureAirport !== undefined && { departureAirport: departureAirport || null }),
+        ...(imageUrl !== undefined && { imageUrl: imageUrl || null }),
+      },
     });
     return NextResponse.json(item);
   } catch (err) {

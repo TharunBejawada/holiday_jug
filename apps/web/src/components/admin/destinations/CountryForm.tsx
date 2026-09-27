@@ -43,7 +43,9 @@ type CountryData = {
   whyVisitHighlights: string[];
   whyVisitImageUrl: string;
   thingsToDoContent: string;
+  thingsToDoImageUrl: string;
   whenToGoContent: string;
+  whenToGoImageUrl: string;
   travelGuideContent: string;
   featuredOnOverview: boolean;
   isPublished: boolean;
@@ -68,7 +70,9 @@ const EMPTY: CountryData = {
   whyVisitHighlights: [],
   whyVisitImageUrl: "",
   thingsToDoContent: "",
+  thingsToDoImageUrl: "",
   whenToGoContent: "",
+  whenToGoImageUrl: "",
   travelGuideContent: "",
   featuredOnOverview: false,
   isPublished: false,
@@ -97,6 +101,8 @@ export function CountryForm({ countryId }: { countryId?: string }) {
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingCard, setUploadingCard] = useState(false);
   const [uploadingWhyVisit, setUploadingWhyVisit] = useState(false);
+  const [uploadingThingsToDo, setUploadingThingsToDo] = useState(false);
+  const [uploadingWhenToGo, setUploadingWhenToGo] = useState(false);
   const [loading, setLoading] = useState(!!countryId);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -128,7 +134,9 @@ export function CountryForm({ countryId }: { countryId?: string }) {
           whyVisitHighlights: c.whyVisitHighlights ?? [],
           whyVisitImageUrl: c.whyVisitImageUrl ?? "",
           thingsToDoContent: c.thingsToDoContent ?? "",
+          thingsToDoImageUrl: c.thingsToDoImageUrl ?? "",
           whenToGoContent: c.whenToGoContent ?? "",
+          whenToGoImageUrl: c.whenToGoImageUrl ?? "",
           travelGuideContent: c.travelGuideContent ?? "",
           featuredOnOverview: c.featuredOnOverview,
           isPublished: c.isPublished,
@@ -207,6 +215,30 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       setErrorMsg("Why visit image upload failed.");
     } finally {
       setUploadingWhyVisit(false);
+    }
+  }
+
+  async function handleThingsToDoUpload(file: File) {
+    setUploadingThingsToDo(true);
+    try {
+      const url = await uploadAssetImage(file);
+      setData((d) => ({ ...d, thingsToDoImageUrl: url }));
+    } catch {
+      setErrorMsg("Things to do image upload failed.");
+    } finally {
+      setUploadingThingsToDo(false);
+    }
+  }
+
+  async function handleWhenToGoUpload(file: File) {
+    setUploadingWhenToGo(true);
+    try {
+      const url = await uploadAssetImage(file);
+      setData((d) => ({ ...d, whenToGoImageUrl: url }));
+    } catch {
+      setErrorMsg("When to go image upload failed.");
+    } finally {
+      setUploadingWhenToGo(false);
     }
   }
 
@@ -380,8 +412,8 @@ export function CountryForm({ countryId }: { countryId?: string }) {
                   key={ht.id}
                   onClick={() => toggleHolidayType(ht.id)}
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${selected
-                      ? "bg-brand-600 text-white border-brand-600 shadow-xs"
-                      : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
+                    ? "bg-brand-600 text-white border-brand-600 shadow-xs"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
                     }`}
                 >
                   {selected ? `✓ ${ht.name}` : `+ ${ht.name}`}
@@ -404,8 +436,8 @@ export function CountryForm({ countryId }: { countryId?: string }) {
                 key={tag}
                 onClick={() => toggleBestFor(tag)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${data.bestFor.includes(tag)
-                    ? "bg-brand-600 text-white border-brand-600 shadow-xs"
-                    : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
+                  ? "bg-brand-600 text-white border-brand-600 shadow-xs"
+                  : "bg-white text-gray-600 border-gray-300 hover:border-brand-400 hover:bg-gray-50"
                   }`}
               >
                 {tag.replace(/_/g, " ")}
@@ -581,10 +613,54 @@ export function CountryForm({ countryId }: { countryId?: string }) {
       </section>
 
       {/* Sub-nav tab content */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
         <h2 className="font-semibold text-gray-900">Page tabs</h2>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Things to Do</label>
+          <div className="mb-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+              &quot;Things to Do&quot; Section Image
+            </label>
+            <div className="flex items-start gap-4">
+              <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+                {data.thingsToDoImageUrl ? (
+                  <Image src={data.thingsToDoImageUrl} alt="Things to Do Image Preview" fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-xs text-center px-2">No image</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                  <FiUpload /> {uploadingThingsToDo ? "Uploading..." : "Upload image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingThingsToDo}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleThingsToDoUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {data.thingsToDoImageUrl && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setData((d) => ({ ...d, thingsToDoImageUrl: "" }))}
+                      className="text-xs text-red-600 hover:underline font-medium"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-2">
+                  Featured photo displayed alongside the &quot;Things to Do&quot; content.
+                </p>
+              </div>
+            </div>
+          </div>
           <RichTextEditor
             value={data.thingsToDoContent}
             onChange={(html) => setData((d) => ({ ...d, thingsToDoContent: html }))}
@@ -592,6 +668,50 @@ export function CountryForm({ countryId }: { countryId?: string }) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">When to Go</label>
+          <div className="mb-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+              &quot;When to Go&quot; Section Image
+            </label>
+            <div className="flex items-start gap-4">
+              <div className="relative w-40 h-28 rounded-xl bg-white overflow-hidden shrink-0 border border-gray-200 shadow-xs">
+                {data.whenToGoImageUrl ? (
+                  <Image src={data.whenToGoImageUrl} alt="When to Go Image Preview" fill className="object-cover" />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-xs text-center px-2">No image</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 transition-colors shadow-xs">
+                  <FiUpload /> {uploadingWhenToGo ? "Uploading..." : "Upload image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadingWhenToGo}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleWhenToGoUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                {data.whenToGoImageUrl && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setData((d) => ({ ...d, whenToGoImageUrl: "" }))}
+                      className="text-xs text-red-600 hover:underline font-medium"
+                    >
+                      Remove image
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-2">
+                  Featured photo displayed alongside the &quot;When to Go&quot; weather &amp; seasonal content.
+                </p>
+              </div>
+            </div>
+          </div>
           <RichTextEditor
             value={data.whenToGoContent}
             onChange={(html) => setData((d) => ({ ...d, whenToGoContent: html }))}

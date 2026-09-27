@@ -25,10 +25,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
   }
 
-  const { departureAirport, ...rest } = parsed.data;
+  const { departureAirport, imageUrl, ...rest } = parsed.data;
   try {
     const item = await prisma.package.create({
-      data: { ...rest, departureAirport: departureAirport || null },
+      data: {
+        ...rest,
+        departureAirport: departureAirport || null,
+        imageUrl: imageUrl || null,
+      },
     });
     return NextResponse.json(item, { status: 201 });
   } catch (err) {
