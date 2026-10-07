@@ -226,12 +226,12 @@ export function Header() {
                 <div className="hidden sm:flex items-center gap-6">
                     {/* Call us */}
                     <div className="flex flex-col text-left">
-                        <span className="text-[11px] font-medium text-gray-600">Call us at</span>
+                        <span className="text-[11px] font-medium text-gray-600">Sales Line</span>
                         <a
-                            href="tel:040XXXXXXXX"
-                            className="text-base font-semibold text-[#F7941D] hover:underline "
+                            href="tel:03301658879"
+                            className="text-base font-semibold text-[#F7941D] hover:underline"
                         >
-                            040 xxxxxxxxx
+                            0330 165 8879
                         </a>
                     </div>
 
@@ -398,9 +398,9 @@ export function Header() {
 
                     <div className="mt-4 border-t border-gray-100 pt-4 flex flex-col gap-3">
                         <div>
-                            <span className="text-xs text-gray-500 block">Call us at</span>
-                            <a href="tel:040XXXXXXXX" className="text-lg font-semibold text-[#F7941D]">
-                                040 xxxxxxxxx
+                            <span className="text-xs text-gray-500 block">Sales Line</span>
+                            <a href="tel:03301658879" className="text-lg font-semibold text-[#F7941D]">
+                                0330 165 8879
                             </a>
                         </div>
                         <Link

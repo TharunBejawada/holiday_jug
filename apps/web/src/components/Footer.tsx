@@ -221,17 +221,41 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* COLUMN 5: NEED HELP? */}
-                    <div>
+                    {/* COLUMN 5: CONTACT & OFFICE */}
+                    <div className="space-y-4">
                         <h4 className="text-sm sm:text-base font-semibold text-[#F7941D] uppercase tracking-wider mb-4">
-                            NEED HELP?
+                            CONTACT US
                         </h4>
-                        <a
-                            href="tel:020XXXXXXXX"
-                            className="text-sm sm:text-base font-semibold text-white hover:text-[#F7941D] transition-colors block"
-                        >
-                            020 XXXXXXXX
-                        </a>
+
+                        {/* UK Contact */}
+                        <div className="space-y-1">
+                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">UK Contact</p>
+                            <p className="text-xs text-white/90">
+                                Sales: <a href="tel:+443301658879" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+44 330 165 8879</a>
+                            </p>
+                            <p className="text-xs text-white/90">
+                                Support: <a href="tel:+443300249639" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+44 330 024 9639</a>
+                            </p>
+                        </div>
+
+                        {/* India Contact */}
+                        <div className="space-y-1 pt-1">
+                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">India Contact</p>
+                            <p className="text-xs text-white/90">
+                                Sales: <a href="tel:+917699512345" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+91 76995 12345</a>
+                            </p>
+                            <p className="text-xs text-white/90">
+                                Support: <a href="tel:+918977396433" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+91 89773 96433</a>
+                            </p>
+                        </div>
+
+                        {/* Registered Office */}
+                        <div className="space-y-1 pt-1">
+                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">Registered Office</p>
+                            <p className="text-xs text-white/80 leading-relaxed">
+                                128 City Road, London, United Kingdom, EC1V 2NX
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

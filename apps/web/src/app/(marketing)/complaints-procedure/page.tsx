@@ -193,26 +193,40 @@ export default function ComplaintsProcedurePage() {
                     </h3>
                     <p>
                         For complaints following your holiday, please email us with your
-                        booking reference number together with all relevant information.
+                        booking reference number together with all relevant information, or contact our customer support team.
                     </p>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-[#071746] text-[#F7941D] flex items-center justify-center text-xl shrink-0">
-                            <HiMail />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-[#071746] text-[#F7941D] flex items-center justify-center text-xl shrink-0">
+                                <HiMail />
+                            </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                                    Customer Complaints Email
+                                </p>
+                                <a
+                                    href="mailto:support@holidayjug.com"
+                                    className="text-base sm:text-lg font-bold text-[#071746] hover:text-[#F7941D] transition-colors"
+                                >
+                                    support@holidayjug.com
+                                </a>
+                            </div>
                         </div>
-                        <div>
+
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2 text-xs sm:text-sm text-slate-700">
                             <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                                Customer Complaints Email
+                                Support Phone Lines
                             </p>
-                            <a
-                                href="mailto:support@holidayjug.com"
-                                className="text-base sm:text-lg font-bold text-[#071746] hover:text-[#F7941D] transition-colors"
-                            >
-                                support@holidayjug.com
-                            </a>
-                            <p className="text-xs text-slate-600 mt-1">
-                                We will forward your complaint to the relevant Supplier where
-                                appropriate and assist with communication between you and the
-                                Supplier.
+                            <p>
+                                <strong>UK Support:</strong>{" "}
+                                <a href="tel:+443300249639" className="font-bold text-[#071746] hover:text-[#F7941D]">+44 330 024 9639</a>
+                            </p>
+                            <p>
+                                <strong>India Support:</strong>{" "}
+                                <a href="tel:+918977396433" className="font-bold text-[#071746] hover:text-[#F7941D]">+91 89773 96433</a>
+                            </p>
+                            <p className="text-xs text-slate-500 pt-1 border-t border-slate-200">
+                                <strong>Registered Office:</strong> 128 City Road, London, United Kingdom, EC1V 2NX
                             </p>
                         </div>
                     </div>
