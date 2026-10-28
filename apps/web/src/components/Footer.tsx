@@ -2,268 +2,248 @@
 
 import Link from "next/link";
 import {
-    FaFacebookF,
-    FaInstagram,
-    FaYoutube,
-    FaTwitter,
-    FaWhatsapp,
+  FaFacebookF,
+  FaInstagram,
+  FaYoutube,
+  FaPhoneAlt,
+  FaShieldAlt,
+  FaPlane,
 } from "react-icons/fa";
 
 export function Footer() {
-    return (
-        <footer className="bg-[#071746] text-white font-medium">
-            {/* MAIN FOOTER CONTENT */}
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
-                    {/* COLUMN 1: BRAND LOGO & SOCIAL */}
-                    <div className="flex flex-col space-y-4">
-                        <Link href="/" className="inline-block">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                                src="/assets/Holiday_Jug_Footer.png"
-                                alt="HolidayJug"
-                                className="h-12 sm:h-14 w-auto object-contain"
-                            />
-                        </Link>
-                        <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal max-w-xs">
-                            our trusted travel partner for unforgettable holidays and comfortable stays.
-                        </p>
+  return (
+    <footer className="bg-[#071746] text-white font-medium pb-14 sm:pb-0">
+      {/* MAIN FOOTER CONTENT */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
+          {/* COLUMN 1: BRAND LOGO & SOCIAL (G4) */}
+          <div className="flex flex-col space-y-4">
+            <Link href="/" className="inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/Holiday_Jug_Footer.png"
+                alt="HolidayJug"
+                className="h-12 sm:h-14 w-auto object-contain"
+              />
+            </Link>
+            <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal max-w-xs">
+              our trusted travel partner for unforgettable holidays and comfortable stays.
+            </p>
 
-                        {/* SOCIAL ICONS */}
-                        <div className="flex items-center gap-2.5 pt-2">
-                            <a
-                                href="https://facebook.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Facebook"
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
-                            >
-                                <FaFacebookF />
-                            </a>
-                            <a
-                                href="https://instagram.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Instagram"
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
-                            >
-                                <FaInstagram />
-                            </a>
-                            <a
-                                href="https://youtube.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="YouTube"
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
-                            >
-                                <FaYoutube />
-                            </a>
-                            <a
-                                href="https://twitter.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Twitter / X"
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
-                            >
-                                <FaTwitter />
-                            </a>
-                            <a
-                                href="https://whatsapp.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="WhatsApp"
-                                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
-                            >
-                                <FaWhatsapp />
-                            </a>
-                        </div>
-                    </div>
+            {/* SOCIAL ICONS (G4: Must open the actual HolidayJug page handle: holidayjug in a new tab) */}
+            <div className="flex items-center gap-2.5 pt-2">
+              <a
+                href="https://facebook.com/holidayjug"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HolidayJug Facebook Page"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
+              >
+                <FaFacebookF />
+              </a>
+              <a
+                href="https://instagram.com/holidayjug"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HolidayJug Instagram Profile"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
+              >
+                <FaInstagram />
+              </a>
+              <a
+                href="https://youtube.com/@holidayjug"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HolidayJug YouTube Channel"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
+              >
+                <FaYoutube />
+              </a>
+            </div>
+          </div>
 
-                    {/* COLUMN 2: HOLIDAYS */}
-                    <div>
-                        <h4 className="text-sm sm:text-base font-semibold text-[#F7941D] uppercase tracking-wider mb-4">
-                            HOLIDAYS
-                        </h4>
-                        <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
-                            <li>
-                                <Link href="/holidays?type=beach" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Beach Holidays
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/holidays?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> All-Inclusive Holidays
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/holidays?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Family Holidays
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/holidays?type=couple" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Couple Getaways
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/holidays?type=luxury" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Luxury Holidays
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/holidays?type=honeymoon" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Honeymoon Holidays
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/deals/last-minute" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Last-Minute Holidays
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+          {/* COLUMN 2: HOLIDAYS */}
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
+              HOLIDAYS
+            </h4>
+            <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
+              <li>
+                <Link href="/search?type=beach" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Beach Holidays
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> All-Inclusive Holidays
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Family Holidays
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?type=luxury" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Luxury Holidays
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?type=honeymoon" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Honeymoon Holidays
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* COLUMN 3: HOTELS */}
-                    <div>
-                        <h4 className="text-sm sm:text-base font-semibold text-[#F7941D] uppercase tracking-wider mb-4">
-                            HOTELS
-                        </h4>
-                        <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
-                            <li>
-                                <Link href="/hotels?type=beachfront" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Beach Hotels &amp; Resorts
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/hotels?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> All-Inclusive Hotels
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/hotels?rating=5" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Luxury Hotels
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/hotels?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Family Hotels
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/hotels?deals=true" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Hotel Deals
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+          {/* COLUMN 3: HOTELS */}
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
+              HOTELS
+            </h4>
+            <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
+              <li>
+                <Link href="/search?destination=dubai" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Dubai Luxury Resorts
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?destination=tenerife" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Tenerife Beach Hotels
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?destination=santorini" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Santorini Caldera Stays
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?destination=antalya" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Antalya All-Inclusive
+                </Link>
+              </li>
+              <li>
+                <Link href="/search?destination=majorca" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Majorca Holiday Hotels
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* COLUMN 4: COMPANY */}
-                    <div>
-                        <h4 className="text-sm sm:text-base font-semibold text-[#F7941D] uppercase tracking-wider mb-4">
-                            COMPANY
-                        </h4>
-                        <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
-                            <li>
-                                <Link href="/about" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> About Us
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/why-book-with-us" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Why Book With Us
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/blog" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Travel Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/terms" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Terms &amp; Conditions
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/privacy" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Privacy Policy
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/cookie-policy" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Cookie Policy
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/cookie-consent" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Cookie Consent
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/booking-conditions" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Booking Conditions
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/complaints-procedure" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Complaints Procedure
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/contact" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Contact Information
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/company-information" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                                    <span className="text-[#F7941D]">•</span> Company Information
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
+          {/* COLUMN 4: COMPANY & LEGAL (G6) */}
+          <div>
+            <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
+              COMPANY
+            </h4>
+            <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
+              <li>
+                <Link href="/terms" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookie-policy" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Cookie Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/booking-conditions" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Booking Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/complaints-procedure" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Complaints Procedure
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Contact Information
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-                    {/* COLUMN 5: CONTACT & OFFICE */}
-                    <div className="space-y-4">
-                        <h4 className="text-sm sm:text-base font-semibold text-[#F7941D] uppercase tracking-wider mb-4">
-                            CONTACT US
-                        </h4>
+          {/* COLUMN 5: UK SALES NUMBER & CONTACT (G1) */}
+          <div className="space-y-4">
+            <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
+              UK SALES LINE
+            </h4>
 
-                        {/* UK Contact */}
-                        <div className="space-y-1">
-                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">UK Contact</p>
-                            <p className="text-xs text-white/90">
-                                Sales: <a href="tel:+443301658879" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+44 330 165 8879</a>
-                            </p>
-                            <p className="text-xs text-white/90">
-                                Support: <a href="tel:+443300249639" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+44 330 024 9639</a>
-                            </p>
-                        </div>
-
-                        {/* India Contact */}
-                        <div className="space-y-1 pt-1">
-                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">India Contact</p>
-                            <p className="text-xs text-white/90">
-                                Sales: <a href="tel:+917699512345" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+91 76995 12345</a>
-                            </p>
-                            <p className="text-xs text-white/90">
-                                Support: <a href="tel:+918977396433" className="text-white hover:text-[#F7941D] font-semibold transition-colors">+91 89773 96433</a>
-                            </p>
-                        </div>
-
-                        {/* Registered Office */}
-                        <div className="space-y-1 pt-1">
-                            <p className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide">Registered Office</p>
-                            <p className="text-xs text-white/80 leading-relaxed">
-                                128 City Road, London, United Kingdom, EC1V 2NX
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            {/* UK Sales Contact Repeated (G1) */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+              <span className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide block">
+                Speak to our travel experts
+              </span>
+              <a
+                href="tel:03301658879"
+                className="text-xl sm:text-2xl font-black text-white hover:text-[#F7941D] transition-colors flex items-center gap-2"
+              >
+                <FaPhoneAlt className="text-base text-[#F7941D]" />
+                <span>0330 165 8879</span>
+              </a>
+              <p className="text-[11px] text-white/70">
+                UK Freephone • Mon - Sun 08:00 - 22:00
+              </p>
             </div>
 
-            {/* COPYRIGHT BAR */}
-            <div className="border-t border-white/10 py-6 text-center text-xs sm:text-sm font-normal text-white">
-                <p>© 2026 Holiday Jug. All Rights Reserved.</p>
+            <div className="space-y-1 text-xs text-white/80">
+              <p className="font-semibold text-white">Registered UK Office:</p>
+              <p>128 City Road, London, EC1V 2NX, United Kingdom</p>
             </div>
-        </footer>
-    );
+          </div>
+        </div>
+
+        {/* SECTION FOR IATA & ATOL LOGOS (G5: Add IATA and ATOL logos at bottom of site) */}
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-wrap items-center gap-6 sm:gap-8">
+            {/* ATOL PROTECTION BADGE (G5) */}
+            <div className="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl border border-white/15">
+              <div className="w-10 h-10 rounded-full bg-amber-400 text-[#071746] flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                ATOL
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-extrabold tracking-wide text-white block uppercase">
+                  ATOL Protected
+                </span>
+                <span className="text-[10px] text-white/75 block">
+                  100% Financial Protection for Package Holidays
+                </span>
+              </div>
+            </div>
+
+            {/* IATA ACCREDITED BADGE (G5) */}
+            <div className="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl border border-white/15">
+              <div className="w-10 h-10 rounded-full bg-blue-400 text-[#071746] flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                IATA
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-extrabold tracking-wide text-white block uppercase">
+                  IATA Member
+                </span>
+                <span className="text-[10px] text-white/75 block">
+                  International Air Transport Association Standard
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center md:text-right text-xs text-white/70">
+            <p>All flight-inclusive packages are financially protected by ATOL.</p>
+            <p>Prices subject to live supplier availability.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* COPYRIGHT BAR */}
+      <div className="border-t border-white/10 py-6 text-center text-xs sm:text-sm font-normal text-white/80">
+        <p>© 2026 Holiday Jug. All Rights Reserved. Authorised and Regulated.</p>
+      </div>
+    </footer>
+  );
 }

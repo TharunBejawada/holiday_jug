@@ -13,15 +13,17 @@ import {
   FiUsers,
   FiSettings,
   FiMapPin,
+  FiHome,
   FiChevronLeft,
   FiChevronRight,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: FiGrid },
+  { href: "/admin/hotels", label: "Hotels & Inventory", icon: FiHome },
+  { href: "/admin/bookings", label: "Quotes & Bookings", icon: FiCalendar },
   { href: "/admin/destinations", label: "Destinations", icon: FiMapPin },
   { href: "/admin/packages", label: "Packages", icon: FiPackage },
-  { href: "/admin/bookings", label: "Bookings", icon: FiCalendar },
   { href: "/admin/assets", label: "Assets", icon: FiImage },
   { href: "/admin/users", label: "Users", icon: FiUsers },
   { href: "/admin/settings", label: "Settings", icon: FiSettings },

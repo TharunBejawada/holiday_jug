@@ -1,0 +1,239 @@
+{
+  "info": {
+    "_postman_id": "9c35e9df-07c5-4ca1-aac2-270d544a4921",
+    "name": "GRN Connect",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47045291",
+    "_collection_link": "https://go.postman.co/collection/47045291-9c35e9df-07c5-4ca1-aac2-270d544a4921?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Credit Limit",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api-key",
+            "value": "653e6ee232c8d1bc58a91d1d252b5e78",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api-sandbox.grnconnect.com/api/v3/credit-limit",
+          "protocol": "https",
+          "host": [
+            "api-sandbox",
+            "grnconnect",
+            "com"
+          ],
+          "path": [
+            "api",
+            "v3",
+            "credit-limit"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Country List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api-key",
+            "value": "653e6ee232c8d1bc58a91d1d252b5e78",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api-sandbox.grnconnect.com/api/v3/countries",
+          "protocol": "https",
+          "host": [
+            "api-sandbox",
+            "grnconnect",
+            "com"
+          ],
+          "path": [
+            "api",
+            "v3",
+            "countries"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "City List by Country",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api-key",
+            "value": "653e6ee232c8d1bc58a91d1d252b5e78",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api-sandbox.grnconnect.com/api/v3/cities?country=IN&version=2.0",
+          "protocol": "https",
+          "host": [
+            "api-sandbox",
+            "grnconnect",
+            "com"
+          ],
+          "path": [
+            "api",
+            "v3",
+            "cities"
+          ],
+          "query": [
+            {
+              "key": "country",
+              "value": "IN"
+            },
+            {
+              "key": "version",
+              "value": "2.0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Hotels List By Cities",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api-key",
+            "value": "653e6ee232c8d1bc58a91d1d252b5e78",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://api-sandbox.grnconnect.com/api/v3/hotels?city=121449&version=2.0",
+          "protocol": "https",
+          "host": [
+            "api-sandbox",
+            "grnconnect",
+            "com"
+          ],
+          "path": [
+            "api",
+            "v3",
+            "hotels"
+          ],
+          "query": [
+            {
+              "key": "city",
+              "value": "121449"
+            },
+            {
+              "key": "version",
+              "value": "2.0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Hotel Search & Availability",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "api-key",
+            "value": "653e6ee232c8d1bc58a91d1d252b5e78",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"rooms\": [{ \"adults\": 2 }],\n    \"rates\": \"comprehensive\",\n    \"hotel_codes\": [\"1847631\"],\n    \"currency\": \"INR\",\n    \"client_nationality\": \"AE\",\n    \"checkin\": \"2026-11-15\",\n    \"checkout\": \"2026-11-18\",\n    \"purpose_of_travel\": 1,\n    \"options\": { \"hotel_info\": true, \"rate_comments\": true }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api-sandbox.grnconnect.com/api/v3/hotels/availability",
+          "protocol": "https",
+          "host": [
+            "api-sandbox",
+            "grnconnect",
+            "com"
+          ],
+          "path": [
+            "api",
+            "v3",
+            "hotels",
+            "availability"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ]
+}

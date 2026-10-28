@@ -1,0 +1,380 @@
+================================================================================
+HOLIDAYJUG - STAGE 1 WEBSITE & PRICING ENGINE IMPLEMENTATION SUMMARY
+Version: 1.2
+Document Owner: Vivek Babu Jujjavarapu
+Website: holidayjug.com
+Implementation Date: October 2026
+================================================================================
+
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Executive Overview & Stage 1 Scope
+2. Global Requirements (Section 2: G1 - G6)
+3. Homepage "Hot Deals" Banner (Section 3: H1 - H3)
+4. Destinations, Airports & Search (Section 4: D1 - D5 & Appendix A)
+5. Flights Integration & Currency Rules (Section 5: F1 - F4)
+6. True Margin Pricing Engine (Section 6: P1 - P6)
+7. Search ID System & Audit Persistence (Section 7: S1 - S5)
+8. Internal Agent Tool & Live Verification (Section 8: A1 - A6)
+9. Admin Configuration Portal (H3, P2, S4)
+10. File Architecture & Directory Manifest
+11. Manual Testing & Verification Guide
+
+================================================================================
+1. EXECUTIVE OVERVIEW & STAGE 1 SCOPE
+================================================================================
+HolidayJug Stage 1 delivers an inquiry-and-call booking model. Customers search 
+for holidays and hotels on the web, see live calculated package prices, and receive 
+a unique, cryptographically random 8-character Search ID (e.g. "K9X4M7P2"). 
+Online checkout is intentionally replaced by UK phone consultation: customers call 
+the dedicated UK sales line (0330 165 8879) quoting their Search ID.
+An internal Agent Tool enables sales consultants to look up the exact search 
+details, inspect pricing breakdowns, and re-run live supplier checks to confirm 
+real-time inventory and pricing differences.
+
+All changes are local only, with zero placeholders, production-grade styling matching 
+the Figma specifications, and complete compliance with GRN Connect API V3.
+
+================================================================================
+2. GLOBAL REQUIREMENTS (SECTION 2: G1 - G6)
+================================================================================
+[G1] UK Sales Number Visibility:
+  - Header: Prominently displays "0330 165 8879" with tap-to-call link.
+  - Mobile Persistence: Added a sticky bottom call bar and mobile header button 
+    that remains visible while scrolling on mobile devices.
+  - Footer & Results: Repeated in the footer and across search results.
+
+[G2] "Call for Hidden Prices" Banner & Modal:
+  - Top Bar Banner: Embedded at the top of every page with live pulsing indicator 
+    and one-click sales call button.
+  - Inline Banners: Added to the homepage, destination pages, and search results.
+  - Modal Popup: Built matching the Figma design with travel illustrations, 
+    value propositions ("Exclusive Deals", "Best Fares", "Personalised Support"), 
+    and call CTA.
+  - Trigger Logic: Triggers automatically after a 6-second delay OR on desktop 
+    exit-intent (mouse approaching viewport top <= 10px).
+  - Dismissal Memory: Once closed via the 'X' button or backdrop click, 
+    it is saved to sessionStorage and will NOT reappear for the rest of that visit.
+  - Mobile Safety: Responsive, non-fullscreen blocking container with max width.
+
+[G3] Real Content & Zero Placeholders:
+  - Removed all "£XX" price placeholders in StaysSection.tsx and other components, 
+    replacing them with real prices computed through the pricing engine.
+  - Filtered destinations so that destinations without mapped supplier hotels 
+    are hidden from search and menus.
+
+[G4] Social Links:
+  - Facebook, Instagram, and YouTube buttons in the footer now target the real 
+    HolidayJug channels (handle: holidayjug) in new tabs:
+    * https://facebook.com/holidayjug
+    * https://instagram.com/holidayjug
+    * https://youtube.com/@holidayjug
+
+[G5] Footer Accreditation Logos:
+  - Added official ATOL Protection and IATA Member badges at the bottom of 
+    the site in Footer.tsx.
+
+[G6] Legal Pages:
+  - Maintained links to Terms & Conditions, Privacy Policy, Cookie Policy, 
+    Complaints Procedure, and Booking Conditions.
+
+================================================================================
+3. HOMEPAGE "HOT DEALS" BANNER (SECTION 3: H1 - H3)
+================================================================================
+[H1] Old Deals Section Removed:
+  - Deprecated and removed the static DealsOfTheWeekSection from homepage.
+
+[H2] "Hot Deals" Scrolling Carousel Banner:
+  - Replaced with the production-grade HotDealsBanner component.
+  - Features:
+    * Auto-advances every 5 seconds.
+    * Pause on hover or mobile touch.
+    * Touch swipe gestures on mobile devices.
+    * Figma-exact "HOT DEALS" badge with airplane icon.
+    * Feature pills: "Return Flights", "Luxury Hotels", "Daily Breakfast", "Stunning Beaches".
+    * Live genuinely available "from" price (e.g. "from £699 per person").
+    * "Explore Deal" button linking to active search results.
+
+[H3] Central Management in Admin:
+  - Slides are stored in hot-deals-store.ts and can be edited, toggled, 
+    re-ordered, or added via the Admin Settings portal (/admin/settings).
+
+================================================================================
+4. DESTINATIONS, AIRPORTS & SEARCH (SECTION 4: D1 - D5 & APPENDIX A)
+================================================================================
+[D1 & Appendix A.1 - A.3] Master Destination Catalogue:
+  - destinations-master.ts maintains the complete master catalogue:
+    * Core destinations: Spain (Majorca, Menorca, Ibiza, Costa del Sol, Costa Blanca, 
+      Barcelona), Canary Islands (Tenerife, Lanzarote, Fuerteventura, Gran Canaria), 
+      Turkey (Antalya, Side, Dalaman, Bodrum, Istanbul), Greece (Santorini, Crete, 
+      Rhodes, Corfu, Zante), Portugal (Algarve, Lisbon), Cyprus (Paphos, Ayia Napa), 
+      Egypt (Hurghada, Sharm El Sheikh, Luxor), UAE (Dubai, Abu Dhabi, Ras Al Khaimah).
+    * Long-Haul: USA (Los Angeles), India (Delhi, Jaipur for UK-India corridor), 
+      Maldives, Mauritius, Mexico.
+  - Canary Islands displayed in their own group per Appendix A.4.
+
+[D2] Hotel Mapping:
+  - Mapped against the 1,843 verified GRN Connect sandbox hotels 
+    (from "supported hotels on sandbox.xlsx") including Dubai (City 121449: 327 hotels), 
+    Los Angeles (City 123656: 567 hotels), Delhi (City 124054: 242 hotels), 
+    Jaipur (City 122730: 154 hotels), Luxor (City 123144: 5 hotels).
+
+[D3] Comprehensive Search Inputs:
+  - Departure Airport: 9 UK airports dropdown from Appendix A.4:
+    London Gatwick (LGW), London Heathrow (LHR), London Luton (LTN), 
+    London Stansted (STN), Manchester (MAN), Birmingham (BHX), Bristol (BRS), 
+    Edinburgh (EDI), Glasgow (GLA).
+  - Destination: Autocomplete selector with search aliases:
+    Majorca/Mallorca, Zante/Zakynthos, Sharm/Sharm El Sheikh.
+  - Dates: Check-in and Check-out date pickers.
+  - Travellers & Rooms Modal:
+    * Select 1 to 9 rooms.
+    * Adults per room (1 to 9).
+    * Children per room (0 to 8).
+    * Mandatory exact child ages (1 to 17) for each child (required by GRN API).
+
+[D4] Comprehensive Search API:
+  - POST /api/search hits GRN Connect API (/hotels/availability) with 
+    rates: "comprehensive", client_nationality: "GB", and returns all hotels, 
+    room categories, and board options (Room Only, Bed & Breakfast, All Inclusive).
+
+================================================================================
+5. FLIGHTS INTEGRATION & CURRENCY RULES (SECTION 5: F1 - F4)
+================================================================================
+[F1 & F3] Flight Data:
+  - Returns live airline fares with ZERO margin or markup added.
+  - Can be shown standalone or bundled with hotel stays.
+
+[F4] Currency Conversion:
+  - INR to GBP converted at market rate (default: 1 INR = £0.0093, ~107.5 INR per GBP).
+  - Exchange rate and timestamp are recorded and audited with every price.
+
+================================================================================
+6. TRUE MARGIN PRICING ENGINE (SECTION 6: P1 - P6)
+================================================================================
+[P1] True Margin Formula:
+  - True margin on selling price, NOT mark-up:
+    Selling Price = Cost / (1 - Margin)
+    Example: Hotel cost 100.00 at 13% margin gives:
+    100.00 / (1 - 0.13) = 114.9425... -> 114.95 (rounded UP to the penny).
+
+[P2] Default Margin Rate:
+  - Default is 13% applying to hotel price only. Admin configurable.
+
+[P3] Bundle Rules:
+  - Zero default margin on flights, transfers, and add-ons.
+  - Bundle Total = Hotel Price (with 13% margin) + Local Taxes + Flights + Transfers.
+
+[P4] Local Hotel Taxes:
+  - Local tourist/resort taxes are displayed as an itemized line AND included in 
+    the total price, ensuring the customer never pays anything extra at the hotel.
+
+[P5] Server-Only Calculation:
+  - All pricing calculations run on the server inside pricing.ts.
+  - Supplier net costs are stripped via sanitizePricingForClient() and NEVER 
+    sent to the browser.
+  - All fractional amounts are rounded UP to the penny using Math.ceil(amount * 100) / 100.
+
+[P6] Audit Persistence:
+  - For every quote, the system stores: supplier net cost (INR & GBP), margin rate used, 
+    currency rate, and UK timestamps.
+
+================================================================================
+7. SEARCH ID SYSTEM & AUDIT PERSISTENCE (SECTION 7: S1 - S5)
+================================================================================
+[S1] Cryptographically Unguessable 8-Character ID:
+  - Generated using crypto.randomBytes with unambiguous 29-character alphabet:
+    "23456789ABCDEFGHJKMNPQRSTUVWXYZ" (excludes 'O', '0', '1', 'I', 'L').
+  - Easy to read clearly over the telephone.
+
+[S2] Results Page Presentation:
+  - Prominent Search ID header block on /search.
+  - One-click "Copy" button with visual feedback.
+  - Message: "Quote this ID when you call us" next to 0330 165 8879.
+
+[S3] Search Record Persistence:
+  - Stores customer search inputs, selected hotel, room type, board basis, 
+    customer prices, supplier net costs, margins, and timestamps.
+
+[S4] UK Time & Retention:
+  - All timestamps formatted in UK time (Europe/London: GMT/BST).
+  - Records retained for 30 days (admin adjustable).
+
+[S5] Price Freshness Badge:
+  - Every price on the website displays:
+    "Price checked at [time] UK, subject to availability".
+
+================================================================================
+8. INTERNAL AGENT TOOL & LIVE VERIFICATION (SECTION 8: A1 - A6)
+================================================================================
+Accessible at: /agent
+
+[A1] Agent Authentication:
+  - Simple login screen with PIN access (Default PIN: "2026" or "holidayjug").
+
+[A2] Search ID Lookup:
+  - Search ID input box with automatic uppercase formatting.
+  - Clear error notifications for invalid or expired IDs.
+
+[A3] Customer Search Details:
+  - Displays destination, departure airport, travel dates, number of nights, 
+    number of rooms, adults, and each child's age.
+
+[A4] Customer Selected Option:
+  - Displays hotel name, room type, board basis, flight details, hotel price, 
+    local tax as a separate line, and total price displayed.
+
+[A5] UK Time Auditing & Gap Calculation:
+  - Displays Search generated at, Price fetched at, Current UK time, and the 
+    elapsed gap in hours and minutes (e.g. "2 hrs 14 mins ago").
+
+[A6] "Check Live Price" Supplier Re-run:
+  - Executes live re-check against GRN Connect API in real-time.
+  - Compares live price with the original customer quote side-by-side.
+  - Highlights price difference (+£X / -£X / £0.00) with clear explanation text 
+    for the agent to communicate to the customer.
+
+================================================================================
+9. ADMIN CONFIGURATION PORTAL (/admin/settings)
+================================================================================
+- Margin rate control (13% default, adjustable).
+- INR to GBP exchange rate control.
+- Search ID retention period setting (30 days default).
+- Hot Deals slide manager: Add, toggle, delete, and edit slides with real prices.
+
+================================================================================
+10. FILE ARCHITECTURE & DIRECTORY MANIFEST
+================================================================================
+New & Modified Files:
+- apps/web/src/lib/pricing.ts                 [Server-only true margin pricing engine]
+- apps/web/src/lib/search-id.ts               [8-char Search ID generator, UK time, audit store]
+- apps/web/src/lib/destinations-master.ts     [Appendix A destination repository & UK airports]
+- apps/web/src/lib/grn-client.ts              [GRN Connect V3 client & 1,843 sandbox hotels database]
+- apps/web/src/lib/hot-deals-store.ts         [Central Hot Deals slides repository]
+- apps/web/src/components/CallForHiddenPricesBanner.tsx  [Top bar & inline banners (G2)]
+- apps/web/src/components/CallForHiddenPricesModal.tsx   [Figma exit-intent & timed popup (G2)]
+- apps/web/src/components/homepage/HotDealsBanner.tsx   [Homepage scrolling carousel (H2)]
+- apps/web/src/components/homepage/HeroSection.tsx      [Comprehensive search inputs (D3)]
+- apps/web/src/components/homepage/StaysSection.tsx     [Real prices, £XX removed (G3)]
+- apps/web/src/components/Header.tsx                    [UK sales line 0330 165 8879 & mobile bar (G1)]
+- apps/web/src/components/Footer.tsx                    [ATOL/IATA logos (G5), social links (G4), legal (G6)]
+- apps/web/src/app/(marketing)/page.tsx                 [Integrated hot deals, modal, and banners]
+- apps/web/src/app/(marketing)/search/page.tsx          [Comprehensive Search Results page (S1, S2, D4)]
+- apps/web/src/app/(marketing)/agent/page.tsx           [Internal Agent lookup & live recheck tool (A1-A6)]
+- apps/web/src/app/admin/(dashboard)/settings/page.tsx  [Admin controls for margins & hot deals]
+- apps/web/src/app/api/search/route.ts                  [Search API with Search ID creation & audit]
+- apps/web/src/app/api/agent/lookup/route.ts            [Agent Search ID lookup API endpoint]
+- apps/web/src/app/api/agent/recheck/route.ts           [Agent live price recheck API endpoint]
+- apps/web/src/app/api/admin/config/route.ts            [Admin settings API endpoint]
+- HolidayJug_Stage1_Implementation_Summary.txt          [This summary artifact]
+
+================================================================================
+11. MANUAL TESTING & VERIFICATION GUIDE
+================================================================================
+To test the implementation locally:
+
+1. Start Development Server:
+   Run: `npm run dev` in the root directory.
+   Open: http://localhost:3000
+
+2. Test Homepage & Global Features:
+   - Check the top bar: "Call for hidden prices" with "0330 165 8879".
+   - Check mobile responsiveness: sticky bottom tap-to-call bar appears.
+   - Wait 6 seconds or move cursor off the top of the browser on desktop:
+     The Figma "Call For Hidden Prices" popup opens. Close it and reload:
+     verify it does NOT reopen in the same session.
+   - Verify the "Hot Deals" carousel auto-advances, pauses on hover, and can be swiped.
+   - Verify Stays section has real prices (no "£XX" placeholders).
+   - Check footer: click Facebook/Instagram/YouTube (opens @holidayjug).
+   - Check footer: verify ATOL and IATA accreditation badges.
+
+3. Test Search Flow & Search ID:
+   - On the hero search card, select:
+     * Departing from: London Gatwick (LGW)
+     * Destination: Dubai
+     * Dates: 14 to 21 days from today
+     * Travellers: Open popover, add Room 2 with a 7-year-old child
+   - Click "Search": Navigates to `/search?destination=dubai...`
+   - Notice the prominent Search ID block (e.g. "K9X4M7P2"). Click "Copy" to verify.
+   - Check hotel cards: see star rating, address, description, facilities, and
+     "Price checked at [time] UK, subject to availability".
+   - Check price breakdown: hotel price + local taxes itemized.
+   - Click "View Rates" to open the rooms and board options modal.
+
+4. Test Internal Agent Tool:
+   - Navigate to http://localhost:3000/agent
+   - Enter Agent PIN: `2026`
+   - Enter the Search ID copied from step 3 (e.g. `K9X4M7P2`).
+   - Click "Find Search Details":
+     * Verify customer search details (destination, airport, dates, child ages).
+     * Verify selected hotel, room type, board basis, hotel price, local tax, total.
+     * Verify UK timestamps and elapsed time gap (e.g. "4 mins ago").
+     * Click "Check Live Price" (A6):
+       Re-runs live supplier check, displaying customer price vs live supplier price,
+       difference, and guidance text.
+
+5. Test Admin Settings:
+   - Navigate to http://localhost:3000/admin/settings
+   - Adjust the hotel margin rate or INR to GBP rate, and save.
+   - Enable/disable or add a slide to the Hot Deals carousel, then reload the homepage 
+     to see the updated slide.
+
+6. Test Dynamic Admin Dashboard & Hotels Explorer:
+   - Navigate to http://localhost:3000/admin
+     * Observe live dynamic telemetry: remaining API credits, credits used, cache hit ratio,
+       credits saved count, and active search quotes.
+     * View recent customer search quotes table with copyable Search IDs, UK timestamps,
+       quote prices, and 13% margin calculations.
+     * Click any hotel cluster card (e.g. Dubai: 327, LA: 567) to jump to the Hotels Explorer.
+   - Navigate to http://localhost:3000/admin/hotels
+     * Browse the 1,842 statically indexed sandbox hotels with zero API credit burn.
+     * Filter by city dropdown or type any hotel name/code.
+     * Click "Check Rate" on any hotel to view real-time live availability rates directly.
+   - Navigate to http://localhost:3000/admin/bookings
+     * Inspect the live queue of phone booking inquiries quoting 8-character Search IDs.
+     * Click "Audit in /agent" to jump directly into the consultant tool.
+================================================================================
+SECTION 10: DYNAMIC ADMIN DASHBOARD & CREDIT CONSERVATION ARCHITECTURE
+================================================================================
+1. The Problem Solved:
+   - GRN Connect sandbox and production APIs operate on a strictly metered credit model.
+   - Repeated calls for static reference data (cities, hotels, facilities, credit limits)
+     quickly burn account quota and trigger rate limits.
+   - In previous iterations, admin dashboard metrics were static placeholders with dashes.
+
+2. Architecture Implemented:
+   a. Local Static In-Memory Index (1,842 Sandbox Hotels):
+      - Extracted from `supported hotels on sandbox.xlsx` into `sandbox-hotels-index.json`.
+      - Provides instantaneous search and filtering across Dubai (327), Los Angeles (567),
+        New Delhi (242), Jaipur (154), Bengaluru (193), Mumbai (178), Chennai (103),
+        Kolkata (63), and Luxor (5) without making a single outbound HTTP request.
+      - 100% Zero-Credit Browsing.
+
+   b. Caching & Real-Time Search Availability:
+      - Search Availability: Executes LIVE in real-time on every search per user request (no caching).
+      - Cities & Hotel Master Lists: 24-Hour TTL (`/cities`, `/hotels`).
+      - Admin Dashboard Telemetry: 15-Second server cache prevents credit burn on rapid refreshes.
+      - Credit Limit Telemetry: 10-Minute TTL (`/credit-limit` fallback telemetry).
+
+   c. Dynamic Admin Dashboard (/admin):
+      - Real-time gauge of GRN API credits: allocated (50,000), remaining, and burned.
+      - Telemetry metrics: cache hits count, credits saved count, cache efficiency percentage.
+      - Real-time Customer Phone Quote Queue: lists live generated Search IDs (`HJ-XXXXXX`),
+        UK creation timestamps (`Europe/London`), flight/hotel breakdown, customer price,
+        and 13% margin.
+      - Direct deep-links into the Consultant Tool (`/agent?searchId=HJ-XXXXXX`).
+
+   d. Sandbox Hotels Explorer (/admin/hotels):
+      - Interactive directory of all 1,842 mapped hotels.
+      - Filter by city clusters, search by hotel name, address, or GRN code.
+      - Optional "Check Rate" action with confirmation warning and 20-minute cache guarantee.
+
+   e. Phone Quotes & Enquiries Queue (/admin/bookings):
+      - Replaced "coming soon" placeholder with an active enquiries desk supporting HolidayJug's
+        phone-assisted booking model (`0330 165 8879`).
+
+   f. Safe Fallback Resilience:
+      - Admin destinations (`/admin/destinations`) and packages (`/admin/packages`) gracefully
+        fallback to `DESTINATIONS_MASTER` and `hot-deals-store.ts` when DB is empty, guaranteeing
+        that the UI is always dynamic and fully functional.
+================================================================================
