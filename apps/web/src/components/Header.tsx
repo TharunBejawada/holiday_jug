@@ -21,7 +21,11 @@ import {
   FaTimes,
   FaSearch,
   FaHeadset,
+  FaFacebookF,
+  FaInstagram,
+  FaYoutube,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import { UserAccountMenu } from "@/components/UserAccountMenu";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
 
@@ -287,6 +291,46 @@ export function Header() {
               </div>
               <div onClick={() => setMobileMenuOpen(false)}>
                 <UserAccountMenu variant="mobile" />
+              </div>
+
+              {/* Social Media Links */}
+              <div className="pt-2 border-t border-gray-100 flex items-center gap-2.5">
+                <a
+                  href="https://www.facebook.com/HOLIDAYJUG/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="HolidayJug Facebook Page"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#F7941D] hover:text-white text-[#071746] flex items-center justify-center text-xs transition-all duration-300"
+                >
+                  <FaFacebookF />
+                </a>
+                <a
+                  href="https://www.instagram.com/holidayjug/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="HolidayJug Instagram Profile"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#F7941D] hover:text-white text-[#071746] flex items-center justify-center text-xs transition-all duration-300"
+                >
+                  <FaInstagram />
+                </a>
+                <a
+                  href="https://x.com/Holidayjug"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="HolidayJug X Profile"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#F7941D] hover:text-white text-[#071746] flex items-center justify-center text-xs transition-all duration-300"
+                >
+                  <FaXTwitter />
+                </a>
+                <a
+                  href="https://youtube.com/@holidayjug?si=rVl_T3N1wBdAUaaf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="HolidayJug YouTube Channel"
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-[#F7941D] hover:text-white text-[#071746] flex items-center justify-center text-xs transition-all duration-300"
+                >
+                  <FaYoutube />
+                </a>
               </div>
             </div>
           </div>

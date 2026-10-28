@@ -8,7 +8,11 @@ import {
     FaClock,
     FaPaperPlane,
     FaBuilding,
+    FaFacebookF,
+    FaInstagram,
+    FaYoutube,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export const metadata: Metadata = {
     title: "Contact Us — HolidayJug",
@@ -220,6 +224,51 @@ export default function ContactPage() {
                             >
                                 View Complaints Procedure &rarr;
                             </Link>
+                        </div>
+
+                        {/* SOCIAL MEDIA CHANNELS */}
+                        <div className="pt-4 border-t border-slate-100 space-y-3">
+                            <span className="text-xs font-bold text-[#071746] uppercase tracking-wide block">
+                                Connect With Us
+                            </span>
+                            <div className="flex items-center gap-3">
+                                <a
+                                    href="https://www.facebook.com/HOLIDAYJUG/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="HolidayJug Facebook Page"
+                                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#F7941D] text-[#071746] hover:text-white flex items-center justify-center text-sm transition-all duration-300 shadow-xs"
+                                >
+                                    <FaFacebookF />
+                                </a>
+                                <a
+                                    href="https://www.instagram.com/holidayjug/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="HolidayJug Instagram Profile"
+                                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#F7941D] text-[#071746] hover:text-white flex items-center justify-center text-sm transition-all duration-300 shadow-xs"
+                                >
+                                    <FaInstagram />
+                                </a>
+                                <a
+                                    href="https://x.com/Holidayjug"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="HolidayJug X Profile"
+                                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#F7941D] text-[#071746] hover:text-white flex items-center justify-center text-sm transition-all duration-300 shadow-xs"
+                                >
+                                    <FaXTwitter />
+                                </a>
+                                <a
+                                    href="https://youtube.com/@holidayjug?si=rVl_T3N1wBdAUaaf"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="HolidayJug YouTube Channel"
+                                    className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-[#F7941D] text-[#071746] hover:text-white flex items-center justify-center text-sm transition-all duration-300 shadow-xs"
+                                >
+                                    <FaYoutube />
+                                </a>
+                            </div>
                         </div>
                     </div>
 

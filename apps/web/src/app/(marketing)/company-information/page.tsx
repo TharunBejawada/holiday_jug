@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LegalPageLayout } from "@/components/legal/LegalPageLayout";
-import { FaBuilding, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaGlobe } from "react-icons/fa";
+import { FaBuilding, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaGlobe, FaFacebookF, FaInstagram, FaYoutube } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export const metadata: Metadata = {
     title: "Company Information — HolidayJug",
@@ -135,6 +136,77 @@ export default function CompanyInformationPage() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* OFFICIAL SOCIAL MEDIA CHANNELS */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-4">
+                    <h3 className="text-lg font-bold text-[#071746]">
+                        Official Social Media Channels
+                    </h3>
+                    <p className="text-sm text-slate-600 font-normal">
+                        Follow and connect with HolidayJug across our verified social profiles:
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                        <a
+                            href="https://www.facebook.com/HOLIDAYJUG/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200 hover:border-[#F7941D] hover:shadow-sm transition-all group"
+                        >
+                            <span className="w-9 h-9 rounded-lg bg-[#071746] text-white group-hover:bg-[#F7941D] flex items-center justify-center text-sm transition-colors">
+                                <FaFacebookF />
+                            </span>
+                            <div>
+                                <span className="text-xs font-bold text-[#071746] block">Facebook</span>
+                                <span className="text-[11px] text-slate-500">@HOLIDAYJUG</span>
+                            </div>
+                        </a>
+
+                        <a
+                            href="https://www.instagram.com/holidayjug/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200 hover:border-[#F7941D] hover:shadow-sm transition-all group"
+                        >
+                            <span className="w-9 h-9 rounded-lg bg-[#071746] text-white group-hover:bg-[#F7941D] flex items-center justify-center text-sm transition-colors">
+                                <FaInstagram />
+                            </span>
+                            <div>
+                                <span className="text-xs font-bold text-[#071746] block">Instagram</span>
+                                <span className="text-[11px] text-slate-500">@holidayjug</span>
+                            </div>
+                        </a>
+
+                        <a
+                            href="https://x.com/Holidayjug"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200 hover:border-[#F7941D] hover:shadow-sm transition-all group"
+                        >
+                            <span className="w-9 h-9 rounded-lg bg-[#071746] text-white group-hover:bg-[#F7941D] flex items-center justify-center text-sm transition-colors">
+                                <FaXTwitter />
+                            </span>
+                            <div>
+                                <span className="text-xs font-bold text-[#071746] block">X (Twitter)</span>
+                                <span className="text-[11px] text-slate-500">@Holidayjug</span>
+                            </div>
+                        </a>
+
+                        <a
+                            href="https://youtube.com/@holidayjug?si=rVl_T3N1wBdAUaaf"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-3 p-3.5 bg-white rounded-xl border border-slate-200 hover:border-[#F7941D] hover:shadow-sm transition-all group"
+                        >
+                            <span className="w-9 h-9 rounded-lg bg-[#071746] text-white group-hover:bg-[#F7941D] flex items-center justify-center text-sm transition-colors">
+                                <FaYoutube />
+                            </span>
+                            <div>
+                                <span className="text-xs font-bold text-[#071746] block">YouTube</span>
+                                <span className="text-[11px] text-slate-500">@holidayjug</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

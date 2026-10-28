@@ -9,6 +9,7 @@ import {
   FaShieldAlt,
   FaPlane,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 
 export function Footer() {
   return (
@@ -27,13 +28,13 @@ export function Footer() {
               />
             </Link>
             <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal max-w-xs">
-              our trusted travel partner for unforgettable holidays and comfortable stays.
+              Your trusted travel partner for unforgettable holidays and comfortable stays.
             </p>
 
-            {/* SOCIAL ICONS (G4: Must open the actual HolidayJug page handle: holidayjug in a new tab) */}
+            {/* SOCIAL ICONS (Redirection to official HolidayJug social media handles) */}
             <div className="flex items-center gap-2.5 pt-2">
               <a
-                href="https://facebook.com/holidayjug"
+                href="https://www.facebook.com/HOLIDAYJUG/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="HolidayJug Facebook Page"
@@ -42,7 +43,7 @@ export function Footer() {
                 <FaFacebookF />
               </a>
               <a
-                href="https://instagram.com/holidayjug"
+                href="https://www.instagram.com/holidayjug/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="HolidayJug Instagram Profile"
@@ -51,7 +52,16 @@ export function Footer() {
                 <FaInstagram />
               </a>
               <a
-                href="https://youtube.com/@holidayjug"
+                href="https://x.com/Holidayjug"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="HolidayJug X (Twitter) Profile"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-[#F7941D] text-white flex items-center justify-center text-sm transition-all duration-300"
+              >
+                <FaXTwitter />
+              </a>
+              <a
+                href="https://youtube.com/@holidayjug?si=rVl_T3N1wBdAUaaf"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="HolidayJug YouTube Channel"
