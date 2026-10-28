@@ -59,11 +59,25 @@ interface HotelResult {
 
 function SearchResultsContent() {
   const searchParams = useSearchParams();
+  const rawType = searchParams.get("type");
+  const rawDeparture = searchParams.get("departureAirport");
+  const isHotelsOnly = rawType === "hotels" || rawDeparture === "" || rawDeparture === "null" || !rawDeparture;
+  const departureAirport = isHotelsOnly ? "" : (rawDeparture || "LGW");
   const destination = searchParams.get("destination") || "dubai";
-  const departureAirport = searchParams.get("departureAirport") || "LGW";
   const checkIn = searchParams.get("checkIn") || "";
   const checkOut = searchParams.get("checkOut") || "";
   const adults = searchParams.get("adults") || "2";
+
+  // Parse rooms if present in query params
+  const rawRooms = searchParams.get("rooms");
+  let parsedRooms: any[] | undefined = undefined;
+  if (rawRooms) {
+    try {
+      parsedRooms = JSON.parse(rawRooms);
+    } catch (e) {
+      parsedRooms = undefined;
+    }
+  }
 
   const [loading, setLoading] = useState(true);
   const [hotels, setHotels] = useState<HotelResult[]>([]);
@@ -85,11 +99,13 @@ function SearchResultsContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            type: isHotelsOnly ? "hotels" : "holidays",
             destination,
             departureAirport,
             checkIn,
             checkOut,
             adults: Number(adults),
+            rooms: parsedRooms,
           }),
         });
 
@@ -108,7 +124,7 @@ function SearchResultsContent() {
     }
 
     fetchSearch();
-  }, [destination, departureAirport, checkIn, checkOut, adults]);
+  }, [destination, departureAirport, checkIn, checkOut, adults, isHotelsOnly, rawRooms]);
 
   const copySearchId = () => {
     if (!searchId) return;
@@ -133,13 +149,21 @@ function SearchResultsContent() {
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-300 mb-2">
-              <FaPlane className="text-xs" /> Flight + Hotel Package Deals
+              {isHotelsOnly ? (
+                <>
+                  <FaHotel className="text-xs" /> Hotels Only (No Flights Included)
+                </>
+              ) : (
+                <>
+                  <FaPlane className="text-xs" /> Flight + Hotel Package Deals
+                </>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold capitalize text-white">
-              Holidays in {destination.replace(/-/g, " ")}
+              {isHotelsOnly ? "Hotels" : "Holidays"} in {destination.replace(/-/g, " ")}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-gray-300">
-              Departing from {departureAirport} • 7 Nights • {adults} Adults
+              {isHotelsOnly ? "Hotels Only (Direct check-in)" : `Departing from ${departureAirport}`} • 7 Nights • {adults} Adults
             </p>
           </div>
 
@@ -368,7 +392,7 @@ function SearchResultsContent() {
                           </span>
                         </div>
                         <span className="text-[11px] text-gray-500 font-medium">
-                          £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person
+                          £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person {isHotelsOnly ? "(Hotel Only)" : "(Flight + Hotel)"}
                         </span>
 
                         <div className="mt-2.5 flex items-center gap-2">

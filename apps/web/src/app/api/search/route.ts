@@ -140,6 +140,8 @@ async function handleSearch(payload: SearchPayload) {
     priceCheckedAt: ukTimeShort,
     priceCheckedAtFullUk: ukTimeNow,
     searchDetails: {
+      type: isHotelsOnly ? "hotels" : "holidays",
+      isHotelsOnly,
       destination: destinationItem.destination,
       country: destinationItem.country,
       departureAirport,
