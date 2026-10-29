@@ -16,9 +16,9 @@ export function Footer() {
     <footer className="bg-[#071746] text-white font-medium pb-14 sm:pb-0">
       {/* MAIN FOOTER CONTENT */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 lg:grid-cols-12 gap-8 lg:gap-8 xl:gap-10">
           {/* COLUMN 1: BRAND LOGO & SOCIAL (G4) */}
-          <div className="flex flex-col space-y-4">
+          <div className="sm:col-span-2 md:col-span-6 lg:col-span-3 flex flex-col space-y-4">
             <Link href="/" className="inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -73,7 +73,7 @@ export function Footer() {
           </div>
 
           {/* COLUMN 2: HOLIDAYS */}
-          <div>
+          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
               HOLIDAYS
             </h4>
@@ -107,7 +107,7 @@ export function Footer() {
           </div>
 
           {/* COLUMN 3: HOTELS */}
-          <div>
+          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
               HOTELS
             </h4>
@@ -141,7 +141,7 @@ export function Footer() {
           </div>
 
           {/* COLUMN 4: COMPANY & LEGAL (G6) */}
-          <div>
+          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
               COMPANY
             </h4>
@@ -180,31 +180,31 @@ export function Footer() {
           </div>
 
           {/* COLUMN 5: UK SALES NUMBER & CONTACT (G1) */}
-          <div className="space-y-4">
+          <div className="sm:col-span-1 md:col-span-6 lg:col-span-3 flex flex-col">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
               UK SALES LINE
             </h4>
 
             {/* UK Sales Contact Repeated (G1) */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-              <span className="text-xs font-semibold text-[#F7941D] uppercase tracking-wide block">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
+              <span className="text-[11px] sm:text-xs font-semibold text-[#F7941D] uppercase tracking-wider block">
                 Speak to our travel experts
               </span>
               <a
                 href="tel:03301658879"
-                className="text-xl sm:text-2xl font-black text-white hover:text-[#F7941D] transition-colors flex items-center gap-2"
+                className="text-xl sm:text-2xl font-black text-white hover:text-[#F7941D] transition-colors flex items-center gap-2.5 whitespace-nowrap"
               >
-                <FaPhoneAlt className="text-base text-[#F7941D]" />
-                <span>0330 165 8879</span>
+                <FaPhoneAlt className="text-base sm:text-lg text-[#F7941D] shrink-0" />
+                <span className="tracking-tight">0330 165 8879</span>
               </a>
-              <p className="text-[11px] text-white/70">
-                UK Freephone • Mon - Sun 08:00 - 22:00
+              <p className="text-[11px] sm:text-xs text-white/70">
+                UK Freephone • Mon – Sun 08:00 – 22:00
               </p>
             </div>
 
-            <div className="space-y-1 text-xs text-white/80">
+            <div className="mt-4 pt-1 space-y-1 text-xs text-white/80">
               <p className="font-semibold text-white">Registered UK Office:</p>
-              <p>128 City Road, London, EC1V 2NX, United Kingdom</p>
+              <p className="leading-relaxed">128 City Road, London, EC1V 2NX, United Kingdom</p>
             </div>
           </div>
         </div>
