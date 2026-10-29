@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FaArrowRight, FaPlane } from "react-icons/fa";
+import { FaArrowRight, FaPlane, FaPhoneAlt } from "react-icons/fa";
+import { NeedHelpBanner } from "./NeedHelpBanner";
 
 interface BannerItem {
     id: string;
@@ -108,6 +109,9 @@ export function HomeBottomSections() {
             {/* SECTION 8 & 9: WHY CHOOSE HOLIDAY JUG & READY TO FIND CTA */}
             <section className="bg-white py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
+                    {/* NEED HELP CHOOSING YOUR HOLIDAY BANNER */}
+                    <NeedHelpBanner />
+
                     {/* WHY CHOOSE HOLIDAY JUG */}
                     <div>
                         <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
@@ -172,27 +176,86 @@ export function HomeBottomSections() {
                     </div>
 
                     {/* READY TO FIND YOUR PERFECT HOLIDAY CTA BANNER */}
-                    <div className="relative rounded-2xl sm:rounded-3xl bg-[#071746] py-6 sm:py-8 px-6 sm:px-10 lg:px-12 overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 z-10">
-                        <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-                            <svg className="w-full h-full" viewBox="0 0 1000 150" fill="none" preserveAspectRatio="none">
-                                <path d="M-50,75 Q250,140 500,75 T1050,75" stroke="white" strokeWidth="2" strokeDasharray="6 6" />
+                    <div className="relative rounded-2xl sm:rounded-3xl bg-[#071746] py-5 sm:py-6 lg:py-6 px-6 sm:px-8 lg:px-10 overflow-hidden shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 z-10">
+                        {/* Background Dashed Flight Paths & Airplanes */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">
+                            <svg
+                                className="w-full h-full"
+                                viewBox="0 0 1000 120"
+                                fill="none"
+                                preserveAspectRatio="none"
+                            >
+                                {/* Left Flight Trail */}
+                                <path
+                                    d="M 15 120 C 25 80, 32 50, 38 28"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    strokeDasharray="4 4"
+                                    strokeOpacity="0.28"
+                                />
+                                {/* Left Airplane */}
+                                <g transform="translate(38, 16) scale(0.6)">
+                                    <path
+                                        d="M10 0 L12 7 L18 10 L18 12 L12 10 L12 15 L14 17 L14 18 L10 17 L6 18 L6 17 L8 15 L8 10 L2 12 L2 10 L8 7 Z"
+                                        fill="white"
+                                        fillOpacity="0.45"
+                                    />
+                                </g>
+
+                                {/* Center-Right Flight Trail */}
+                                <path
+                                    d="M 500 120 C 580 110, 680 75, 755 30 C 815 -5, 875 5, 935 40 C 975 65, 1010 60, 1040 30"
+                                    stroke="white"
+                                    strokeWidth="1.5"
+                                    strokeDasharray="4 4"
+                                    strokeOpacity="0.28"
+                                />
+                                {/* Right Airplane */}
+                                <g transform="translate(753, 18) rotate(15) scale(0.6)">
+                                    <path
+                                        d="M10 0 L12 7 L18 10 L18 12 L12 10 L12 15 L14 17 L14 18 L10 17 L6 18 L6 17 L8 15 L8 10 L2 12 L2 10 L8 7 Z"
+                                        fill="white"
+                                        fillOpacity="0.45"
+                                    />
+                                </g>
                             </svg>
                         </div>
 
-                        <div className="relative z-10 flex items-center gap-4 text-center md:text-left">
-                            <FaPlane className="text-white/40 text-xl sm:text-2xl transform -rotate-45 hidden sm:block" />
-                            <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white tracking-wide">
+                        {/* LEFT: TEXT HEADING */}
+                        <div className="relative z-10 flex items-center text-center md:text-left">
+                            <h3 className="text-xl sm:text-2xl lg:text-[27px] font-semibold text-white tracking-normal">
                                 Ready to find your{" "}
-                                <span className="font-serif italic font-normal text-2xl sm:text-3xl lg:text-4xl text-white">
+                                <span
+                                    className="font-serif italic font-normal text-2xl sm:text-3xl lg:text-[34px] text-white"
+                                    style={{ fontFamily: "'Dancing Script', 'Caveat', 'Playfair Display', cursive, serif" }}
+                                >
                                     perfect holiday?
                                 </span>
                             </h3>
                         </div>
 
+                        {/* CENTER: SPEAK TO OUR TRAVEL EXPERT - MOBILE NUMBER */}
+                        <a
+                            href="tel:03301658879"
+                            aria-label="Speak to our travel expert at 0330 165 8879"
+                            className="relative z-10 flex items-center gap-3.5 sm:gap-4 group hover:opacity-95 transition-all duration-200 hover:scale-105 shrink-0 cursor-pointer"
+                        >
+                            <FaPhoneAlt className="text-[#F7941D] text-2xl sm:text-3xl lg:text-[34px] shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                            <div className="flex flex-col text-left">
+                                <span className="text-[10px] sm:text-[11px] lg:text-xs font-bold text-white tracking-wider uppercase leading-tight">
+                                    SPEAK TO OUR TRAVEL EXPERT
+                                </span>
+                                <span className="text-xl sm:text-2xl lg:text-[26px] font-black text-white tracking-tight leading-tight whitespace-nowrap">
+                                    0330 165 8879
+                                </span>
+                            </div>
+                        </a>
+
+                        {/* RIGHT: EXPLORE HOLIDAYS BUTTON */}
                         <div className="relative z-10 shrink-0">
                             <Link
                                 href="/holidays"
-                                className="inline-flex items-center gap-3 rounded-full bg-[#F7941D] px-7 sm:px-9 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white shadow-md hover:bg-[#e08316] transition-all duration-300 transform hover:scale-105"
+                                className="inline-flex items-center gap-2.5 sm:gap-3 rounded-full bg-[#F7941D] hover:bg-[#e08316] px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white shadow-md transition-all duration-300 transform hover:scale-105 whitespace-nowrap cursor-pointer"
                             >
                                 Explore Holidays
                                 <FaArrowRight className="text-xs sm:text-sm" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FaPhoneAlt,
@@ -59,6 +59,7 @@ interface HotelResult {
 }
 
 function SearchResultsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const rawType = searchParams.get("type");
   const rawDeparture = searchParams.get("departureAirport");
@@ -104,9 +105,10 @@ function SearchResultsContent() {
   useEffect(() => {
     async function fetchSearch() {
       // RULE: The availability and search API is strictly for HOTELS ONLY.
-      // If user came looking for holidays, do NOT call the hotel API!
+      // If user came looking for holidays or non-hotel searches with no data, navigate to homepage
       if (!isHotelsOnly) {
         setLoading(false);
+        router.replace("/");
         return;
       }
 
@@ -126,14 +128,18 @@ function SearchResultsContent() {
         });
 
         const data = await res.json();
-        if (data.success) {
-          setHotels(data.hotels || []);
+        if (data.success && Array.isArray(data.hotels) && data.hotels.length > 0) {
+          setHotels(data.hotels);
           setSearchId(data.searchId || "");
           setPriceCheckedAt(data.priceCheckedAt || "");
           setPriceCheckedAtFull(data.priceCheckedAtFullUk || "");
+        } else {
+          // No data from API response: navigate to homepage
+          router.replace("/");
         }
       } catch (err) {
         console.error("Failed to load search results:", err);
+        router.replace("/");
       } finally {
         setLoading(false);
       }

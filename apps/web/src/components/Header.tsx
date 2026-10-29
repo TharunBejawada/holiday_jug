@@ -5,17 +5,9 @@ import Link from "next/link";
 import {
   FaChevronDown,
   FaUmbrellaBeach,
-  FaUsers,
-  FaSun,
-  FaGem,
-  FaStar,
   FaHotel,
-  FaHome,
   FaMapMarkerAlt,
   FaFire,
-  FaTag,
-  FaBookOpen,
-  FaShieldAlt,
   FaPhoneAlt,
   FaBars,
   FaTimes,
@@ -24,6 +16,7 @@ import {
   FaFacebookF,
   FaInstagram,
   FaYoutube,
+  FaInfoCircle,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { UserAccountMenu } from "@/components/UserAccountMenu";
@@ -31,11 +24,7 @@ import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanne
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-
-  const toggleDropdown = (name: string) => {
-    setActiveDropdown(activeDropdown === name ? null : name);
-  };
+  const [mobileDestinationsOpen, setMobileDestinationsOpen] = useState(false);
 
   return (
     <>
@@ -57,80 +46,20 @@ export function Header() {
           {/* DESKTOP NAVIGATION MENU */}
           <nav className="hidden lg:flex items-center gap-6 text-[15px] font-semibold text-[#1D1248]">
             {/* Holidays */}
-            <div className="relative group" onMouseLeave={() => setActiveDropdown(null)}>
-              <button
-                type="button"
-                onClick={() => toggleDropdown("holidays")}
-                className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2 cursor-pointer"
-              >
-                Holidays
-                <FaChevronDown className="text-[10px] text-[#F7941D] transition-transform duration-200 group-hover:rotate-180" />
-              </button>
-
-              <div className="absolute left-0 top-full hidden group-hover:block w-56 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                <Link
-                  href="/holidays?type=all-inclusive"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaUmbrellaBeach className="text-[#F7941D]" /> All Inclusive Holidays
-                </Link>
-                <Link
-                  href="/holidays?type=family"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaUsers className="text-[#F7941D]" /> Family Package Holidays
-                </Link>
-                <Link
-                  href="/holidays?type=beach"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaSun className="text-[#F7941D]" /> Beach Escapes
-                </Link>
-                <Link
-                  href="/holidays?type=luxury"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaGem className="text-[#F7941D]" /> Luxury Holidays
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/holidays"
+              className="hover:text-[#F7941D] transition-colors py-2"
+            >
+              Holidays
+            </Link>
 
             {/* Hotels */}
-            <div className="relative group">
-              <Link
-                href="/hotels"
-                className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2 cursor-pointer"
-              >
-                Hotels
-                <FaChevronDown className="text-[10px] text-[#F7941D] transition-transform duration-200 group-hover:rotate-180" />
-              </Link>
-              <div className="absolute left-0 top-full hidden group-hover:block w-56 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                <Link
-                  href="/hotels"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#F7941D] hover:bg-amber-50 transition-colors border-b border-gray-100 mb-1"
-                >
-                  <FaHotel className="text-[#F7941D]" /> All Hotels &amp; Resorts
-                </Link>
-                <Link
-                  href="/hotels?rating=5"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaStar className="text-[#F7941D]" /> 5-Star Luxury Hotels
-                </Link>
-                <Link
-                  href="/hotels?destination=dubai"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaHotel className="text-[#F7941D]" /> Dubai Resorts &amp; Spas
-                </Link>
-                <Link
-                  href="/hotels?destination=santorini"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaHome className="text-[#F7941D]" /> Boutique Stays
-                </Link>
-              </div>
-            </div>
+            <Link
+              href="/hotels"
+              className="hover:text-[#F7941D] transition-colors py-2"
+            >
+              Hotels
+            </Link>
 
             {/* Destinations (G3: Only destinations with mapped hotels) */}
             <div className="relative group">
@@ -189,19 +118,26 @@ export function Header() {
 
             {/* Hot Deals (H2) */}
             <Link
-              href="/destinations/dubai"
+              href="/"
               className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
             >
-              <FaFire className="text-[#F7941D] text-xs" /> Hot Deals
+              Hot Deals
+            </Link>
+
+            <Link
+              href="/about"
+              className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
+            >
+              About Us
             </Link>
 
             {/* Agent Lookup (Internal Tool A1) */}
-            <Link
+            {/* <Link
               href="/agent"
               className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#1D1248] py-2 border-l border-gray-200 pl-4"
             >
               <FaHeadset className="text-[#F7941D]" /> Agent Tool
-            </Link>
+            </Link> */}
           </nav>
 
           {/* CALL US & SEARCH BUTTON */}
@@ -255,41 +191,129 @@ export function Header() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-gray-100 bg-white px-4 pb-6 pt-2 shadow-lg animate-in slide-in-from-top-2">
             <nav className="flex flex-col space-y-1 font-semibold text-[#1D1248]">
-              <Link
-                href="/hotels"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2.5 text-[#F7941D] font-bold"
-              >
-                <FaHotel /> Search Hotels &amp; Resorts
-              </Link>
-
+              {/* Holidays */}
               <Link
                 href="/holidays"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2 hover:text-[#F7941D]"
+                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
               >
-                <FaUmbrellaBeach className="text-[#F7941D]" /> Holidays (Coming Soon)
+                <FaUmbrellaBeach className="text-[#F7941D]" /> Holidays
               </Link>
+
+              {/* Hotels */}
               <Link
-                href="/hotels?destination=dubai"
+                href="/hotels"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2 hover:text-[#F7941D]"
+                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
               >
-                <FaHotel className="text-[#F7941D]" /> Dubai Resorts &amp; Hotels
+                <FaHotel className="text-[#F7941D]" /> Hotels
               </Link>
+
+              {/* Destinations with dropdown */}
+              <div>
+                <div className="flex items-center justify-between py-2.5">
+                  <Link
+                    href="/destinations"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2.5 hover:text-[#F7941D] transition-colors flex-1"
+                  >
+                    <FaMapMarkerAlt className="text-[#F7941D]" /> Destinations
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setMobileDestinationsOpen(!mobileDestinationsOpen)}
+                    className="p-2 text-gray-500 hover:text-[#F7941D] cursor-pointer"
+                    aria-label="Toggle Destinations submenu"
+                  >
+                    <FaChevronDown
+                      className={`text-xs text-[#F7941D] transition-transform duration-200 ${
+                        mobileDestinationsOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {mobileDestinationsOpen && (
+                  <div className="ml-6 pl-3 border-l-2 border-amber-200 flex flex-col space-y-2 py-2 text-sm text-gray-700 bg-amber-50/40 rounded-r-lg mb-2">
+                    <Link
+                      href="/destinations"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="font-bold text-[#F7941D] hover:underline"
+                    >
+                      All Destinations
+                    </Link>
+                    <Link
+                      href="/destinations/turkey"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Turkey
+                    </Link>
+                    <Link
+                      href="/destinations/greece"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Greece
+                    </Link>
+                    <Link
+                      href="/destinations/dubai"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Dubai
+                    </Link>
+                    <Link
+                      href="/destinations/spain"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Spain
+                    </Link>
+                    <Link
+                      href="/destinations/antalya"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Antalya
+                    </Link>
+                    <Link
+                      href="/destinations/portugal"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="hover:text-[#F7941D]"
+                    >
+                      Portugal
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Hot Deals */}
               <Link
-                href="/destinations"
+                href="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2 hover:text-[#F7941D]"
+                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
               >
-                <FaMapMarkerAlt className="text-[#F7941D]" /> All Destinations
+                <FaFire className="text-[#F7941D]" /> Hot Deals
               </Link>
+
+              {/* About Us */}
               <Link
-                href="/agent"
+                href="/about"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2 text-gray-600 hover:text-[#1D1248]"
+                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
               >
-                <FaHeadset className="text-[#F7941D]" /> Agent Search ID Lookup Tool
+                <FaInfoCircle className="text-[#F7941D]" /> About Us
+              </Link>
+
+              {/* Search Hotels Button */}
+              <Link
+                href="/hotels"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#1D1248] hover:bg-[#2B1B6D] px-4 py-2.5 text-sm font-bold text-white transition-all shadow-xs mt-3"
+              >
+                <FaSearch className="text-xs" />
+                <span>Search Hotels</span>
               </Link>
             </nav>
 

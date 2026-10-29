@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   FaHotel,
@@ -109,6 +109,7 @@ const HOLIDAY_TYPE_OPTIONS = [
 ];
 
 function HotelsPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialDestination = searchParams.get("destination") || "all";
   const initialHotelCode = searchParams.get("hotelCode") || "";
@@ -328,8 +329,8 @@ function HotelsPageContent() {
         });
 
         const data = await res.json();
-        if (!isCancelled && data.success) {
-          const list: HotelResult[] = data.hotels || [];
+        if (!isCancelled && data.success && Array.isArray(data.hotels) && data.hotels.length > 0) {
+          const list: HotelResult[] = data.hotels;
           setHotels(list);
           setSearchId(data.searchId || "");
           setPriceCheckedAt(data.priceCheckedAt || "");
@@ -341,9 +342,15 @@ function HotelsPageContent() {
               setSelectedHotel(targeted);
             }
           }
+        } else if (!isCancelled && (!data.success || !data.hotels || data.hotels.length === 0)) {
+          // If no data from API response, navigate to homepage
+          router.replace("/");
         }
       } catch (err) {
         console.error("Failed to load hotels:", err);
+        if (!isCancelled) {
+          router.replace("/");
+        }
       } finally {
         if (!isCancelled) setLoading(false);
       }

@@ -42,19 +42,13 @@ const DEFAULT_ADMIN_DESTINATIONS: AdminDestinationItem[] = [
 export function HeroSection() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"holidays" | "hotels">("holidays");
-  const [departureAirport, setDepartureAirport] = useState("LGW");
-  const [destination, setDestination] = useState("dubai");
-  const [destinationQuery, setDestinationQuery] = useState("Dubai, United Arab Emirates");
+  const [departureAirport, setDepartureAirport] = useState("");
+  const [destination, setDestination] = useState("");
+  const [destinationQuery, setDestinationQuery] = useState("");
   const [adminDestinations, setAdminDestinations] = useState<AdminDestinationItem[]>(DEFAULT_ADMIN_DESTINATIONS);
 
-  const [checkIn, setCheckIn] = useState(() => {
-    const d = new Date(Date.now() + 14 * 86400000);
-    return d.toISOString().split("T")[0];
-  });
-  const [checkOut, setCheckOut] = useState(() => {
-    const d = new Date(Date.now() + 21 * 86400000);
-    return d.toISOString().split("T")[0];
-  });
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
 
   // Comprehensive Travellers & Rooms popover state (D3)
   const [rooms, setRooms] = useState<RoomConfig[]>([
@@ -104,27 +98,30 @@ export function HeroSection() {
   // Summary labels for Travellers
   const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
   const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.length, 0);
-  const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${
-    totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
-  }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+  const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
+    }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (activeTab === "hotels") {
       const queryParams = new URLSearchParams({
-        destination,
-        checkIn,
-        checkOut,
+        destination: destination || "all",
         type: "hotels",
         rooms: JSON.stringify(rooms),
         adults: totalAdults.toString(),
         children: totalChildren.toString(),
       });
+      if (checkIn) queryParams.set("checkIn", checkIn);
+      if (checkOut) queryParams.set("checkOut", checkOut);
       router.push(`/hotels?${queryParams.toString()}`);
     } else {
       // For Holidays / Destination search: navigate directly to destination details page based on Admin Dashboard data
-      router.push(`/destinations/${destination}`);
+      if (destination) {
+        router.push(`/destinations/${destination}`);
+      } else {
+        router.push(`/destinations`);
+      }
     }
   };
 
@@ -189,22 +186,20 @@ export function HeroSection() {
               <button
                 type="button"
                 onClick={() => setActiveTab("holidays")}
-                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${
-                  activeTab === "holidays"
-                    ? "bg-white text-[#1D1248]"
-                    : "bg-[#F7941D] text-white hover:bg-[#e08314]"
-                }`}
+                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${activeTab === "holidays"
+                    ? "bg-[#F7941D] text-white"
+                    : "bg-white text-[#1D1248] hover:bg-gray-100"
+                  }`}
               >
                 Holidays (Destinations)
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("hotels")}
-                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${
-                  activeTab === "hotels"
-                    ? "bg-white text-[#1D1248]"
-                    : "bg-[#F7941D] text-white hover:bg-[#e08314]"
-                }`}
+                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${activeTab === "hotels"
+                    ? "bg-[#F7941D] text-white"
+                    : "bg-white text-[#1D1248] hover:bg-gray-100"
+                  }`}
               >
                 Hotels Only
               </button>
@@ -422,7 +417,7 @@ export function HeroSection() {
                     className="w-full rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-[0.98] py-3 sm:py-3.5 px-6 text-sm sm:text-base font-extrabold text-white transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <FaSearch className="text-xs sm:text-sm" />
-                    <span>{activeTab === "holidays" ? "Explore Destination" : "Search Hotels"}</span>
+                    <span>{activeTab === "holidays" ? "Explore Destination" : "Search"}</span>
                   </button>
                 </div>
               </form>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
     DestinationsFilterSidebar,
     EMPTY_FILTERS,
@@ -33,6 +33,7 @@ export interface DestinationApiItem {
 }
 
 export function DestinationsExplorer() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const searchQuery = searchParams.get("search")?.toLowerCase().trim() ?? "";
     const holidayTypeParam = searchParams.get("holidayType");
@@ -52,9 +53,18 @@ export function DestinationsExplorer() {
         fetch("/api/destinations", { cache: "no-store" })
             .then((res) => (res.ok ? res.json() : { items: [] }))
             .then((data) => {
-                if (isMounted) setDestinations(Array.isArray(data?.items) ? data.items : []);
+                if (isMounted) {
+                    const items = Array.isArray(data?.items) ? data.items : [];
+                    if (items.length === 0) {
+                        router.replace("/");
+                        return;
+                    }
+                    setDestinations(items);
+                }
             })
-            .catch(() => { })
+            .catch(() => {
+                if (isMounted) router.replace("/");
+            })
             .finally(() => {
                 if (isMounted) setLoadingDestinations(false);
             });
