@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,11 +16,20 @@ import {
   FaTimes,
   FaSlidersH,
   FaInfoCircle,
+  FaUserFriends,
+  FaChevronDown,
+  FaPlus,
+  FaMinus,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
 import { getActiveSearchDestinations } from "@/lib/destinations-master";
+
+export interface RoomConfig {
+  adults: number;
+  childrenAges: number[];
+}
 
 interface HotelResult {
   hotelCode: string;
@@ -75,6 +84,19 @@ function HotelsPageContent() {
   const initialHotelCode = searchParams.get("hotelCode") || "";
   const initialRating = searchParams.get("rating") ? Number(searchParams.get("rating")) : null;
 
+  // Travellers & Rooms initialization
+  const initialRoomsParam = searchParams.get("rooms");
+  const initialAdultsParam = searchParams.get("adults");
+  let defaultRooms: RoomConfig[] = [{ adults: 2, childrenAges: [] }];
+  if (initialRoomsParam) {
+    try {
+      const parsed = JSON.parse(initialRoomsParam);
+      if (Array.isArray(parsed) && parsed.length > 0) defaultRooms = parsed;
+    } catch {}
+  } else if (initialAdultsParam) {
+    defaultRooms = [{ adults: Math.max(1, Number(initialAdultsParam)), childrenAges: [] }];
+  }
+
   const [destination, setDestination] = useState(initialDestination);
   const [checkIn, setCheckIn] = useState(() => {
     const d = new Date(Date.now() + 14 * 86400000);
@@ -88,6 +110,92 @@ function HotelsPageContent() {
   const [boardFilter, setBoardFilter] = useState<string>("ALL");
   const [keyword, setKeyword] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("recommended");
+
+  // Travellers & Rooms state
+  const [rooms, setRooms] = useState<RoomConfig[]>(defaultRooms);
+  const [showTravellersPopover, setShowTravellersPopover] = useState(false);
+  const travellersRef = useRef<HTMLDivElement>(null);
+  const [searchVersion, setSearchVersion] = useState(0);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (travellersRef.current && !travellersRef.current.contains(e.target as Node)) {
+        setShowTravellersPopover(false);
+      }
+    }
+    if (showTravellersPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTravellersPopover]);
+
+  const addRoom = () => {
+    if (rooms.length < 9) {
+      setRooms((prev) => [...prev, { adults: 2, childrenAges: [] }]);
+    }
+  };
+
+  const removeRoom = (index: number) => {
+    if (rooms.length > 1) {
+      setRooms((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateAdults = (roomIdx: number, change: number) => {
+    setRooms((prev) => {
+      const updated = [...prev];
+      const newAdults = Math.max(1, Math.min(9, updated[roomIdx].adults + change));
+      updated[roomIdx] = { ...updated[roomIdx], adults: newAdults };
+      return updated;
+    });
+  };
+
+  const addChild = (roomIdx: number) => {
+    setRooms((prev) => {
+      const updated = [...prev];
+      if (updated[roomIdx].childrenAges.length < 8) {
+        updated[roomIdx] = {
+          ...updated[roomIdx],
+          childrenAges: [...updated[roomIdx].childrenAges, 7],
+        };
+      }
+      return updated;
+    });
+  };
+
+  const removeChild = (roomIdx: number, childIdx: number) => {
+    setRooms((prev) => {
+      const updated = [...prev];
+      const newAges = [...updated[roomIdx].childrenAges];
+      newAges.splice(childIdx, 1);
+      updated[roomIdx] = { ...updated[roomIdx], childrenAges: newAges };
+      return updated;
+    });
+  };
+
+  const updateChildAge = (roomIdx: number, childIdx: number, age: number) => {
+    setRooms((prev) => {
+      const updated = [...prev];
+      const newAges = [...updated[roomIdx].childrenAges];
+      newAges[childIdx] = age;
+      updated[roomIdx] = { ...updated[roomIdx], childrenAges: newAges };
+      return updated;
+    });
+  };
+
+  const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
+  const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.length, 0);
+  const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${
+    totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
+  }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+
+  const nights = Math.max(
+    1,
+    Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
+  );
 
   // API State
   const [loading, setLoading] = useState(true);
@@ -175,8 +283,8 @@ function HotelsPageContent() {
             hotelCode: initialHotelCode || undefined,
             checkIn,
             checkOut,
-            adults: 2,
-            rooms: [{ adults: 2, childrenAges: [] }],
+            adults: totalAdults,
+            rooms,
           }),
         });
 
@@ -207,7 +315,7 @@ function HotelsPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, [destination, checkIn, checkOut, initialHotelCode]);
+  }, [destination, checkIn, checkOut, initialHotelCode, searchVersion]);
 
   const copySearchId = () => {
     if (!searchId) return;
@@ -302,7 +410,7 @@ function HotelsPageContent() {
           <div className="bg-white rounded-3xl p-5 sm:p-7 shadow-2xl border border-gray-100 text-gray-800">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
               {/* DESTINATION SELECTOR */}
-              <div className="lg:col-span-4 flex flex-col gap-1.5">
+              <div className="lg:col-span-3 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248] flex items-center gap-1.5">
                   <FaMapMarkerAlt className="text-[#F7941D]" /> Destination / Region
                 </label>
@@ -317,25 +425,192 @@ function HotelsPageContent() {
               </div>
 
               {/* CHECK-IN */}
-              <div className="lg:col-span-3 flex flex-col gap-1.5">
+              <div className="lg:col-span-2 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-in Date</label>
                 <DatePicker value={checkIn} onChange={setCheckIn} placeholder="Select check-in" />
               </div>
 
               {/* CHECK-OUT */}
-              <div className="lg:col-span-3 flex flex-col gap-1.5">
+              <div className="lg:col-span-2 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-out Date</label>
                 <DatePicker value={checkOut} onChange={setCheckOut} placeholder="Select check-out" minDate={checkIn} />
+              </div>
+
+              {/* TRAVELLERS & ROOMS */}
+              <div ref={travellersRef} className="lg:col-span-3 flex flex-col gap-1.5 relative">
+                <label className="text-xs sm:text-sm font-bold text-[#1D1248] flex items-center gap-1.5">
+                  <FaUserFriends className="text-[#F7941D]" /> Travellers &amp; Rooms
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowTravellersPopover(!showTravellersPopover)}
+                  className="w-full text-left rounded-xl bg-gray-50 border border-gray-200 px-3.5 py-3 text-xs sm:text-sm text-gray-800 focus:border-[#F7941D] focus:bg-white focus:outline-none transition-all font-semibold flex items-center justify-between cursor-pointer"
+                >
+                  <span className="truncate">{travellersSummary}</span>
+                  <FaChevronDown
+                    className={`text-gray-400 text-xs shrink-0 ml-2 transition-transform duration-200 ${
+                      showTravellersPopover ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* ROOMS & GUESTS POPOVER */}
+                {showTravellersPopover && (
+                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                      <div>
+                        <span className="font-bold text-sm sm:text-base block">Travellers &amp; Rooms</span>
+                        <span className="text-[11px] text-gray-500">Up to 9 rooms, 9 adults per room</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowTravellersPopover(false)}
+                        className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      >
+                        <FaTimes className="text-sm" />
+                      </button>
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto py-3 space-y-4">
+                      {rooms.map((room, roomIdx) => (
+                        <div key={roomIdx} className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-100 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-xs uppercase tracking-wide text-[#F7941D]">
+                              Room {roomIdx + 1}
+                            </span>
+                            {rooms.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeRoom(roomIdx)}
+                                className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer"
+                              >
+                                Remove Room
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Adults */}
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
+                            <div>
+                              <p className="font-semibold text-gray-800">Adults</p>
+                              <p className="text-[10px] text-gray-400">Ages 18+</p>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => updateAdults(roomIdx, -1)}
+                                disabled={room.adults <= 1}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <FaMinus className="text-[9px]" />
+                              </button>
+                              <span className="w-5 text-center font-bold text-xs sm:text-sm">
+                                {room.adults}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => updateAdults(roomIdx, 1)}
+                                disabled={room.adults >= 9}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <FaPlus className="text-[9px]" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Children */}
+                          <div className="flex items-center justify-between text-xs sm:text-sm pt-2 border-t border-gray-200/50">
+                            <div>
+                              <p className="font-semibold text-gray-800">Children</p>
+                              <p className="text-[10px] text-gray-400">Ages 0 to 17</p>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => removeChild(roomIdx, room.childrenAges.length - 1)}
+                                disabled={room.childrenAges.length === 0}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <FaMinus className="text-[9px]" />
+                              </button>
+                              <span className="w-5 text-center font-bold text-xs sm:text-sm">
+                                {room.childrenAges.length}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addChild(roomIdx)}
+                                disabled={room.childrenAges.length >= 8}
+                                className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <FaPlus className="text-[9px]" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Child Ages inputs */}
+                          {room.childrenAges.length > 0 && (
+                            <div className="pt-2 border-t border-gray-200/50 space-y-2">
+                              <p className="text-[10px] font-semibold text-gray-500">
+                                Ages of children at check-out
+                              </p>
+                              <div className="grid grid-cols-3 gap-2">
+                                {room.childrenAges.map((age, childIdx) => (
+                                  <div key={childIdx} className="flex flex-col gap-0.5">
+                                    <label className="text-[9px] text-gray-500">
+                                      Child {childIdx + 1}
+                                    </label>
+                                    <select
+                                      value={age}
+                                      onChange={(e) =>
+                                        updateChildAge(roomIdx, childIdx, parseInt(e.target.value))
+                                      }
+                                      className="rounded-lg bg-white border border-gray-200 px-2 py-1 text-xs font-semibold focus:border-[#F7941D] focus:outline-none"
+                                    >
+                                      {Array.from({ length: 18 }, (_, a) => (
+                                        <option key={a} value={a}>
+                                          {a === 0 ? "Under 1" : `${a} yr${a > 1 ? "s" : ""}`}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                      {rooms.length < 9 && (
+                        <button
+                          type="button"
+                          onClick={addRoom}
+                          className="text-xs font-bold text-[#F7941D] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <FaPlus className="text-[10px]" /> Add Another Room
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowTravellersPopover(false);
+                          setSearchVersion((v) => v + 1);
+                        }}
+                        className="ml-auto rounded-lg bg-[#1D1248] text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer"
+                      >
+                        Apply &amp; Search
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* SEARCH ACTION */}
               <div className="lg:col-span-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    // Refreshes search with current destination
-                    setDestination((d) => d);
-                  }}
+                  onClick={() => setSearchVersion((v) => v + 1)}
                   className="w-full h-[46px] rounded-xl bg-[#F7941D] hover:bg-[#e08316] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <FaSearch /> Update
@@ -364,10 +639,35 @@ function HotelsPageContent() {
                     setStarFilter(null);
                     setBoardFilter("ALL");
                     setKeyword("");
+                    setRooms([{ adults: 2, childrenAges: [] }]);
+                    setSearchVersion((v) => v + 1);
                   }}
-                  className="text-xs text-[#F7941D] font-bold hover:underline"
+                  className="text-xs text-[#F7941D] font-bold hover:underline cursor-pointer"
                 >
                   Reset
+                </button>
+              </div>
+
+              {/* Travellers & Rooms Sidebar Selector */}
+              <div>
+                <label className="text-xs font-bold text-gray-700 block uppercase tracking-wide mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FaUserFriends className="text-[#F7941D]" /> Travellers &amp; Rooms
+                  </span>
+                  <span className="text-[10px] font-bold text-[#1D1248] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                    {rooms.length} {rooms.length === 1 ? "Room" : "Rooms"}
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowTravellersPopover(true);
+                    travellersRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                  className="w-full text-left rounded-xl bg-gray-50 hover:bg-gray-100 px-3 py-2.5 text-xs text-gray-800 border border-gray-200 transition-all font-semibold flex items-center justify-between cursor-pointer"
+                >
+                  <span className="truncate">{travellersSummary}</span>
+                  <span className="text-xs font-bold text-[#F7941D] ml-1.5 shrink-0">Change</span>
                 </button>
               </div>
 
@@ -594,7 +894,7 @@ function HotelsPageContent() {
                           </span>
                         </div>
                         <span className="text-[11px] text-gray-500 font-medium">
-                          £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person (7 nights)
+                          £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person ({nights} night{nights > 1 ? "s" : ""}, {rooms.length} {rooms.length === 1 ? "room" : "rooms"})
                         </span>
 
                         <div className="mt-3 flex items-center gap-2">
