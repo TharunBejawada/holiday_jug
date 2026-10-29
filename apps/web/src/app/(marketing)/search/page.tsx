@@ -17,6 +17,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
+import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface HotelResult {
@@ -617,8 +618,12 @@ function SearchResultsContent() {
 
 export default function SearchResultsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-12 text-center font-bold">Loading holiday results...</div>}>
-      <SearchResultsContent />
-    </Suspense>
+    <>
+      {/* Hidden Prices Phone Booking Popup */}
+      <CallForHiddenPricesModal />
+      <Suspense fallback={<div className="min-h-screen bg-gray-50 p-12 text-center font-bold">Loading holiday results...</div>}>
+        <SearchResultsContent />
+      </Suspense>
+    </>
   );
 }

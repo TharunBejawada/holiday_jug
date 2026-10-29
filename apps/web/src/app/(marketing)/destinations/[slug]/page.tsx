@@ -6,6 +6,7 @@ import { WhyVisitSection } from "@/components/destinations/WhyVisitSection";
 import { TopDestinationsSection } from "@/components/destinations/TopDestinationsSection";
 import { HolidayTypesSection } from "@/components/destinations/HolidayTypesSection";
 import { BestHolidayDealsSection } from "@/components/destinations/BestHolidayDealsSection";
+import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 
 type PageParams = { params: Promise<{ slug: string }> };
 
@@ -111,6 +112,9 @@ export default async function DestinationLandingPage({ params }: PageParams) {
 
         return (
             <main className="min-h-screen bg-white">
+                {/* Hidden Prices Phone Booking Popup */}
+                <CallForHiddenPricesModal key={country.slug} />
+
                 {/* Hero Section */}
                 <DestinationHero country={country} />
 

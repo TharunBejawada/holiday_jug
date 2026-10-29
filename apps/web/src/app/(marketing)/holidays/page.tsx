@@ -10,6 +10,7 @@ import {
   FaCheckCircle,
   FaHeadset,
 } from "react-icons/fa";
+import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 
 export const metadata: Metadata = {
   title: "Holiday Packages — Coming Soon | HolidayJug",
@@ -20,6 +21,9 @@ export const metadata: Metadata = {
 export default function HolidaysComingSoonPage() {
   return (
     <div className="min-h-screen bg-gray-50/70 pb-20">
+      {/* Hidden Prices Phone Booking Popup */}
+      <CallForHiddenPricesModal />
+
       {/* HERO SECTION */}
       <div className="bg-[#1D1248] text-white py-14 sm:py-20 px-4 sm:px-6 lg:px-8 border-b border-amber-500/20 text-center">
         <div className="max-w-4xl mx-auto space-y-4">

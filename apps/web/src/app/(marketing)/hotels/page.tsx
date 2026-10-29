@@ -24,6 +24,7 @@ import {
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
+import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 import { getActiveSearchDestinations } from "@/lib/destinations-master";
 
 export interface RoomConfig {
@@ -1401,15 +1402,19 @@ function HotelsPageContent() {
 
 export default function HotelsHomepage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-gray-50 p-12 text-center font-bold text-[#1D1248]">
-          Loading Verified Hotels...
-        </div>
-      }
-    >
-      <HotelsPageContent />
-    </Suspense>
+    <>
+      {/* Hidden Prices Phone Booking Popup */}
+      <CallForHiddenPricesModal />
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-gray-50 p-12 text-center font-bold text-[#1D1248]">
+            Loading Verified Hotels...
+          </div>
+        }
+      >
+        <HotelsPageContent />
+      </Suspense>
+    </>
   );
 }
 

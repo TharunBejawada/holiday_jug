@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { DestinationsBanner } from "@/components/destinations/DestinationsBanner";
 import { DestinationsExplorer } from "@/components/destinations/DestinationsExplorer";
+import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 
 export const metadata: Metadata = {
     title: "Destinations Overview | HolidayJug",
@@ -11,6 +12,9 @@ export const metadata: Metadata = {
 export default function DestinationsPage() {
     return (
         <main className="min-h-screen bg-gray-50">
+            {/* Hidden Prices Phone Booking Popup */}
+            <CallForHiddenPricesModal />
+
             {/* 1. Banner Section */}
             <DestinationsBanner />
 

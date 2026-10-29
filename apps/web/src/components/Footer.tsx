@@ -249,7 +249,18 @@ export function Footer() {
 
       {/* COPYRIGHT BAR */}
       <div className="border-t border-white/10 py-6 text-center text-xs sm:text-sm font-normal text-white/80">
-        <p>© 2026 Holiday Jug. All Rights Reserved. Authorised and Regulated.</p>
+        <p>
+          &copy; 2026{" "}
+          <a
+            href="https://vgdigitalmarketingagency.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#F7941D] hover:underline hover:text-white transition-colors font-medium"
+          >
+            vgdigitalmarketingagency.com
+          </a>
+          . All rights reserved.
+        </p>
       </div>
     </footer>
   );

@@ -1,20 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import {
-    FaUmbrellaBeach,
-    FaUsers,
-    FaHeart,
-    FaCrown,
-    FaRing,
-    FaSuitcaseRolling,
-} from "react-icons/fa";
+import Image from "next/image";
 
 interface CategoryItem {
     id: string;
     title: string;
     href: string;
-    icon: React.ReactNode;
+    icon: string;
 }
 
 const categories: CategoryItem[] = [
@@ -22,37 +15,37 @@ const categories: CategoryItem[] = [
         id: "beach",
         title: "Beach Holidays",
         href: "/holidays?type=beach",
-        icon: <FaUmbrellaBeach className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Beach Holidays.png",
     },
     {
         id: "family",
         title: "Family Holidays",
         href: "/holidays?type=family",
-        icon: <FaUsers className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Family Holidays.png",
     },
     {
         id: "couple",
         title: "Couple Getaways",
         href: "/holidays?type=couple",
-        icon: <FaHeart className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Couple Gateways.png",
     },
     {
         id: "luxury",
         title: "Luxury Holidays",
         href: "/holidays?type=luxury",
-        icon: <FaCrown className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Luxury Holidays.png",
     },
     {
         id: "honeymoon",
         title: "Honeymoon",
         href: "/holidays?type=honeymoon",
-        icon: <FaRing className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Honeymoon.png",
     },
     {
         id: "last-minute",
         title: "Last-Minute Deals",
         href: "/holidays?type=last-minute",
-        icon: <FaSuitcaseRolling className="text-4xl sm:text-5xl" />,
+        icon: "/assets/HOME PAGE/ICONS/Last Minute Deals.png",
     },
 ];
 
@@ -68,8 +61,14 @@ export function CategorySection() {
                             className="group cursor-pointer rounded-2xl bg-white p-5 sm:p-6 shadow-md hover:shadow-xl border border-gray-100 flex flex-col items-center justify-center text-center gap-4 transition-all duration-300 hover:bg-[#F7941D] hover:-translate-y-1.5"
                         >
                             {/* ICON WRAPPER */}
-                            <div className="text-[#1D1248] group-hover:text-white transition-colors duration-300">
-                                {cat.icon}
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+                                <Image
+                                    src={cat.icon}
+                                    alt={cat.title}
+                                    width={56}
+                                    height={56}
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
 
                             {/* TITLE */}
