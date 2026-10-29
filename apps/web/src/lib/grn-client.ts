@@ -463,8 +463,11 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Canary Islands",
     description: "Sun-drenched clifftop resort in Costa Adeje offering panoramic Atlantic Ocean views, lagoon swimming pools, and minutes from golden sandy beaches.",
     facilities: ["Lagoon Pool", "Atlantic Views", "Full Spa", "Tennis Courts", "Free Wi-Fi"],
-    mainImage: "/assets/Tenerife.jpg",
-    galleryImages: ["/assets/Tenerife.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 8800,
     localTaxGbp: 15.00,
   },
@@ -477,8 +480,10 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Canary Islands",
     description: "Vibrant beachside property located in the heart of Playa de las Americas with direct promenade access, cocktail cabanas, and nightly entertainment.",
     facilities: ["Beachfront Promenade", "Cocktail Cabanas", "Heated Pool", "Wellness Centre"],
-    mainImage: "/assets/Tenerife.jpg",
-    galleryImages: ["/assets/Tenerife.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 10500,
     localTaxGbp: 18.00,
   },
@@ -491,10 +496,28 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Spain",
     description: "Mediterranean gem overlooking the Palma marina and historic cathedral, featuring rooftop infinity plunge pool and authentic tapas dining.",
     facilities: ["Marina Views", "Rooftop Pool", "Tapas Bar", "Free Wi-Fi", "Air Conditioning"],
-    mainImage: "/assets/Tenerife.jpg",
-    galleryImages: ["/assets/Tenerife.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 8200,
     localTaxGbp: 14.00,
+  },
+  "ES-MAJ-02": {
+    hotelCode: "ES-MAJ-02",
+    name: "Majorca Sol & Sea Suites",
+    starRating: 4,
+    address: "Cala Major Beachfront, 07015 Palma, Majorca, Spain",
+    city: "Majorca",
+    country: "Spain",
+    description: "Relaxed coastal retreat nestled by golden sand coves with private sea-access solarium, freshwater pool, and ocean sunset dining.",
+    facilities: ["Sea-Access Solarium", "Freshwater Pool", "Beachside Bar", "Air Conditioning", "Free Wi-Fi"],
+    mainImage: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80",
+    ],
+    baseRateInr: 7600,
+    localTaxGbp: 13.00,
   },
   "TR-ANT-01": {
     hotelCode: "TR-ANT-01",
@@ -505,10 +528,29 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Turkey",
     description: "Ultra all-inclusive beachfront palace on Turkish Riviera's Lara Beach with private pier, aqua park, Turkish hammam, and 8 international restaurants.",
     facilities: ["Private Beach Pier", "Aqua Park", "Turkish Hammam", "Ultra All Inclusive", "Kids Club"],
-    mainImage: "/assets/Antalya.jpg",
-    galleryImages: ["/assets/Antalya.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 7800,
     localTaxGbp: 12.00,
+  },
+  "TR-ANT-02": {
+    hotelCode: "TR-ANT-02",
+    name: "Lara Beach Sun & Spa Resort",
+    starRating: 5,
+    address: "Kundu Koyu Mevkii, Lara Beach, Antalya 07112, Turkey",
+    city: "Antalya",
+    country: "Turkey",
+    description: "Expansive five-star paradise set right on the Mediterranean shoreline, offering expansive infinity pools, private cabanas, and nightly theatrical shows.",
+    facilities: ["Private Sand Beach", "Multi-Tier Pools", "Luxury Spa", "Kids Waterpark", "24-Hour Dining"],
+    mainImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+    ],
+    baseRateInr: 8400,
+    localTaxGbp: 13.50,
   },
   "PT-ALG-01": {
     hotelCode: "PT-ALG-01",
@@ -519,10 +561,28 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Portugal",
     description: "Perched above the red sandstone cliffs of Falesia Beach with pine forest trails, expansive sun terraces, and Atlantic ocean vistas.",
     facilities: ["Direct Beach Access", "Outdoor Pools", "Pine Forest Trails", "Ocean View Restaurant"],
-    mainImage: "/assets/Tenerife.jpg",
-    galleryImages: ["/assets/Tenerife.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 7900,
     localTaxGbp: 13.00,
+  },
+  "PT-ALG-02": {
+    hotelCode: "PT-ALG-02",
+    name: "Albufeira Grand Marina Hotel",
+    starRating: 5,
+    address: "Marina de Albufeira, 8200-392 Albufeira, Algarve, Portugal",
+    city: "Algarve",
+    country: "Portugal",
+    description: "Contemporary 5-star marina hotel overlooking yachts and coastal coves, boasting heated outdoor pools, luxury spa suites, and seafood gastronomy.",
+    facilities: ["Marina View Suites", "Heated Pool", "Thalasso Spa", "Fine Dining", "Free Wi-Fi"],
+    mainImage: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80",
+    ],
+    baseRateInr: 9200,
+    localTaxGbp: 15.00,
   },
   "GR-SAN-01": {
     hotelCode: "GR-SAN-01",
@@ -533,10 +593,29 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     country: "Greece",
     description: "Whitewashed luxury cave suites perched on the caldera rim in Oia with private plunge pools, world-famous Aegean sunset views, and Greek gourmet breakfast.",
     facilities: ["Caldera Sunset Views", "Private Plunge Pool", "Cave Suites", "Greek Gourmet Breakfast"],
-    mainImage: "/assets/Santorini.jpg",
-    galleryImages: ["/assets/Santorini.jpg"],
+    mainImage: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
+    ],
     baseRateInr: 16500,
     localTaxGbp: 24.00,
+  },
+  "GR-SAN-02": {
+    hotelCode: "GR-SAN-02",
+    name: "Oia Sunset Boutique Hotel",
+    starRating: 5,
+    address: "Main Pedestrian Street, Oia, Santorini 84702, Greece",
+    city: "Santorini",
+    country: "Greece",
+    description: "Intimate cliffside retreat offering infinity edge pools looking out towards the volcanic islands, bespoke wine tastings, and tailored butler service.",
+    facilities: ["Infinity Edge Pool", "Caldera Balconies", "Wine Cellar", "Sunset Lounge", "Free Airport Shuttle"],
+    mainImage: "https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?auto=format&fit=crop&w=800&q=80",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1515542622106-78bda8ba0e5b?auto=format&fit=crop&w=800&q=80",
+    ],
+    baseRateInr: 15200,
+    localTaxGbp: 22.00,
   },
 };
 
@@ -748,8 +827,8 @@ export async function searchGrnHotels(
       country: indexed ? indexed.countryName : "International",
       description: `Premium accommodation situated in ${indexed ? indexed.cityName : "the resort centre"}, offering comfortable guest rooms, full service amenities and attentive service.`,
       facilities: ["Swimming Pool", "Free Wi-Fi", "Restaurant & Bar", "Air Conditioning"],
-      mainImage: "/assets/Tenerife.jpg",
-      galleryImages: ["/assets/Tenerife.jpg"],
+      mainImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
+      galleryImages: ["https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"],
       baseRateInr: 8500,
       localTaxGbp: 12.00,
     };
@@ -814,6 +893,29 @@ export async function searchGrnHotels(
     const finalName = apiHotel?.name || dbHotel?.name || (indexed ? indexed.hotelName : fallbackHotel.name);
     const finalAddress = apiHotel?.address || dbHotel?.address || (indexed ? indexed.address : fallbackHotel.address);
 
+    // Resolve valid image from API or DB fallback
+    let resolvedImage = fallbackHotel.mainImage;
+    if (apiHotel?.images) {
+      let apiImg = apiHotel.images.main_image;
+      if (apiImg && typeof apiImg === "object" && typeof apiImg.url === "string") {
+        apiImg = apiImg.url;
+      }
+      if (typeof apiImg === "string") {
+        apiImg = apiImg.trim();
+        if (apiImg.startsWith("http://")) {
+          resolvedImage = apiImg.replace("http://", "https://");
+        } else if (apiImg.startsWith("https://") || apiImg.startsWith("/assets/")) {
+          resolvedImage = apiImg;
+        } else {
+          // If GRN returned a relative fragment (e.g. "1848131/001.jpg"), prefer our verified high-res hotel photo
+          resolvedImage = fallbackHotel.mainImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
+        }
+      }
+    }
+    if (!resolvedImage || resolvedImage.trim() === "" || (!resolvedImage.startsWith("http") && !resolvedImage.startsWith("/assets/"))) {
+      resolvedImage = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
+    }
+
     results.push({
       hotelCode: code,
       hotelName: finalName,
@@ -823,7 +925,7 @@ export async function searchGrnHotels(
       country: finalCountry,
       description: apiHotel?.description || fallbackHotel.description,
       facilities: apiHotel?.facilities ? apiHotel.facilities.split(";").map((s: string) => s.trim()).filter(Boolean) : fallbackHotel.facilities,
-      mainImage: apiHotel?.images?.main_image || fallbackHotel.mainImage,
+      mainImage: resolvedImage,
       galleryImages: fallbackHotel.galleryImages,
       availableRates,
       leadPricing,

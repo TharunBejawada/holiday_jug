@@ -51,7 +51,7 @@ const categories: CategoryItem[] = [
     {
         id: "last-minute",
         title: "Last-Minute Deals",
-        href: "/deals/last-minute",
+        href: "/holidays?type=last-minute",
         icon: <FaSuitcaseRolling className="text-4xl sm:text-5xl" />,
     },
 ];

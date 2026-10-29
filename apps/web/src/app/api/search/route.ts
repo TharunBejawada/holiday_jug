@@ -10,6 +10,7 @@ interface SearchPayload {
   type?: "holidays" | "hotels";
   destination?: string;
   departureAirport?: string;
+  hotelCode?: string; // Optional single hotel availability check
   checkIn?: string;
   checkOut?: string;
   adults?: number | string;
@@ -18,9 +19,19 @@ interface SearchPayload {
 }
 
 async function handleSearch(payload: SearchPayload) {
-  const isHotelsOnly = payload.type === "hotels" || payload.departureAirport === "";
-  const destinationInput = payload.destination || "dubai";
-  const departureAirport = isHotelsOnly ? "" : (payload.departureAirport || "LGW");
+  // RULE: The search and availability API is strictly for HOTELS ONLY.
+  // Holidays data is not yet integrated into the live API.
+  if (payload.type === "holidays") {
+    return NextResponse.json({
+      success: false,
+      isHolidays: true,
+      hotels: [],
+      message:
+        "Holiday flight + hotel packages are coming soon! We are actively integrating live airline inventory. For custom holiday quotes, please contact our travel advisors.",
+    });
+  }
+
+  const destinationInput = (payload.destination || "all").toLowerCase().trim();
   const checkIn = payload.checkIn || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
   const checkOut = payload.checkOut || new Date(Date.now() + 21 * 86400000).toISOString().split("T")[0];
 
@@ -45,16 +56,50 @@ async function handleSearch(payload: SearchPayload) {
     Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  // Resolve mapped destination (D1, D2, A.4)
-  const destinationItem = findDestination(destinationInput) || findDestination("dubai")!;
+  // Resolve mapped destination or default to curated worldwide featured hotels
+  let destinationName = "Featured Worldwide";
+  let countryName = "Top Destinations";
+  let destinationSlug = "all";
+  let hotelCodesToSearch: string[] = [];
 
-  // Flight fare simulation (Section 5: Live fare converted to GBP, zero margin added. 0 for Hotels Only)
-  const flightFareGbp = isHotelsOnly ? 0 : 120;
+  if (payload.hotelCode) {
+    hotelCodesToSearch = [payload.hotelCode];
+    const item = findDestination(destinationInput);
+    if (item) {
+      destinationName = item.destination;
+      countryName = item.country;
+      destinationSlug = item.slug;
+    }
+  } else if (!destinationInput || destinationInput === "all" || destinationInput === "featured") {
+    // Show a curated selection of "few hotels" across diverse top destinations on overview
+    hotelCodesToSearch = [
+      "1848131", // Sheraton Dubai Creek (Dubai, UAE)
+      "TR-ANT-01", // Antalya Riviera Luxury Palace (Antalya, Turkey)
+      "GR-SAN-01", // Santorini Caldera View Suites (Santorini, Greece)
+      "ES-TEN-01", // Tenerife Royal Sun Resort (Tenerife, Spain)
+      "1847658", // Al Habtoor Grand Resort (Dubai JBR)
+      "PT-ALG-01", // Algarve Cliffside Resort (Algarve, Portugal)
+      "1847631", // Grand Hyatt Dubai (Dubai, UAE)
+      "ES-MAJ-01", // Palma Bay Luxury Resort (Majorca, Spain)
+    ];
+    destinationName = "Featured Worldwide";
+    countryName = "Top Destinations";
+    destinationSlug = "all";
+  } else {
+    const destinationItem = findDestination(destinationInput) || findDestination("dubai")!;
+    destinationName = destinationItem.destination;
+    countryName = destinationItem.country;
+    destinationSlug = destinationItem.slug;
+    hotelCodesToSearch = destinationItem.featuredHotelCodes;
+  }
 
-  // Search GRN availability (Section 4 & 6)
+  // Hotel search only: No flight fare added
+  const flightFareGbp = 0;
+
+  // Search GRN availability (Hotels Only)
   const hotels = await searchGrnHotels(
     {
-      hotelCodes: destinationItem.featuredHotelCodes,
+      hotelCodes: hotelCodesToSearch,
       checkIn,
       checkOut,
       rooms,
@@ -80,9 +125,9 @@ async function handleSearch(payload: SearchPayload) {
     const record: StoredSearchRecord = {
       searchId,
       customerSearch: {
-        destination: destinationItem.slug,
-        destinationName: destinationItem.destination,
-        departureAirport,
+        destination: destinationSlug,
+        destinationName,
+        departureAirport: "",
         checkIn,
         checkOut,
         nights,
@@ -98,18 +143,11 @@ async function handleSearch(payload: SearchPayload) {
         starRating: leadHotel.starRating,
         address: leadHotel.address,
         imageUrl: leadHotel.mainImage,
-        flightDetails: flightFareGbp > 0 ? {
-          airline: "British Airways",
-          flightNumber: "BA-214",
-          departureTime: "08:15 LGW",
-          returnTime: "17:30 LHR",
-          flightPriceGbp: flightFareGbp,
-        } : undefined,
       },
       customerPricing: {
         hotelPrice: leadRate.customerPricing.hotelPrice,
         localTax: leadRate.customerPricing.localTax,
-        flightPrice: leadRate.customerPricing.flightPrice,
+        flightPrice: 0,
         transfersPrice: leadRate.customerPricing.transfersPrice,
         totalPrice: leadRate.customerPricing.totalPrice,
         pricePerPerson: leadRate.customerPricing.pricePerPerson,
@@ -140,11 +178,12 @@ async function handleSearch(payload: SearchPayload) {
     priceCheckedAt: ukTimeShort,
     priceCheckedAtFullUk: ukTimeNow,
     searchDetails: {
-      type: isHotelsOnly ? "hotels" : "holidays",
-      isHotelsOnly,
-      destination: destinationItem.destination,
-      country: destinationItem.country,
-      departureAirport,
+      type: "hotels",
+      isHotelsOnly: true,
+      destination: destinationName,
+      country: countryName,
+      destinationSlug,
+      departureAirport: "",
       checkIn,
       checkOut,
       nights,
@@ -174,12 +213,13 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const type = (url.searchParams.get("type") as "holidays" | "hotels") || undefined;
     const destination = url.searchParams.get("destination") || undefined;
+    const hotelCode = url.searchParams.get("hotelCode") || undefined;
     const departureAirport = url.searchParams.get("departureAirport") || undefined;
     const checkIn = url.searchParams.get("checkIn") || undefined;
     const checkOut = url.searchParams.get("checkOut") || undefined;
     const adults = url.searchParams.get("adults") ? Number(url.searchParams.get("adults")) : undefined;
 
-    return await handleSearch({ type, destination, departureAirport, checkIn, checkOut, adults });
+    return await handleSearch({ type, destination, hotelCode, departureAirport, checkIn, checkOut, adults });
   } catch (error: any) {
     console.error("Search API GET Error:", error);
     return NextResponse.json(

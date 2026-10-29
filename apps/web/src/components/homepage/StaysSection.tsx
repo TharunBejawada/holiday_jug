@@ -45,7 +45,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847658.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847658.baseRateInr, h1847658.localTaxGbp),
       image: h1847658.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847658.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847658.hotelCode}`,
       tag: "Private Beachfront",
     },
     {
@@ -55,7 +55,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1848134.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1848134.baseRateInr, h1848134.localTaxGbp),
       image: h1848134.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1848134.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1848134.hotelCode}`,
       tag: "Palm Garden Resort",
     },
     {
@@ -65,7 +65,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 5,
       pricePerNightGbp: 89,
       image: "/assets/Antalya.jpg",
-      href: "/search?destination=turkey",
+      href: "/hotels?destination=turkey",
       tag: "All-Inclusive Beach",
     },
     {
@@ -75,7 +75,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 4,
       pricePerNightGbp: 95,
       image: "/assets/Tenerife.jpg",
-      href: "/search?destination=spain",
+      href: "/hotels?destination=spain",
       tag: "Oceanfront Views",
     },
   ],
@@ -87,7 +87,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847445.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847445.baseRateInr, h1847445.localTaxGbp),
       image: h1847445.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847445.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847445.hotelCode}`,
       tag: "Burj Khalifa Views",
     },
     {
@@ -97,7 +97,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1848002.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1848002.baseRateInr, h1848002.localTaxGbp),
       image: h1848002.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1848002.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1848002.hotelCode}`,
       tag: "Historic Creek Waterfront",
     },
     {
@@ -107,7 +107,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847874.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847874.baseRateInr, h1847874.localTaxGbp),
       image: h1847874.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847874.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847874.hotelCode}`,
       tag: "Saltwater Pool & English Pub",
     },
     {
@@ -117,7 +117,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 4,
       pricePerNightGbp: 142,
       image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80",
-      href: "/search?destination=usa",
+      href: "/hotels?destination=usa",
       tag: "Financial District LA",
     },
   ],
@@ -129,7 +129,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1848044.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1848044.baseRateInr, h1848044.localTaxGbp),
       image: h1848044.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1848044.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1848044.hotelCode}`,
       tag: "7 Dining Venues & Tennis",
     },
     {
@@ -139,7 +139,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847631.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847631.baseRateInr, h1847631.localTaxGbp),
       image: h1847631.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847631.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847631.hotelCode}`,
       tag: "37 Acres Lagoon Resort",
     },
     {
@@ -149,7 +149,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 4,
       pricePerNightGbp: 78,
       image: "/assets/Tenerife.jpg",
-      href: "/search?destination=spain",
+      href: "/hotels?destination=spain",
       tag: "Kids Club & Water Park",
     },
     {
@@ -159,7 +159,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 4,
       pricePerNightGbp: 64,
       image: "/assets/Antalya.jpg",
-      href: "/search?destination=turkey",
+      href: "/hotels?destination=turkey",
       tag: "Family Suites & Slides",
     },
   ],
@@ -171,7 +171,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1848131.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1848131.baseRateInr, h1848131.localTaxGbp),
       image: h1848131.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1848131.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1848131.hotelCode}`,
       tag: "5★ Iconic Waterfront",
     },
     {
@@ -181,7 +181,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847631.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847631.baseRateInr, h1847631.localTaxGbp),
       image: h1847631.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847631.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847631.hotelCode}`,
       tag: "Luxury Private Cabanas",
     },
     {
@@ -191,7 +191,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: h1847658.starRating,
       pricePerNightGbp: getCalculatedStayPrice(h1847658.baseRateInr, h1847658.localTaxGbp),
       image: h1847658.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847658.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847658.hotelCode}`,
       tag: "Autograph Collection Resort",
     },
     {
@@ -201,7 +201,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 5,
       pricePerNightGbp: 185,
       image: "/assets/Santorini.jpg",
-      href: "/search?destination=greece",
+      href: "/hotels?destination=greece",
       tag: "Private Infinity Pools",
     },
   ],
@@ -213,7 +213,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 5,
       pricePerNightGbp: getCalculatedStayPrice(h1847631.baseRateInr, h1847631.localTaxGbp),
       image: h1847631.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1847631.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1847631.hotelCode}`,
       tag: "Award-Winning Ahasees Spa",
     },
     {
@@ -223,7 +223,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 5,
       pricePerNightGbp: getCalculatedStayPrice(h1848131.baseRateInr, h1848131.localTaxGbp),
       image: h1848131.mainImage,
-      href: `/search?destination=dubai&hotelCode=${h1848131.hotelCode}`,
+      href: `/hotels?destination=dubai&hotelCode=${h1848131.hotelCode}`,
       tag: "Full Service Wellness & Pool",
     },
     {
@@ -233,7 +233,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 4,
       pricePerNightGbp: 88,
       image: "/assets/Tenerife.jpg",
-      href: "/search?destination=portugal",
+      href: "/hotels?destination=portugal",
       tag: "Hydrotherapy & Thalasso",
     },
     {
@@ -243,7 +243,7 @@ const dynamicStaysData: Record<TabCategory, StayCard[]> = {
       starRating: 5,
       pricePerNightGbp: 75,
       image: "https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=800&q=80",
-      href: "/search?destination=egypt",
+      href: "/hotels?destination=egypt",
       tag: "Historic Nile Waterfront",
     },
   ],
@@ -304,6 +304,10 @@ export function StaysSection() {
                 <img
                   src={stay.image}
                   alt={stay.title}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
+                  }}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

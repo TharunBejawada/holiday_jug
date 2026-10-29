@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FiX, FiPlus, FiEdit2 } from "react-icons/fi";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 type Place = { id: string; name: string; slug: string; sortOrder: number; countryId: string | null };
 
@@ -98,24 +99,28 @@ export function CountryPlacesManager({ countryId }: { countryId: string }) {
         </div>
       )}
 
-      <div className="flex gap-2">
-        <select
-          value={picking}
-          onChange={(e) => setPicking(e.target.value)}
-          className="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm bg-white"
-        >
-          <option value="">Add an existing place...</option>
-          {unassigned.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <SearchableSelect
+            options={unassigned.map((p) => ({ value: p.id, label: p.name }))}
+            value={picking}
+            onChange={(val) => setPicking(val)}
+            placeholder="Add an existing place..."
+            searchPlaceholder="Search places to add..."
+            isClearable
+            triggerClassName="py-2 rounded-lg border-gray-300 bg-white"
+          />
+        </div>
         <button
           type="button"
-          onClick={() => addPlace(picking)}
+          onClick={() => {
+            if (picking) {
+              addPlace(picking);
+              setPicking("");
+            }
+          }}
           disabled={!picking}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-sm font-medium text-gray-700 transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-sm font-medium text-gray-700 transition-colors shrink-0"
         >
           <FiPlus /> Add
         </button>

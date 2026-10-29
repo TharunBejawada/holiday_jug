@@ -15,6 +15,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { CountryPlacesManager } from "@/components/admin/destinations/CountryPlacesManager";
 import { CountryFaqsManager } from "@/components/admin/destinations/CountryFaqsManager";
 import { uploadAssetImage } from "@/lib/upload-asset";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 const REGIONS = ["EUROPE", "MEDITERRANEAN", "MIDDLE_EAST", "INDIAN_OCEAN", "ASIA", "CARIBBEAN", "AMERICAS"];
 const FLIGHT_BANDS = [
@@ -338,31 +339,31 @@ export function CountryForm({ countryId }: { countryId?: string }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Region</label>
-            <select
+            <SearchableSelect
+              options={REGIONS.map((r) => ({
+                value: r,
+                label: r.replace(/_/g, " "),
+              }))}
               value={data.region}
-              onChange={(e) => setData((d) => ({ ...d, region: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
-            >
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>
-                  {r.replace(/_/g, " ")}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setData((d) => ({ ...d, region: val }))}
+              placeholder="Select region..."
+              searchPlaceholder="Search region..."
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Typical flight time</label>
-            <select
+            <SearchableSelect
+              options={FLIGHT_BANDS.map((b) => ({
+                value: b.value,
+                label: b.label,
+              }))}
               value={data.flightTimeBand}
-              onChange={(e) => setData((d) => ({ ...d, flightTimeBand: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
-            >
-              {FLIGHT_BANDS.map((b) => (
-                <option key={b.value} value={b.value}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setData((d) => ({ ...d, flightTimeBand: val }))}
+              placeholder="Select flight time..."
+              searchPlaceholder="Search flight time..."
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Starting From price (£ / person)</label>

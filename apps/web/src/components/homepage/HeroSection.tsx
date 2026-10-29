@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaMapMarkerAlt,
@@ -15,12 +15,29 @@ import {
 } from "react-icons/fa";
 
 import { DatePicker } from "@/components/DatePicker";
-import { DEPARTURE_AIRPORTS, getActiveSearchDestinations } from "@/lib/destinations-master";
+import { SearchableSelect } from "@/components/SearchableSelect";
+import { DEPARTURE_AIRPORTS } from "@/lib/destinations-master";
 
 interface RoomConfig {
   adults: number;
   childrenAges: number[];
 }
+
+interface AdminDestinationItem {
+  slug: string;
+  name: string;
+  region: string;
+  priceFrom?: number | null;
+}
+
+const DEFAULT_ADMIN_DESTINATIONS: AdminDestinationItem[] = [
+  { slug: "turkey", name: "Turkey", region: "Europe", priceFrom: 95 },
+  { slug: "greece", name: "Greece", region: "Europe", priceFrom: 285 },
+  { slug: "dubai", name: "Dubai", region: "Middle East", priceFrom: 548 },
+  { slug: "spain", name: "Spain", region: "Europe", priceFrom: 325 },
+  { slug: "antalya", name: "Antalya", region: "Mediterranean", priceFrom: 878 },
+  { slug: "portugal", name: "Portugal", region: "Europe", priceFrom: 450 },
+];
 
 export function HeroSection() {
   const router = useRouter();
@@ -28,6 +45,8 @@ export function HeroSection() {
   const [departureAirport, setDepartureAirport] = useState("LGW");
   const [destination, setDestination] = useState("dubai");
   const [destinationQuery, setDestinationQuery] = useState("Dubai, United Arab Emirates");
+  const [adminDestinations, setAdminDestinations] = useState<AdminDestinationItem[]>(DEFAULT_ADMIN_DESTINATIONS);
+
   const [checkIn, setCheckIn] = useState(() => {
     const d = new Date(Date.now() + 14 * 86400000);
     return d.toISOString().split("T")[0];
@@ -43,7 +62,44 @@ export function HeroSection() {
   ]);
   const [showTravellersPopover, setShowTravellersPopover] = useState(false);
 
-  const activeDestinations = getActiveSearchDestinations();
+  // Fetch published destinations dynamically from Admin Dashboard
+  useEffect(() => {
+    fetch("/api/destinations", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+          setAdminDestinations(
+            data.items.map((item: any) => ({
+              slug: item.slug,
+              name: item.name,
+              region: item.region || "Worldwide",
+              priceFrom: item.priceFrom,
+            }))
+          );
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching destinations for Hero dropdown:", err);
+      });
+  }, []);
+
+  const airportOptions = useMemo(() => {
+    return DEPARTURE_AIRPORTS.map((apt) => ({
+      value: apt.code,
+      label: `${apt.city} (${apt.code})`,
+      subtitle: apt.name,
+      searchTerms: [apt.city, apt.code, apt.name],
+    }));
+  }, []);
+
+  const destinationOptions = useMemo(() => {
+    return adminDestinations.map((d) => ({
+      value: d.slug,
+      label: `${d.name} (${d.region})`,
+      subtitle: d.priceFrom ? `From £${d.priceFrom} pp` : undefined,
+      searchTerms: [d.name, d.slug, d.region],
+    }));
+  }, [adminDestinations]);
 
   // Summary labels for Travellers
   const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
@@ -55,18 +111,21 @@ export function HeroSection() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const queryParams = new URLSearchParams({
-      destination,
-      departureAirport: activeTab === "holidays" ? departureAirport : "",
-      checkIn,
-      checkOut,
-      type: activeTab,
-      rooms: JSON.stringify(rooms),
-      adults: totalAdults.toString(),
-      children: totalChildren.toString(),
-    });
-
-    router.push(`/search?${queryParams.toString()}`);
+    if (activeTab === "hotels") {
+      const queryParams = new URLSearchParams({
+        destination,
+        checkIn,
+        checkOut,
+        type: "hotels",
+        rooms: JSON.stringify(rooms),
+        adults: totalAdults.toString(),
+        children: totalChildren.toString(),
+      });
+      router.push(`/hotels?${queryParams.toString()}`);
+    } else {
+      // For Holidays / Destination search: navigate directly to destination details page based on Admin Dashboard data
+      router.push(`/destinations/${destination}`);
+    }
   };
 
   const addRoom = () => {
@@ -136,7 +195,7 @@ export function HeroSection() {
                     : "bg-[#F7941D] text-white hover:bg-[#e08314]"
                 }`}
               >
-                Holidays (Flight + Hotel)
+                Holidays (Destinations)
               </button>
               <button
                 type="button"
@@ -158,44 +217,32 @@ export function HeroSection() {
                 {activeTab === "holidays" && (
                   <div className="lg:col-span-2 flex flex-col gap-1 sm:gap-1.5">
                     <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Departing From</label>
-                    <div className="relative flex items-center">
-                      <select
-                        value={departureAirport}
-                        onChange={(e) => setDepartureAirport(e.target.value)}
-                        className="w-full rounded-xl bg-gray-50/90 px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-800 border border-gray-200 focus:border-[#F7941D] focus:bg-white focus:outline-none transition-all font-semibold appearance-none cursor-pointer"
-                      >
-                        {DEPARTURE_AIRPORTS.map((apt) => (
-                          <option key={apt.code} value={apt.code}>
-                            {apt.city} ({apt.code})
-                          </option>
-                        ))}
-                      </select>
-                      <FaPlaneDeparture className="absolute right-3.5 text-gray-400 pointer-events-none text-xs sm:text-sm" />
-                    </div>
+                    <SearchableSelect
+                      options={airportOptions}
+                      value={departureAirport}
+                      onChange={(val) => setDepartureAirport(val)}
+                      placeholder="Select airport"
+                      searchPlaceholder="Search airport or city..."
+                      trailingIcon={<FaPlaneDeparture className="text-gray-400 text-xs sm:text-sm" />}
+                    />
                   </div>
                 )}
 
-                {/* 2. WHERE TO? (D1, D3 & Appendix A) */}
+                {/* 2. WHERE TO? (Destinations from Admin Dashboard) */}
                 <div className={`${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-4"} flex flex-col gap-1 sm:gap-1.5`}>
                   <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Where to?</label>
-                  <div className="relative flex items-center">
-                    <select
-                      value={destination}
-                      onChange={(e) => {
-                        setDestination(e.target.value);
-                        const match = activeDestinations.find((d) => d.slug === e.target.value);
-                        if (match) setDestinationQuery(`${match.destination}, ${match.country}`);
-                      }}
-                      className="w-full rounded-xl bg-gray-50/90 px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-800 border border-gray-200 focus:border-[#F7941D] focus:bg-white focus:outline-none transition-all font-semibold appearance-none cursor-pointer"
-                    >
-                      {activeDestinations.map((d) => (
-                        <option key={d.slug} value={d.slug}>
-                          {d.destination} ({d.country})
-                        </option>
-                      ))}
-                    </select>
-                    <FaMapMarkerAlt className="absolute right-3.5 text-gray-400 pointer-events-none text-xs sm:text-sm" />
-                  </div>
+                  <SearchableSelect
+                    options={destinationOptions}
+                    value={destination}
+                    onChange={(val) => {
+                      setDestination(val);
+                      const match = adminDestinations.find((d) => d.slug === val);
+                      if (match) setDestinationQuery(`${match.name}, ${match.region}`);
+                    }}
+                    placeholder="Select destination"
+                    searchPlaceholder="Search country or city..."
+                    trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs sm:text-sm" />}
+                  />
                 </div>
 
                 {/* 3. CHECK-IN */}
@@ -238,94 +285,102 @@ export function HeroSection() {
 
                       <div className="max-h-72 overflow-y-auto py-3 space-y-4">
                         {rooms.map((room, roomIdx) => (
-                          <div key={roomIdx} className="p-3 rounded-xl bg-gray-50 border border-gray-100 space-y-3">
+                          <div key={roomIdx} className="p-3 rounded-xl bg-gray-50/70 border border-gray-100 space-y-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-[#F7941D] uppercase tracking-wide">
+                              <span className="font-bold text-xs uppercase tracking-wide text-[#F7941D]">
                                 Room {roomIdx + 1}
                               </span>
                               {rooms.length > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => removeRoom(roomIdx)}
-                                  className="text-xs text-red-500 hover:underline font-semibold"
+                                  className="text-red-500 hover:text-red-700 text-xs font-semibold"
                                 >
                                   Remove Room
                                 </button>
                               )}
                             </div>
 
-                            {/* Adults in room */}
-                            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                            {/* Adults */}
+                            <div className="flex items-center justify-between text-xs sm:text-sm">
                               <div>
-                                <p>Adults</p>
-                                <span className="text-[11px] text-gray-500 font-normal">Ages 18+</span>
+                                <p className="font-semibold text-gray-800">Adults</p>
+                                <p className="text-[10px] text-gray-400">Ages 18+</p>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2.5">
                                 <button
                                   type="button"
                                   onClick={() => updateAdults(roomIdx, -1)}
                                   disabled={room.adults <= 1}
-                                  className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs hover:bg-gray-100 disabled:opacity-40"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
-                                  <FaMinus />
+                                  <FaMinus className="text-[9px]" />
                                 </button>
-                                <span className="w-5 text-center font-bold">{room.adults}</span>
+                                <span className="w-5 text-center font-bold text-xs sm:text-sm">
+                                  {room.adults}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => updateAdults(roomIdx, 1)}
                                   disabled={room.adults >= 9}
-                                  className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs hover:bg-gray-100 disabled:opacity-40"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
-                                  <FaPlus />
+                                  <FaPlus className="text-[9px]" />
                                 </button>
                               </div>
                             </div>
 
-                            {/* Children in room */}
-                            <div className="flex items-center justify-between text-xs sm:text-sm font-semibold">
+                            {/* Children */}
+                            <div className="flex items-center justify-between text-xs sm:text-sm pt-2 border-t border-gray-200/50">
                               <div>
-                                <p>Children</p>
-                                <span className="text-[11px] text-gray-500 font-normal">Ages 1 to 17</span>
+                                <p className="font-semibold text-gray-800">Children</p>
+                                <p className="text-[10px] text-gray-400">Ages 0 to 17</p>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2.5">
                                 <button
                                   type="button"
-                                  onClick={() => room.childrenAges.length > 0 && removeChild(roomIdx, room.childrenAges.length - 1)}
-                                  disabled={room.childrenAges.length <= 0}
-                                  className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs hover:bg-gray-100 disabled:opacity-40"
+                                  onClick={() => removeChild(roomIdx, room.childrenAges.length - 1)}
+                                  disabled={room.childrenAges.length === 0}
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
-                                  <FaMinus />
+                                  <FaMinus className="text-[9px]" />
                                 </button>
-                                <span className="w-5 text-center font-bold">{room.childrenAges.length}</span>
+                                <span className="w-5 text-center font-bold text-xs sm:text-sm">
+                                  {room.childrenAges.length}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => addChild(roomIdx)}
                                   disabled={room.childrenAges.length >= 8}
-                                  className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center text-xs hover:bg-gray-100 disabled:opacity-40"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
                                 >
-                                  <FaPlus />
+                                  <FaPlus className="text-[9px]" />
                                 </button>
                               </div>
                             </div>
 
-                            {/* Child ages selection (Exact age required D3) */}
+                            {/* Child Ages inputs */}
                             {room.childrenAges.length > 0 && (
-                              <div className="pt-2 border-t border-gray-200/60 space-y-2">
-                                <span className="text-[11px] font-bold text-gray-600 block">
-                                  Children&apos;s Ages at check-in (Required):
-                                </span>
-                                <div className="grid grid-cols-2 gap-2">
+                              <div className="pt-2 border-t border-gray-200/50 space-y-2">
+                                <p className="text-[10px] font-semibold text-gray-500">
+                                  Ages of children at check-out
+                                </p>
+                                <div className="grid grid-cols-3 gap-2">
                                   {room.childrenAges.map((age, childIdx) => (
-                                    <div key={childIdx} className="flex items-center justify-between bg-white px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-medium">
-                                      <span>Child {childIdx + 1}:</span>
+                                    <div key={childIdx} className="flex flex-col gap-0.5">
+                                      <label className="text-[9px] text-gray-500">
+                                        Child {childIdx + 1}
+                                      </label>
                                       <select
                                         value={age}
-                                        onChange={(e) => updateChildAge(roomIdx, childIdx, Number(e.target.value))}
-                                        className="bg-transparent font-bold text-[#F7941D] cursor-pointer outline-none"
+                                        onChange={(e) =>
+                                          updateChildAge(roomIdx, childIdx, parseInt(e.target.value))
+                                        }
+                                        className="rounded-lg bg-white border border-gray-200 px-2 py-1 text-xs font-semibold focus:border-[#F7941D] focus:outline-none"
                                       >
-                                        {Array.from({ length: 17 }, (_, i) => i + 1).map((a) => (
+                                        {Array.from({ length: 18 }, (_, a) => (
                                           <option key={a} value={a}>
-                                            {a} yr{a > 1 ? "s" : ""}
+                                            {a === 0 ? "Under 1" : `${a} yr${a > 1 ? "s" : ""}`}
                                           </option>
                                         ))}
                                       </select>
@@ -367,7 +422,7 @@ export function HeroSection() {
                     className="w-full rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-[0.98] py-3 sm:py-3.5 px-6 text-sm sm:text-base font-extrabold text-white transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <FaSearch className="text-xs sm:text-sm" />
-                    <span>Search {activeTab === "holidays" ? "Holidays" : "Hotels"}</span>
+                    <span>{activeTab === "holidays" ? "Explore Destination" : "Search Hotels"}</span>
                   </button>
                 </div>
               </form>

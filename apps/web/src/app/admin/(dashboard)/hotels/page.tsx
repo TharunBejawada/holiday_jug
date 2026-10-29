@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   FiHome,
@@ -18,6 +18,7 @@ import {
   FiRefreshCw,
   FiShield,
 } from "react-icons/fi";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface HotelItem {
   hotelCode: string;
@@ -46,6 +47,16 @@ export default function AdminHotelsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalHotels, setTotalHotels] = useState(1842);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  const cityOptions = useMemo(() => [
+    { value: "", label: `All Cities (${totalHotels} hotels)` },
+    ...cities.map((c) => ({
+      value: c.cityId,
+      label: c.cityName,
+      badge: `${c.count} hotels`,
+      searchTerms: [c.cityName, c.cityId, c.countryName],
+    })),
+  ], [cities, totalHotels]);
 
   // Rate check modal
   const [selectedHotel, setSelectedHotel] = useState<HotelItem | null>(null);
@@ -166,22 +177,18 @@ export default function AdminHotelsPage() {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative w-full md:w-64">
-              <select
+            <div className="w-full md:w-72">
+              <SearchableSelect
+                options={cityOptions}
                 value={cityId}
-                onChange={(e) => {
-                  setCityId(e.target.value);
+                onChange={(val) => {
+                  setCityId(val);
                   setPage(1);
                 }}
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 text-gray-700 font-medium"
-              >
-                <option value="">All Cities ({totalHotels} hotels)</option>
-                {cities.map((c) => (
-                  <option key={c.cityId} value={c.cityId}>
-                    {c.cityName} ({c.count} hotels)
-                  </option>
-                ))}
-              </select>
+                placeholder="Select city..."
+                searchPlaceholder="Search city..."
+                triggerClassName="py-2.5 rounded-xl border-gray-200 bg-white font-medium"
+              />
             </div>
 
             <button

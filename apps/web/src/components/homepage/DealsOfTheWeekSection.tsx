@@ -7,7 +7,7 @@ export function DealsOfTheWeekSection() {
         <section className="bg-white py-4 sm:py-6">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <Link
-                    href="/deals/of-the-week"
+                    href="/destinations"
                     className="group block relative w-full rounded-3xl border border-gray-100/90 shadow-md hover:shadow-xl bg-white overflow-hidden transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
                 >
                     <div className="flex flex-col md:flex-row items-center h-auto md:h-44">

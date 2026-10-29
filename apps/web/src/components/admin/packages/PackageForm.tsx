@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useMemo, type FormEvent } from "react";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { FiAlertCircle, FiCheckCircle, FiUpload } from "react-icons/fi";
@@ -271,55 +272,45 @@ export function PackageForm({ packageId, initialDestinationId }: { packageId?: s
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Destination</label>
-            <select
+            <SearchableSelect
+              options={destinations.map((d) => ({ value: d.id, label: d.name }))}
               value={selectedDestinationId}
-              onChange={(e) => handleDestinationChange(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
-            >
-              <option value="">Select a destination...</option>
-              {destinations.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => handleDestinationChange(val)}
+              placeholder="Select a destination..."
+              searchPlaceholder="Search destination..."
+              isClearable
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Place</label>
-            <select
-              required
-              disabled={!selectedDestinationId}
+            <SearchableSelect
+              options={filteredPlaces.map((p) => ({ value: p.id, label: p.name }))}
               value={data.destinationId}
-              onChange={(e) => setData((d) => ({ ...d, destinationId: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white disabled:bg-gray-100 disabled:text-gray-400 cursor-pointer disabled:cursor-not-allowed"
-            >
-              <option value="">
-                {!selectedDestinationId
+              onChange={(val) => setData((d) => ({ ...d, destinationId: val }))}
+              disabled={!selectedDestinationId}
+              placeholder={
+                !selectedDestinationId
                   ? "Select a destination first..."
                   : filteredPlaces.length === 0
-                    ? "No places available for this destination"
-                    : "Select a place..."}
-              </option>
-              {filteredPlaces.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+                  ? "No places available for this destination"
+                  : "Select a place..."
+              }
+              searchPlaceholder="Search place..."
+              isClearable
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Board type</label>
-            <select
+            <SearchableSelect
+              options={BOARD_TYPES.map((b) => ({ value: b.value, label: b.label }))}
               value={data.boardType}
-              onChange={(e) => setData((d) => ({ ...d, boardType: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
-            >
-              {BOARD_TYPES.map((b) => (
-                <option key={b.value} value={b.value}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setData((d) => ({ ...d, boardType: val }))}
+              placeholder="Select board type..."
+              searchPlaceholder="Search board type..."
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Nights</label>

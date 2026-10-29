@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -17,6 +17,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 interface HotelResult {
   hotelCode: string;
@@ -90,18 +91,33 @@ function SearchResultsContent() {
   // Filters
   const [starFilter, setStarFilter] = useState<number | null>(null);
   const [boardFilter, setBoardFilter] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<string>("recommended");
+
+  const SORT_OPTIONS = [
+    { value: "recommended", label: "Recommended", subtitle: "Our top picks" },
+    { value: "price-asc", label: "Price: Low to High", subtitle: "Best budget deals first" },
+    { value: "price-desc", label: "Price: High to Low", subtitle: "Luxury & premium options" },
+    { value: "stars-desc", label: "Star Rating: 5 to 3", subtitle: "Highest star rated first" },
+    { value: "name-asc", label: "Hotel Name: A to Z", subtitle: "Alphabetical order" },
+  ];
 
   useEffect(() => {
     async function fetchSearch() {
+      // RULE: The availability and search API is strictly for HOTELS ONLY.
+      // If user came looking for holidays, do NOT call the hotel API!
+      if (!isHotelsOnly) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await fetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: isHotelsOnly ? "hotels" : "holidays",
+            type: "hotels",
             destination,
-            departureAirport,
             checkIn,
             checkOut,
             adults: Number(adults),
@@ -133,14 +149,34 @@ function SearchResultsContent() {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const filteredHotels = hotels.filter((h) => {
-    if (starFilter && h.starRating < starFilter) return false;
-    if (boardFilter !== "ALL") {
-      const hasBoard = h.availableRates.some((r) => r.boardBasis.toLowerCase().includes(boardFilter.toLowerCase()));
-      if (!hasBoard) return false;
-    }
-    return true;
-  });
+  const filteredHotels = useMemo(() => {
+    const list = hotels.filter((h) => {
+      if (starFilter && h.starRating < starFilter) return false;
+      if (boardFilter !== "ALL") {
+        const hasBoard = h.availableRates.some((r) =>
+          r.boardBasis.toLowerCase().includes(boardFilter.toLowerCase())
+        );
+        if (!hasBoard) return false;
+      }
+      return true;
+    });
+
+    return [...list].sort((a, b) => {
+      if (sortBy === "price-asc") {
+        return (a.leadPricing?.pricePerPerson || 0) - (b.leadPricing?.pricePerPerson || 0);
+      }
+      if (sortBy === "price-desc") {
+        return (b.leadPricing?.pricePerPerson || 0) - (a.leadPricing?.pricePerPerson || 0);
+      }
+      if (sortBy === "stars-desc") {
+        return b.starRating - a.starRating;
+      }
+      if (sortBy === "name-asc") {
+        return a.hotelName.localeCompare(b.hotelName);
+      }
+      return 0;
+    });
+  }, [hotels, starFilter, boardFilter, sortBy]);
 
   return (
     <div className="min-h-screen bg-gray-50/70 pb-16">
@@ -151,11 +187,11 @@ function SearchResultsContent() {
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-300 mb-2">
               {isHotelsOnly ? (
                 <>
-                  <FaHotel className="text-xs" /> Hotels Only (No Flights Included)
+                  <FaHotel className="text-xs" /> Verified Hotels Only (Direct check-in)
                 </>
               ) : (
                 <>
-                  <FaPlane className="text-xs" /> Flight + Hotel Package Deals
+                  <FaPlane className="text-xs" /> Holiday Packages (Coming Soon)
                 </>
               )}
             </div>
@@ -163,7 +199,9 @@ function SearchResultsContent() {
               {isHotelsOnly ? "Hotels" : "Holidays"} in {destination.replace(/-/g, " ")}
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-gray-300">
-              {isHotelsOnly ? "Hotels Only (Direct check-in)" : `Departing from ${departureAirport}`} • 7 Nights • {adults} Adults
+              {isHotelsOnly
+                ? "Hotel Stays • Best Direct Price Guarantee"
+                : `Custom Flight + Hotel Quote • ATOL Protected`}
             </p>
           </div>
 
@@ -203,6 +241,55 @@ function SearchResultsContent() {
         </div>
       </div>
 
+      {!isHotelsOnly ? (
+        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-xl border border-gray-100">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-[#F7941D] flex items-center justify-center text-3xl mx-auto mb-5">
+              <FaPlane className="rotate-[-20deg]" />
+            </div>
+            <span className="inline-block px-3.5 py-1 rounded-full bg-amber-100/70 text-[#F7941D] text-xs font-bold uppercase tracking-wider mb-3">
+              Data Coming Soon
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1D1248]">
+              Holiday Flight + Hotel Packages Coming Soon
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+              We are actively integrating live scheduled airline systems and holiday package operators into HolidayJug. Online flight + hotel packages to <span className="font-bold text-[#1D1248] capitalize">{destination.replace(/-/g, " ")}</span> will be launched soon!
+            </p>
+
+            <div className="mt-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-[#071746] to-[#1D1248] text-white max-w-lg mx-auto shadow-md">
+              <span className="text-xs font-bold text-amber-300 uppercase tracking-wide block mb-1">
+                Book Over The Phone Today With 100% ATOL Protection
+              </span>
+              <p className="text-xs text-gray-300 mb-5">
+                Our UK holiday specialists can tailor and confirm your flights, luxury hotel, and transfers right now.
+              </p>
+              <a
+                href="tel:03301658879"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#F7941D] hover:bg-[#e08314] px-6 py-3 text-sm font-bold text-white transition-all transform hover:scale-105"
+              >
+                <FaPhoneAlt className="text-xs" />
+                <span>Call 0330 165 8879</span>
+              </a>
+            </div>
+
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href={`/hotels?destination=${destination}`}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#1D1248] hover:bg-[#071746] text-white px-5 py-2.5 text-xs sm:text-sm font-bold transition-colors"
+              >
+                <FaHotel className="text-[#F7941D]" /> Search Hotels Only in {destination.replace(/-/g, " ")}
+              </Link>
+              <Link
+                href={`/destinations/${destination}`}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 px-5 py-2.5 text-xs sm:text-sm font-bold transition-colors"
+              >
+                <FaMapMarkerAlt className="text-[#F7941D]" /> View {destination.replace(/-/g, " ")} Destination Guide
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {/* INLINE BANNER (G2) */}
         <CallForHiddenPricesBanner variant="inline" />
@@ -299,6 +386,29 @@ function SearchResultsContent() {
 
           {/* RIGHT HOTEL CARDS (D4: Comprehensive set of hotels) */}
           <div className="lg:col-span-3 space-y-6">
+            {!loading && hotels.length > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-200/60">
+                <div>
+                  <h2 className="text-base sm:text-lg font-extrabold text-[#1D1248]">
+                    Available Stays
+                  </h2>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Showing <span className="text-[#F7941D] font-bold">{filteredHotels.length}</span> verified properties
+                  </p>
+                </div>
+                <div className="w-full sm:w-64">
+                  <SearchableSelect
+                    options={SORT_OPTIONS}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    placeholder="Sort results..."
+                    searchPlaceholder="Filter sort options..."
+                    triggerClassName="py-2 rounded-xl text-xs sm:text-sm bg-white font-medium"
+                  />
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -321,8 +431,12 @@ function SearchResultsContent() {
                   <div className="relative w-full md:w-[38%] h-56 md:h-auto overflow-hidden shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={hotel.mainImage}
+                      src={hotel.mainImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"}
                       alt={hotel.hotelName}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
+                      }}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-xs px-2.5 py-1 text-xs font-bold text-amber-300">
@@ -419,6 +533,7 @@ function SearchResultsContent() {
           </div>
         </div>
       </div>
+      )}
 
       {/* ROOMS & RATES MODAL (D4: Comprehensive set of room types and board options) */}
       {selectedHotel && (

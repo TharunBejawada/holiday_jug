@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import type { CountryDetails } from "./DestinationHero";
 
@@ -124,12 +125,12 @@ export function TopDestinationsSection({ country }: { country: CountryDetails })
 
                 {/* View All Destinations Button */}
                 <div className="flex justify-center mt-8 sm:mt-12">
-                    <button
-                        type="button"
-                        className="bg-[#F7941D] hover:bg-[#e08316] text-white font-bold text-sm sm:text-base py-3 px-8 rounded-full shadow-sm transition-colors cursor-default"
+                    <Link
+                        href="/destinations"
+                        className="bg-[#F7941D] hover:bg-[#e08316] text-white font-bold text-sm sm:text-base py-3 px-8 rounded-full shadow-sm transition-colors cursor-pointer"
                     >
                         view all destinations
-                    </button>
+                    </Link>
                 </div>
             </div>
         </section>

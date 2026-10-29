@@ -6,13 +6,13 @@ import {
     FaMapMarkerAlt,
     FaHeadset,
     FaClock,
-    FaPaperPlane,
     FaBuilding,
     FaFacebookF,
     FaInstagram,
     FaYoutube,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import { ContactForm } from "@/components/ContactForm";
 
 export const metadata: Metadata = {
     title: "Contact Us — HolidayJug",
@@ -281,93 +281,7 @@ export default function ContactPage() {
                             Fill out the form below and one of our travel advisors will get back to you promptly.
                         </p>
 
-                        <form className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                        Full Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="John Doe"
-                                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                        Email Address *
-                                    </label>
-                                    <input
-                                        type="email"
-                                        required
-                                        placeholder="john@example.com"
-                                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                        Phone Number
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        placeholder="+44 ..."
-                                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                        Booking Reference (Optional)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="HJ-12345"
-                                        className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                    Subject *
-                                </label>
-                                <select
-                                    required
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                >
-                                    <option value="">Select a topic</option>
-                                    <option value="sales">New Booking Enquiry / Sales</option>
-                                    <option value="support">Customer Support &amp; Bookings</option>
-                                    <option value="complaint">Post-Holiday Complaint</option>
-                                    <option value="other">General Enquiry</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-[#071746] uppercase tracking-wide mb-1.5">
-                                    Message *
-                                </label>
-                                <textarea
-                                    required
-                                    rows={4}
-                                    placeholder="How can we assist you with your holiday?"
-                                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#F7941D] focus:border-transparent transition-all"
-                                ></textarea>
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="inline-flex items-center gap-2.5 rounded-xl bg-[#F7941D] px-7 py-3 text-sm font-semibold text-white shadow-md hover:bg-[#e08316] transition-all duration-300 transform hover:scale-[1.01] cursor-pointer"
-                            >
-                                <FaPaperPlane className="text-xs" />
-                                Send Message
-                            </button>
-                        </form>
+                        <ContactForm />
                     </div>
                 </div>
             </div>

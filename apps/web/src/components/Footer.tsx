@@ -79,27 +79,27 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
               <li>
-                <Link href="/search?type=beach" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/holidays?type=beach" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Beach Holidays
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/holidays?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> All-Inclusive Holidays
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/holidays?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Family Holidays
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=luxury" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/holidays?type=luxury" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Luxury Holidays
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=honeymoon" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/holidays?type=honeymoon" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Honeymoon Holidays
                 </Link>
               </li>
@@ -113,27 +113,27 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
               <li>
-                <Link href="/search?destination=dubai" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/hotels?destination=dubai" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Dubai Luxury Resorts
                 </Link>
               </li>
               <li>
-                <Link href="/search?destination=tenerife" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/hotels?destination=tenerife" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Tenerife Beach Hotels
                 </Link>
               </li>
               <li>
-                <Link href="/search?destination=santorini" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/hotels?destination=santorini" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Santorini Caldera Stays
                 </Link>
               </li>
               <li>
-                <Link href="/search?destination=antalya" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/hotels?destination=antalya" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Antalya All-Inclusive
                 </Link>
               </li>
               <li>
-                <Link href="/search?destination=majorca" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                <Link href="/hotels?destination=majorca" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
                   <span className="text-[#F7941D]">•</span> Majorca Holiday Hotels
                 </Link>
               </li>
@@ -210,9 +210,8 @@ export function Footer() {
         </div>
 
         {/* SECTION FOR IATA & ATOL LOGOS (G5: Add IATA and ATOL logos at bottom of site) */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex flex-wrap items-center gap-6 sm:gap-8">
-            {/* ATOL PROTECTION BADGE (G5) */}
             <div className="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl border border-white/15">
               <div className="w-10 h-10 rounded-full bg-amber-400 text-[#071746] flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                 ATOL
@@ -226,8 +225,6 @@ export function Footer() {
                 </span>
               </div>
             </div>
-
-            {/* IATA ACCREDITED BADGE (G5) */}
             <div className="flex items-center gap-3 bg-white/10 px-4 py-2.5 rounded-xl border border-white/15">
               <div className="w-10 h-10 rounded-full bg-blue-400 text-[#071746] flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                 IATA
@@ -247,7 +244,7 @@ export function Footer() {
             <p>All flight-inclusive packages are financially protected by ATOL.</p>
             <p>Prices subject to live supplier availability.</p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* COPYRIGHT BAR */}

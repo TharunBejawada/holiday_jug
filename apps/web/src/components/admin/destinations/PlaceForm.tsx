@@ -8,6 +8,7 @@ import { FiAlertCircle, FiCheckCircle, FiUpload, FiPlus } from "react-icons/fi";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { PackagesList } from "@/components/admin/packages/PackagesList";
 import { uploadAssetImage } from "@/lib/upload-asset";
+import { SearchableSelect } from "@/components/SearchableSelect";
 
 type CountryOption = { id: string; name: string };
 
@@ -241,18 +242,18 @@ export function PlaceForm({ placeId, initialCountryId }: { placeId?: string; ini
           </div>
           <div className="sm:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Linked destination page</label>
-            <select
+            <SearchableSelect
+              options={[
+                { value: "", label: "None" },
+                ...countries.map((c) => ({ value: c.id, label: c.name })),
+              ]}
               value={data.countryId}
-              onChange={(e) => setData((d) => ({ ...d, countryId: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none transition bg-white"
-            >
-              <option value="">None</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setData((d) => ({ ...d, countryId: val }))}
+              placeholder="Select linked destination..."
+              searchPlaceholder="Search destination..."
+              isClearable
+              triggerClassName="py-2.5 rounded-lg border-gray-300 bg-white"
+            />
             <p className="text-xs text-gray-400 mt-1">
               Shows this place as a &ldquo;Top Destination&rdquo; card on the linked page.
             </p>

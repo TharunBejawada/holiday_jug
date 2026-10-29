@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
-import { DESTINATIONS_MASTER, DestinationMasterItem } from "@/lib/destinations-master";
 
 interface DisplayDestination {
   id: string;
@@ -13,19 +12,74 @@ interface DisplayDestination {
   href: string;
 }
 
+// Fallback initial list based on Admin Dashboard data (Turkey, Greece, Dubai, Spain, Antalya, Portugal)
+const ADMIN_FALLBACK_DESTINATIONS: DisplayDestination[] = [
+  {
+    id: "turkey",
+    name: "Turkey",
+    price: "£95",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/91990881-834d-441b-a63b-a9eea46858a2.jpg",
+    href: "/destinations/turkey",
+  },
+  {
+    id: "greece",
+    name: "Greece",
+    price: "£285",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/afb03492-79f0-4308-9312-47506b6aed0b.jpg",
+    href: "/destinations/greece",
+  },
+  {
+    id: "dubai",
+    name: "Dubai",
+    price: "£548",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/e1536319-3c0d-456f-b8c7-973285f148a9.jpg",
+    href: "/destinations/dubai",
+  },
+  {
+    id: "spain",
+    name: "Spain",
+    price: "£325",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/4005cca2-cffa-4e17-9be6-74f88ca53780.jpg",
+    href: "/destinations/spain",
+  },
+  {
+    id: "antalya",
+    name: "Antalya",
+    price: "£878",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/7a33396e-ed2d-4fcd-a632-54837c254b4c.jpg",
+    href: "/destinations/antalya",
+  },
+  {
+    id: "portugal",
+    name: "Portugal",
+    price: "£450",
+    image: "https://holidayjug-assets-prod.s3.eu-west-2.amazonaws.com/uploads/2026-09-25/5f77e945-62ab-465e-b55c-96a21fc82975.jpg",
+    href: "/destinations/portugal",
+  },
+];
+
 export function TopDestinationsSection() {
-  const [destinations, setDestinations] = useState<DisplayDestination[]>([]);
+  const [destinations, setDestinations] = useState<DisplayDestination[]>(ADMIN_FALLBACK_DESTINATIONS);
 
   useEffect(() => {
-    // Dynamically derive top destinations from DESTINATIONS_MASTER (Appendix A)
-    const items: DisplayDestination[] = DESTINATIONS_MASTER.slice(0, 8).map((d) => ({
-      id: d.slug,
-      name: d.destination,
-      price: `£${d.leadPriceGbp || 299}`,
-      image: d.cardImage || d.heroImage || "/assets/Dubai.jpg",
-      href: `/search?destination=${d.slug}`,
-    }));
-    setDestinations(items);
+    // Fetch live destinations dynamically from the Admin Dashboard / database API
+    fetch("/api/destinations", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
+          const mapped: DisplayDestination[] = data.items.map((c: any) => ({
+            id: c.id || c.slug,
+            name: c.name,
+            price: c.priceFrom ? `£${c.priceFrom}` : "£95",
+            image: c.cardImageUrl || c.heroImageUrl || "/assets/Dubai.jpg",
+            href: `/destinations/${c.slug}`,
+          }));
+          setDestinations(mapped);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading admin dashboard destinations:", err);
+      });
   }, []);
 
   return (
@@ -45,12 +99,12 @@ export function TopDestinationsSection() {
         </div>
 
         {/* DESTINATIONS GRID */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
           {destinations.map((dest) => (
             <Link
               key={dest.id}
               href={dest.href}
-              className="group relative overflow-hidden rounded-3xl h-56 sm:h-60 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 cursor-pointer block"
+              className="group relative overflow-hidden rounded-3xl h-60 sm:h-64 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 cursor-pointer block"
             >
               {/* BACKGROUND IMAGE */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -61,20 +115,25 @@ export function TopDestinationsSection() {
               />
 
               {/* GRADIENT OVERLAY */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
 
               {/* BOTTOM CONTENT */}
-              <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-4 flex items-end justify-between gap-2">
+              <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 flex items-end justify-between gap-2">
                 {/* DESTINATION NAME */}
-                <span className="text-base sm:text-lg lg:text-xl font-semibold text-white leading-tight drop-shadow-md max-w-[50%]">
-                  {dest.name}
-                </span>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-amber-300">
+                    Destination
+                  </span>
+                  <span className="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight drop-shadow-md">
+                    {dest.name}
+                  </span>
+                </div>
 
                 {/* PRICE BADGE BOX */}
-                <div className="bg-white/95 backdrop-blur-xs rounded-2xl px-3 py-2 flex items-center gap-2.5 shadow-lg border border-white/50">
+                <div className="bg-white/95 backdrop-blur-xs rounded-2xl px-3.5 py-2 flex items-center gap-2.5 shadow-lg border border-white/50">
                   <div className="flex flex-col text-left leading-none">
                     <span className="text-[10px] text-gray-500 font-medium mb-0.5">from</span>
-                    <span className="text-base sm:text-lg font-semibold text-[#1D1248]">
+                    <span className="text-base sm:text-lg font-bold text-[#1D1248]">
                       {dest.price}
                     </span>
                     <span className="text-[9px] text-gray-400 font-medium mt-0.5">per person</span>
@@ -91,7 +150,7 @@ export function TopDestinationsSection() {
         {/* BOTTOM ACTION BUTTON */}
         <div className="mt-10 sm:mt-12 text-center">
           <Link
-            href="/search"
+            href="/destinations"
             className="inline-block rounded-full bg-[#F7941D] hover:bg-[#e08314] active:scale-[0.98] px-8 py-3.5 text-sm sm:text-base font-semibold text-white transition-all shadow-md hover:shadow-lg"
           >
             view all destinations
