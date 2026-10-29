@@ -78,6 +78,36 @@ const SORT_OPTIONS = [
   { value: "name-asc", label: "Hotel Name: A to Z", subtitle: "Alphabetical order" },
 ];
 
+const STAR_OPTIONS = [5, 4, 3, 2];
+
+const BOARD_OPTIONS = [
+  "Room Only",
+  "Bed & Breakfast",
+  "Half Board",
+  "Full Board",
+  "All Inclusive",
+];
+
+const PROPERTY_TYPE_OPTIONS = ["Hotel", "Resort", "Aparthotel", "Villa"];
+
+const FACILITY_OPTIONS = [
+  "Pool",
+  "Beachfront",
+  "Spa",
+  "Gym",
+  "Free Wi-Fi",
+  "Family Friendly",
+  "Adults Only",
+];
+
+const HOLIDAY_TYPE_OPTIONS = [
+  "Beach",
+  "Family",
+  "Couples",
+  "Luxury",
+  "All Inclusive",
+];
+
 function HotelsPageContent() {
   const searchParams = useSearchParams();
   const initialDestination = searchParams.get("destination") || "all";
@@ -106,8 +136,17 @@ function HotelsPageContent() {
     const d = new Date(Date.now() + 21 * 86400000);
     return d.toISOString().split("T")[0];
   });
-  const [starFilter, setStarFilter] = useState<number | null>(initialRating);
-  const [boardFilter, setBoardFilter] = useState<string>("ALL");
+
+  // Filter States
+  const [selectedStars, setSelectedStars] = useState<number[]>(
+    initialRating ? [initialRating] : []
+  );
+  const [minPrice, setMinPrice] = useState<number>(50);
+  const [maxPrice, setMaxPrice] = useState<number>(500);
+  const [selectedBoards, setSelectedBoards] = useState<string[]>([]);
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
+  const [selectedHolidayTypes, setSelectedHolidayTypes] = useState<string[]>([]);
   const [keyword, setKeyword] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("recommended");
 
@@ -324,21 +363,221 @@ function HotelsPageContent() {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Toggle Filter Helpers
+  const toggleStar = (stars: number) => {
+    setSelectedStars((prev) =>
+      prev.includes(stars) ? prev.filter((s) => s !== stars) : [...prev, stars]
+    );
+  };
+
+  const toggleBoard = (board: string) => {
+    setSelectedBoards((prev) =>
+      prev.includes(board) ? prev.filter((b) => b !== board) : [...prev, board]
+    );
+  };
+
+  const togglePropertyType = (type: string) => {
+    setSelectedPropertyTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleFacility = (facility: string) => {
+    setSelectedFacilities((prev) =>
+      prev.includes(facility) ? prev.filter((f) => f !== facility) : [...prev, facility]
+    );
+  };
+
+  const toggleHolidayType = (ht: string) => {
+    setSelectedHolidayTypes((prev) =>
+      prev.includes(ht) ? prev.filter((h) => h !== ht) : [...prev, ht]
+    );
+  };
+
+  const handleClearAll = () => {
+    setSelectedStars([]);
+    setMinPrice(50);
+    setMaxPrice(500);
+    setSelectedBoards([]);
+    setSelectedPropertyTypes([]);
+    setSelectedFacilities([]);
+    setSelectedHolidayTypes([]);
+    setKeyword("");
+    setDestination("all");
+  };
+
   // Filter & Sort hotels
   const filteredHotels = useMemo(() => {
     const list = hotels.filter((h) => {
-      if (starFilter && h.starRating < starFilter) return false;
-      if (boardFilter !== "ALL") {
-        const hasBoard = h.availableRates.some((r) =>
-          r.boardBasis.toLowerCase().includes(boardFilter.toLowerCase())
-        );
-        if (!hasBoard) return false;
+      // 1. Star Rating (Multi-select)
+      if (selectedStars.length > 0 && !selectedStars.includes(h.starRating)) {
+        return false;
       }
+
+      // 2. Price per night
+      const nightlyPrice = Math.round(
+        (h.leadPricing?.hotelPrice || h.leadPricing?.totalPrice || 0) / nights
+      );
+      if (minPrice > 50 && nightlyPrice < minPrice) return false;
+      if (maxPrice < 500 && nightlyPrice > maxPrice) return false;
+
+      // 3. Board Basis (Multi-select)
+      if (selectedBoards.length > 0) {
+        const matchesBoard = selectedBoards.some((b) => {
+          const target = b.toLowerCase();
+          return h.availableRates.some((rate) => {
+            const basis = (rate.boardBasis || "").toLowerCase();
+            if (target === "room only") return basis.includes("room only");
+            if (target === "bed & breakfast")
+              return basis.includes("breakfast") || basis.includes("b&b");
+            if (target === "half board") return basis.includes("half board");
+            if (target === "full board") return basis.includes("full board");
+            if (target === "all inclusive")
+              return (
+                basis.includes("all inclusive") ||
+                basis.includes("all-inclusive") ||
+                basis.includes("ultra all inclusive")
+              );
+            return basis.includes(target);
+          });
+        });
+        if (!matchesBoard) return false;
+      }
+
+      // 4. Property Type (Multi-select)
+      if (selectedPropertyTypes.length > 0) {
+        const combined = `${h.hotelName} ${h.description || ""}`.toLowerCase();
+        const matchesType = selectedPropertyTypes.some((type) => {
+          if (type === "Resort") return combined.includes("resort") || combined.includes("palace");
+          if (type === "Aparthotel")
+            return (
+              combined.includes("aparthotel") ||
+              combined.includes("apartment") ||
+              combined.includes("suites") ||
+              combined.includes("suite")
+            );
+          if (type === "Villa")
+            return combined.includes("villa") || combined.includes("chalet") || combined.includes("bungalow");
+          if (type === "Hotel") {
+            return (
+              combined.includes("hotel") ||
+              combined.includes("boutique") ||
+              (!combined.includes("villa") && !combined.includes("aparthotel"))
+            );
+          }
+          return false;
+        });
+        if (!matchesType) return false;
+      }
+
+      // 5. Facilities (Multi-select)
+      if (selectedFacilities.length > 0) {
+        const facCombined = `${(h.facilities || []).join(" ")} ${h.description || ""}`.toLowerCase();
+        const matchesAllFacilities = selectedFacilities.every((fac) => {
+          if (fac === "Pool") return facCombined.includes("pool");
+          if (fac === "Beachfront")
+            return (
+              facCombined.includes("beach") ||
+              facCombined.includes("coastal") ||
+              facCombined.includes("caldera") ||
+              facCombined.includes("sea")
+            );
+          if (fac === "Spa")
+            return (
+              facCombined.includes("spa") ||
+              facCombined.includes("wellness") ||
+              facCombined.includes("hammam") ||
+              facCombined.includes("sauna") ||
+              facCombined.includes("steam")
+            );
+          if (fac === "Gym")
+            return (
+              facCombined.includes("gym") ||
+              facCombined.includes("fitness") ||
+              facCombined.includes("health club") ||
+              facCombined.includes("tennis") ||
+              facCombined.includes("sports")
+            );
+          if (fac === "Free Wi-Fi")
+            return facCombined.includes("wi-fi") || facCombined.includes("wifi") || facCombined.includes("internet");
+          if (fac === "Family Friendly")
+            return (
+              facCombined.includes("kid") ||
+              facCombined.includes("child") ||
+              facCombined.includes("family") ||
+              facCombined.includes("water park") ||
+              facCombined.includes("waterpark")
+            );
+          if (fac === "Adults Only")
+            return (
+              facCombined.includes("adult") ||
+              facCombined.includes("couples") ||
+              facCombined.includes("honeymoon") ||
+              facCombined.includes("cave suites")
+            );
+          return facCombined.includes(fac.toLowerCase());
+        });
+        if (!matchesAllFacilities) return false;
+      }
+
+      // 6. Holiday Type (Multi-select)
+      if (selectedHolidayTypes.length > 0) {
+        const text = `${h.hotelName} ${h.description || ""} ${(h.facilities || []).join(" ")}`.toLowerCase();
+        const matchesHoliday = selectedHolidayTypes.some((ht) => {
+          if (ht === "Beach")
+            return (
+              text.includes("beach") ||
+              text.includes("sea") ||
+              text.includes("coast") ||
+              text.includes("caldera") ||
+              text.includes("riviera")
+            );
+          if (ht === "Family")
+            return (
+              text.includes("family") ||
+              text.includes("kid") ||
+              text.includes("waterpark") ||
+              text.includes("slides") ||
+              text.includes("park")
+            );
+          if (ht === "Couples")
+            return (
+              text.includes("couples") ||
+              text.includes("adult") ||
+              text.includes("honeymoon") ||
+              text.includes("sunset") ||
+              text.includes("suites") ||
+              text.includes("boutique")
+            );
+          if (ht === "Luxury")
+            return (
+              h.starRating >= 5 ||
+              text.includes("luxury") ||
+              text.includes("palace") ||
+              text.includes("grand") ||
+              text.includes("gourmet")
+            );
+          if (ht === "All Inclusive") {
+            return (
+              h.availableRates.some(
+                (r) =>
+                  r.boardBasis.toLowerCase().includes("all inclusive") ||
+                  r.boardBasis.toLowerCase().includes("all-inclusive")
+              ) || text.includes("all inclusive")
+            );
+          }
+          return false;
+        });
+        if (!matchesHoliday) return false;
+      }
+
+      // 7. Search keyword
       if (keyword.trim()) {
         const q = keyword.toLowerCase().trim();
         const matchName = h.hotelName.toLowerCase().includes(q);
         const matchAddress = h.address.toLowerCase().includes(q);
-        if (!matchName && !matchAddress) return false;
+        const matchCity = (h.city || "").toLowerCase().includes(q);
+        if (!matchName && !matchAddress && !matchCity) return false;
       }
       return true;
     });
@@ -358,7 +597,19 @@ function HotelsPageContent() {
       }
       return 0;
     });
-  }, [hotels, starFilter, boardFilter, keyword, sortBy]);
+  }, [
+    hotels,
+    selectedStars,
+    minPrice,
+    maxPrice,
+    selectedBoards,
+    selectedPropertyTypes,
+    selectedFacilities,
+    selectedHolidayTypes,
+    keyword,
+    sortBy,
+    nights,
+  ]);
 
   const isOverview = destination === "all" || !destination;
   const currentDestinationName = isOverview
@@ -628,129 +879,266 @@ function HotelsPageContent() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-6">
           {/* LEFT FILTERS SIDEBAR */}
           <div className="lg:col-span-1 space-y-5">
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-                <span className="font-extrabold text-sm text-[#1D1248] flex items-center gap-2">
-                  <FaSlidersH className="text-[#F7941D]" /> Hotel Filters
+            <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs">
+              {/* HEADER */}
+              <div className="flex items-center justify-between pb-3.5 border-b border-gray-200/70">
+                <span className="font-extrabold text-xs sm:text-sm tracking-wider text-[#1D1248] uppercase">
+                  Filter Hotels
                 </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setStarFilter(null);
-                    setBoardFilter("ALL");
-                    setKeyword("");
-                    setRooms([{ adults: 2, childrenAges: [] }]);
-                    setSearchVersion((v) => v + 1);
-                  }}
-                  className="text-xs text-[#F7941D] font-bold hover:underline cursor-pointer"
+                  onClick={handleClearAll}
+                  className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline cursor-pointer"
                 >
-                  Reset
+                  Clear All
                 </button>
               </div>
 
-              {/* Travellers & Rooms Sidebar Selector */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 block uppercase tracking-wide mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <FaUserFriends className="text-[#F7941D]" /> Travellers &amp; Rooms
-                  </span>
-                  <span className="text-[10px] font-bold text-[#1D1248] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                    {rooms.length} {rooms.length === 1 ? "Room" : "Rooms"}
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowTravellersPopover(true);
-                    travellersRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }}
-                  className="w-full text-left rounded-xl bg-gray-50 hover:bg-gray-100 px-3 py-2.5 text-xs text-gray-800 border border-gray-200 transition-all font-semibold flex items-center justify-between cursor-pointer"
-                >
-                  <span className="truncate">{travellersSummary}</span>
-                  <span className="text-xs font-bold text-[#F7941D] ml-1.5 shrink-0">Change</span>
-                </button>
-              </div>
-
-              {/* Keyword Search */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 block uppercase tracking-wide mb-1.5">
-                  Search by Hotel Name
+              {/* 1. DESTINATION / AREA */}
+              <div className="pt-3.5">
+                <label className="text-xs font-bold text-[#1D1248] block mb-2">
+                  Destination / Area
                 </label>
                 <div className="relative">
-                  <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                  <input
-                    type="text"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="e.g. Sheraton, Grand..."
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:border-[#F7941D] transition-colors"
-                  />
-                  {keyword && (
-                    <button
-                      type="button"
-                      onClick={() => setKeyword("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <FaTimes className="text-xs" />
-                    </button>
-                  )}
+                  <select
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-medium text-gray-700 pr-9 focus:border-[#F7941D] focus:outline-none cursor-pointer shadow-2xs hover:border-gray-300 transition-colors"
+                  >
+                    <option value="all">All Destinations (Featured)</option>
+                    <option value="antalya">Antalya</option>
+                    <option value="dubai">Dubai</option>
+                    <option value="greece">Santorini (Greece)</option>
+                    <option value="spain">Tenerife (Spain)</option>
+                    <option value="turkey">Turkey (Riviera)</option>
+                    <option value="portugal">Algarve (Portugal)</option>
+                    {activeDestinations
+                      .filter(
+                        (d) =>
+                          !["antalya", "dubai", "greece", "spain", "turkey", "portugal", "all"].includes(
+                            d.slug
+                          )
+                      )
+                      .map((d) => (
+                        <option key={d.slug} value={d.slug}>
+                          {d.destination} ({d.country})
+                        </option>
+                      ))}
+                  </select>
+                  <FaChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-[#1D1248]" />
                 </div>
               </div>
 
-              {/* Star Rating Filter */}
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 2. PRICE PER NIGHT */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block uppercase tracking-wide mb-2">
-                  Star Rating
+                <label className="text-xs font-bold text-[#1D1248] block mb-3">
+                  Price per night
                 </label>
-                <div className="space-y-1.5">
-                  {[5, 4, 3].map((stars) => (
-                    <button
-                      key={stars}
-                      type="button"
-                      onClick={() => setStarFilter(starFilter === stars ? null : stars)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        starFilter === stars
-                          ? "bg-[#1D1248] text-white shadow-xs"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1 text-[#F7941D]">
-                        {Array.from({ length: stars }).map((_, i) => (
-                          <FaStar key={i} />
-                        ))}
-                      </div>
-                      <span>{stars} Stars &amp; above</span>
-                    </button>
-                  ))}
+                <div className="relative pt-2 pb-1 px-1">
+                  {/* Track base */}
+                  <div className="relative w-full h-1 bg-gray-200 rounded-full">
+                    {/* Active orange segment */}
+                    <div
+                      className="absolute h-1 bg-[#F7941D] rounded-full"
+                      style={{
+                        left: `${((minPrice - 50) / 450) * 100}%`,
+                        right: `${100 - ((maxPrice - 50) / 450) * 100}%`,
+                      }}
+                    />
+                  </div>
+
+                  {/* Overlapping inputs */}
+                  <input
+                    type="range"
+                    min={50}
+                    max={500}
+                    step={10}
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxPrice - 10);
+                      setMinPrice(val);
+                    }}
+                    className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
+                    style={{ zIndex: minPrice > 450 ? 5 : 3 }}
+                    aria-label="Minimum price per night"
+                  />
+                  <input
+                    type="range"
+                    min={50}
+                    max={500}
+                    step={10}
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minPrice + 10);
+                      setMaxPrice(val);
+                    }}
+                    className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
+                    style={{ zIndex: 4 }}
+                    aria-label="Maximum price per night"
+                  />
+
+                  {/* Left circular handle (hollow with orange ring) */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full border-2 border-[#F7941D] bg-white pointer-events-none shadow-xs transition-[left] duration-75"
+                    style={{ left: `calc(${((minPrice - 50) / 450) * 100}% + 4px)` }}
+                  />
+
+                  {/* Right circular handle (solid orange) */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-[#F7941D] border-2 border-[#F7941D] pointer-events-none shadow-xs transition-[left] duration-75"
+                    style={{ left: `calc(${((maxPrice - 50) / 450) * 100}% + 4px)` }}
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-xs font-semibold text-gray-500 mt-2.5">
+                  <span>£{minPrice}</span>
+                  <span>{maxPrice >= 500 ? "£500+" : `£${maxPrice}`}</span>
                 </div>
               </div>
 
-              {/* Board Basis Filter */}
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 3. HOTEL RATING */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block uppercase tracking-wide mb-2">
+                <label className="text-xs font-bold text-[#1D1248] block mb-2.5">
+                  Hotel Rating
+                </label>
+                <div className="space-y-2">
+                  {STAR_OPTIONS.map((stars) => {
+                    const isChecked = selectedStars.includes(stars);
+                    return (
+                      <label
+                        key={stars}
+                        className="flex items-center gap-3 cursor-pointer text-xs group select-none py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleStar(stars)}
+                          className="w-4 h-4 rounded-xs border-gray-300 text-[#F7941D] focus:ring-[#F7941D] cursor-pointer accent-[#F7941D]"
+                        />
+                        <div className="flex items-center gap-1 text-[#F7941D] text-xs">
+                          {Array.from({ length: stars }).map((_, i) => (
+                            <FaStar key={i} />
+                          ))}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 4. BOARD BASIS */}
+              <div>
+                <label className="text-xs font-bold text-[#1D1248] block mb-2.5">
                   Board Basis
                 </label>
-                <div className="space-y-1.5">
-                  {[
-                    { key: "ALL", label: "All Board Types" },
-                    { key: "All Inclusive", label: "All Inclusive" },
-                    { key: "Breakfast", label: "Bed & Breakfast" },
-                    { key: "Half Board", label: "Half Board" },
-                    { key: "Room Only", label: "Room Only" },
-                  ].map((board) => (
-                    <button
-                      key={board.key}
-                      type="button"
-                      onClick={() => setBoardFilter(board.key)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        boardFilter === board.key
-                          ? "bg-[#F7941D] text-white shadow-xs"
-                          : "bg-gray-50 text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      {board.label}
-                    </button>
-                  ))}
+                <div className="space-y-2">
+                  {BOARD_OPTIONS.map((board) => {
+                    const isChecked = selectedBoards.includes(board);
+                    return (
+                      <label
+                        key={board}
+                        className="flex items-center gap-3 cursor-pointer text-xs text-gray-700 hover:text-gray-900 group select-none py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleBoard(board)}
+                          className="w-4 h-4 rounded-xs border-gray-300 text-[#F7941D] focus:ring-[#F7941D] cursor-pointer accent-[#F7941D]"
+                        />
+                        <span className="font-normal text-xs text-gray-700">{board}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 5. PROPERTY TYPE */}
+              <div>
+                <label className="text-xs font-bold text-[#1D1248] block mb-2.5">
+                  Property Type
+                </label>
+                <div className="space-y-2">
+                  {PROPERTY_TYPE_OPTIONS.map((type) => {
+                    const isChecked = selectedPropertyTypes.includes(type);
+                    return (
+                      <label
+                        key={type}
+                        className="flex items-center gap-3 cursor-pointer text-xs text-gray-700 hover:text-gray-900 group select-none py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => togglePropertyType(type)}
+                          className="w-4 h-4 rounded-xs border-gray-300 text-[#F7941D] focus:ring-[#F7941D] cursor-pointer accent-[#F7941D]"
+                        />
+                        <span className="font-normal text-xs text-gray-700">{type}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 6. FACILITIES */}
+              <div>
+                <label className="text-xs font-bold text-[#1D1248] block mb-2.5">
+                  Facilities
+                </label>
+                <div className="space-y-2">
+                  {FACILITY_OPTIONS.map((facility) => {
+                    const isChecked = selectedFacilities.includes(facility);
+                    return (
+                      <label
+                        key={facility}
+                        className="flex items-center gap-3 cursor-pointer text-xs text-gray-700 hover:text-gray-900 group select-none py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleFacility(facility)}
+                          className="w-4 h-4 rounded-xs border-gray-300 text-[#F7941D] focus:ring-[#F7941D] cursor-pointer accent-[#F7941D]"
+                        />
+                        <span className="font-normal text-xs text-gray-700">{facility}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="border-b border-gray-200/70 my-3.5" />
+
+              {/* 7. HOLIDAY TYPE */}
+              <div>
+                <label className="text-xs font-bold text-[#1D1248] block mb-2.5">
+                  Holiday Type
+                </label>
+                <div className="space-y-2">
+                  {HOLIDAY_TYPE_OPTIONS.map((ht) => {
+                    const isChecked = selectedHolidayTypes.includes(ht);
+                    return (
+                      <label
+                        key={ht}
+                        className="flex items-center gap-3 cursor-pointer text-xs text-gray-700 hover:text-gray-900 group select-none py-0.5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleHolidayType(ht)}
+                          className="w-4 h-4 rounded-xs border-gray-300 text-[#F7941D] focus:ring-[#F7941D] cursor-pointer accent-[#F7941D]"
+                        />
+                        <span className="font-medium text-xs text-gray-700">{ht}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -808,13 +1196,8 @@ function HotelsPageContent() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setStarFilter(null);
-                    setBoardFilter("ALL");
-                    setKeyword("");
-                    setDestination("all");
-                  }}
-                  className="mt-4 px-5 py-2.5 rounded-xl bg-[#F7941D] text-white text-xs font-bold"
+                  onClick={handleClearAll}
+                  className="mt-4 px-5 py-2.5 rounded-xl bg-[#F7941D] text-white text-xs font-bold hover:bg-[#e08316] transition-colors cursor-pointer"
                 >
                   Reset Filters &amp; View All Featured Hotels
                 </button>

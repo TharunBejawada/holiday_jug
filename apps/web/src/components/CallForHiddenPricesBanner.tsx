@@ -17,13 +17,9 @@ export function CallForHiddenPricesBanner({ variant = "inline" }: BannerProps) {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#F7941D]"></span>
             </span>
             <span className="font-semibold text-[#F7941D] flex items-center gap-1.5">
-              <FaLock className="text-xs" /> Call for hidden prices:
-            </span>
-            <span className="hidden sm:inline text-white/90">
-              Unpublished hotel rates &amp; secret airline discounts not shown online
+              <FaLock className="text-xs" /> Call for hidden prices
             </span>
           </div>
-
           <a
             href="tel:03301658879"
             className="flex items-center gap-2 bg-[#F7941D] hover:bg-[#e08314] text-white font-bold px-3 py-1 rounded-full text-xs transition-colors shrink-0 shadow-sm"
@@ -41,7 +37,7 @@ export function CallForHiddenPricesBanner({ variant = "inline" }: BannerProps) {
     <div className="my-6 relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#071746] via-[#1D1248] to-[#2B1B6D] p-5 sm:p-7 text-white shadow-xl border border-amber-500/30">
       {/* Decorative background glow */}
       <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-[#F7941D]/20 rounded-full blur-3xl pointer-events-none" />
-      
+
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left">
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#F7941D]/20 border border-[#F7941D]/40 px-3 py-1 text-xs font-bold text-[#F7941D] mb-2.5">
