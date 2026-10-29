@@ -627,42 +627,36 @@ function HotelsPageContent() {
   return (
     <div className="min-h-screen bg-gray-50/70 pb-20">
       {/* 1. HERO & INTERACTIVE FILTER HEADER */}
-      <div className="bg-[#1D1248] text-white pt-10 pb-12 px-4 sm:px-6 lg:px-8 border-b border-amber-500/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-xs font-semibold text-amber-300 mb-2">
-                <FaHotel className="text-xs" /> Verified Direct Hotel Inventory
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
-                {isOverview ? "Verified Luxury Hotels & Resorts" : `Hotels in ${currentDestinationName}`}
-              </h1>
-              <p className="mt-2 text-xs sm:text-sm text-gray-300 max-w-2xl">
-                {isOverview
-                  ? "Explore our handpicked collection of verified luxury hotels and resorts worldwide. Select any destination or filter below to check real-time availability."
-                  : `Showing verified direct hotel inventory for ${currentDestinationName}. Change destination or filters below to update.`}
-              </p>
-            </div>
+      <div className="relative text-white pt-10 sm:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-[#071746] border-b border-amber-500/20">
+        {/* Full Background Banner Image with Gradient */}
+        <div className="absolute inset-0 pointer-events-none select-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/HOTEL OVERVIEW/Hotel Overview Banner.jpg"
+            alt="Hotel Overview"
+            className="w-full h-full object-cover object-center"
+          />
+          {/* Gradient Overlay for Crisp Text Readability on the left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#071746]/95 via-[#071746]/70 to-transparent" />
+        </div>
 
-            {/* QUOTE ID BANNER */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex items-center gap-4 shrink-0">
-              <div>
-                <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block">
-                  Quote for Phone Deals
-                </span>
-                <span className="font-mono text-xl sm:text-2xl font-black text-white tracking-wider">
-                  {searchId || "HOTEL-CHECK"}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={copySearchId}
-                className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition-all"
-                title="Copy Quote ID"
-              >
-                {copied ? <FaCheck className="text-green-400" /> : <FaCopy />}
-              </button>
-            </div>
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* HERO TITLE & SUBTITLE */}
+          <div className="max-w-2xl mb-8 sm:mb-10 text-left">
+            <p
+              className="font-serif italic text-2xl sm:text-3xl lg:text-4xl text-[#F7941D] font-normal tracking-wide drop-shadow-sm"
+              style={{ fontFamily: "'Dancing Script', 'Caveat', 'Playfair Display', cursive, serif" }}
+            >
+              find your perfect
+            </p>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white uppercase tracking-tight leading-none mt-1 sm:mt-2 drop-shadow-md">
+              STAY
+            </h1>
+            <p className="mt-3 sm:mt-4 text-xs sm:text-sm lg:text-base text-white/90 font-normal leading-relaxed max-w-xl drop-shadow-sm">
+              discover handpicked hotels for your next getaway.
+              <br />
+              from beachfront resorts to city stays, we&apos;ve got you covered.
+            </p>
           </div>
 
           {/* MAIN FILTER CARD */}
@@ -1289,20 +1283,21 @@ function HotelsPageContent() {
                         </span>
 
                         <div className="mt-3 flex items-center gap-2">
-                          {/* CHECK AVAILABILITY BUTTON */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedHotel(hotel)}
-                            className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer"
-                          >
-                            Check Availability ({hotel.availableRates.length} Rates)
-                          </button>
+                          {/* CALL TO BOOK BUTTON */}
                           <a
                             href="tel:03301658879"
-                            className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all"
+                            className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
                           >
                             <FaPhoneAlt className="text-[10px]" /> Call to Book
                           </a>
+                          {/* VIEW DETAILS BUTTON */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHotel(hotel)}
+                            className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                          >
+                            View Details
+                          </button>
                         </div>
                       </div>
                     </div>
