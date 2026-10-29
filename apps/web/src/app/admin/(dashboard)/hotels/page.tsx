@@ -143,15 +143,11 @@ export default function AdminHotelsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Sandbox Hotel Inventory</h1>
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Hotel Inventory</h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
               1,842 Mapped Hotels
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Official sandbox inventory from <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-700">supported hotels on sandbox.xlsx</code>.
-            Zero credits are consumed while browsing, filtering, and quoting.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -226,11 +222,10 @@ export default function AdminHotelsPage() {
                 setCityId(c.cityId);
                 setPage(1);
               }}
-              className={`px-3 py-1 rounded-lg border font-medium shrink-0 transition ${
-                cityId === c.cityId
-                  ? "bg-brand-600 text-white border-brand-600"
-                  : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-brand-50 hover:text-brand-700"
-              }`}
+              className={`px-3 py-1 rounded-lg border font-medium shrink-0 transition ${cityId === c.cityId
+                ? "bg-brand-600 text-white border-brand-600"
+                : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-brand-50 hover:text-brand-700"
+                }`}
             >
               {c.cityName} ({c.count})
             </button>
@@ -315,7 +310,7 @@ export default function AdminHotelsPage() {
                       <div>{h.hotelName}</div>
                       {h.hasCuratedProfile && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 inline-block mt-0.5">
-                          ★ Curated Sandbox Profile
+                          ★ Curated Profile
                         </span>
                       )}
                     </td>

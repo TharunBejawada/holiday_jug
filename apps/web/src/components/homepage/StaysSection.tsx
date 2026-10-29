@@ -268,9 +268,6 @@ export function StaysSection() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#F7941D] tracking-tight">
             Stays for Every Kind of Holiday
           </h2>
-          <p className="mt-2 text-sm sm:text-base text-gray-500 font-medium">
-            Handpicked stays from official sandbox inventory with real calculated 13% true margin rates.
-          </p>
         </div>
 
         {/* TABS */}
@@ -280,11 +277,10 @@ export function StaysSection() {
               key={cat.key}
               type="button"
               onClick={() => setActiveTab(cat.key)}
-              className={`rounded-full px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                activeTab === cat.key
+              className={`rounded-full px-4 sm:px-6 py-2 text-xs sm:text-sm font-bold transition-all cursor-pointer ${activeTab === cat.key
                   ? "bg-[#1D1248] text-white shadow-md"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+                }`}
             >
               {cat.label}
             </button>
@@ -311,7 +307,7 @@ export function StaysSection() {
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                
+
                 {/* Tag Badge */}
                 <span className="absolute top-3 left-3 rounded-lg bg-black/60 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-bold text-white">
                   {stay.tag}

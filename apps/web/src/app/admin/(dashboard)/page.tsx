@@ -143,7 +143,7 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Real-time telemetry, 1,842 mapped sandbox hotels, phone quote queue, and credit-conservation monitor.
+            Real-time telemetry, phone quote queue, and credit-conservation monitor.
           </p>
         </div>
 
@@ -178,10 +178,6 @@ export default function AdminDashboardPage() {
                 Strict TTL Caching
               </span>
             </div>
-            <p className="text-xs text-white/75 mt-0.5 max-w-2xl leading-relaxed">
-              API credits are strictly preserved: Local sandbox index (1,842 hotels) serves instant zero-credit browsing.
-              Availability queries execute live in real-time. Cities and static master feeds are cached for 24 hours.
-            </p>
           </div>
         </div>
 
@@ -281,12 +277,9 @@ export default function AdminDashboardPage() {
               <span className="text-3xl font-extrabold text-gray-900">
                 {telemetry ? telemetry.totalIndexedHotels.toLocaleString() : "1,842"}
               </span>
-              <span className="text-xs font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100">
-                Sandbox Excel
-              </span>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Indexed from <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">supported hotels on sandbox.xlsx</code>
+              Indexed from <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">supported hotels</code>
             </p>
             <div className="mt-2.5">
               <Link
@@ -331,10 +324,8 @@ export default function AdminDashboardPage() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-bold text-gray-900">Sandbox Hotel Clusters</h2>
-            <p className="text-xs text-gray-500">
-              Statically indexed from official GRN Connect sandbox data. Ready for zero-credit local search & testing.
-            </p>
+            <h2 className="text-base font-bold text-gray-900">Hotel Clusters</h2>
+
           </div>
           <Link
             href="/admin/hotels"
