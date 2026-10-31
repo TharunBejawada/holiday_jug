@@ -33,7 +33,7 @@ async function handleSearch(payload: SearchPayload) {
 
   const destinationInput = (payload.destination || "all").toLowerCase().trim();
   const checkIn = payload.checkIn || new Date(Date.now() + 14 * 86400000).toISOString().split("T")[0];
-  const checkOut = payload.checkOut || new Date(Date.now() + 21 * 86400000).toISOString().split("T")[0];
+  const checkOut = payload.checkOut || new Date(new Date(checkIn).getTime() + 7 * 86400000).toISOString().split("T")[0];
 
   // Parse rooms & guests
   const rawRooms = Array.isArray(payload.rooms) && payload.rooms.length > 0 ? payload.rooms : [
@@ -73,6 +73,7 @@ async function handleSearch(payload: SearchPayload) {
   } else if (!destinationInput || destinationInput === "all" || destinationInput === "featured") {
     // Show a curated selection of "few hotels" across diverse top destinations on overview
     hotelCodesToSearch = [
+      "rixos-downtown-antalya", // Rixos Downtown Antalya (Antalya, Turkey)
       "1848131", // Sheraton Dubai Creek (Dubai, UAE)
       "TR-ANT-01", // Antalya Riviera Luxury Palace (Antalya, Turkey)
       "GR-SAN-01", // Santorini Caldera View Suites (Santorini, Greece)

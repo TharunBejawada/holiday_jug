@@ -120,11 +120,9 @@ export default function AdminBookingsPage() {
 
         <div className="flex items-center gap-3 shrink-0">
           <Link
-            href="/agent"
-            target="_blank"
-            className="flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-4 py-2.5 rounded-xl transition shadow-sm"
-          >
-            <span>Consultant Tool (/agent)</span>
+            href="/admin/agent"
+            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-4 py-2.5 rounded-xl transition shadow-xs">
+            <span>Agent Tool</span>
             <FiExternalLink className="text-xs" />
           </Link>
           <button
@@ -249,12 +247,11 @@ export default function AdminBookingsPage() {
                       </td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
                         <Link
-                          href={`/agent?searchId=${q.searchId}`}
-                          target="_blank"
+                          href={`/admin/agent?searchId=${q.searchId}`}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition border border-brand-100"
                         >
                           <FiUserCheck className="text-brand-600" />
-                          <span>Audit in /agent</span>
+                          <span>Open in Agent Tool</span>
                         </Link>
                       </td>
                     </tr>

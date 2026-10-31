@@ -16,10 +16,12 @@ import {
   FiHome,
   FiChevronLeft,
   FiChevronRight,
+  FiHeadphones,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: FiGrid },
+  { href: "/admin/agent", label: "Agent Tool", icon: FiHeadphones },
   { href: "/admin/hotels", label: "Hotels & Inventory", icon: FiHome },
   { href: "/admin/bookings", label: "Quotes & Bookings", icon: FiCalendar },
   { href: "/admin/destinations", label: "Destinations", icon: FiMapPin },

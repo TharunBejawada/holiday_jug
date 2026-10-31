@@ -216,7 +216,7 @@ export const DESTINATIONS_MASTER: DestinationMasterItem[] = [
     aliases: ["Antalya", "Turkish Riviera", "Lara Beach"],
     isCore: true,
     hasMappedHotels: true,
-    featuredHotelCodes: ["TR-ANT-01", "TR-ANT-02"],
+    featuredHotelCodes: ["rixos-downtown-antalya", "TR-ANT-01", "TR-ANT-02"],
     heroImage: "/assets/Antalya.jpg",
     cardImage: "/assets/Antalya.jpg",
     leadPriceGbp: 95,

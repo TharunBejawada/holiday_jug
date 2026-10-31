@@ -20,6 +20,7 @@ import {
   FaChevronDown,
   FaPlus,
   FaMinus,
+  FaSpinner,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
@@ -115,6 +116,8 @@ function HotelsPageContent() {
   const initialDestination = searchParams.get("destination") || "all";
   const initialHotelCode = searchParams.get("hotelCode") || "";
   const initialRating = searchParams.get("rating") ? Number(searchParams.get("rating")) : null;
+  const initialCheckIn = searchParams.get("checkIn") || "";
+  const initialCheckOut = searchParams.get("checkOut") || "";
 
   // Travellers & Rooms initialization
   const initialRoomsParam = searchParams.get("rooms");
@@ -130,14 +133,9 @@ function HotelsPageContent() {
   }
 
   const [destination, setDestination] = useState(initialDestination);
-  const [checkIn, setCheckIn] = useState(() => {
-    const d = new Date(Date.now() + 14 * 86400000);
-    return d.toISOString().split("T")[0];
-  });
-  const [checkOut, setCheckOut] = useState(() => {
-    const d = new Date(Date.now() + 21 * 86400000);
-    return d.toISOString().split("T")[0];
-  });
+  // Default dates removed: displays placeholder until user selects
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
 
   // Filter States
   const [selectedStars, setSelectedStars] = useState<number[]>(
@@ -233,10 +231,13 @@ function HotelsPageContent() {
     totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
   }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
 
-  const nights = Math.max(
-    1,
-    Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
-  );
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 7;
+    const tIn = new Date(checkIn).getTime();
+    const tOut = new Date(checkOut).getTime();
+    if (isNaN(tIn) || isNaN(tOut) || tOut <= tIn) return 7;
+    return Math.max(1, Math.round((tOut - tIn) / (1000 * 60 * 60 * 24)));
+  }, [checkIn, checkOut]);
 
   // API State
   const [loading, setLoading] = useState(true);
@@ -322,8 +323,8 @@ function HotelsPageContent() {
             type: "hotels",
             destination,
             hotelCode: initialHotelCode || undefined,
-            checkIn,
-            checkOut,
+            checkIn: checkIn || undefined,
+            checkOut: checkOut || undefined,
             adults: totalAdults,
             rooms,
           }),
@@ -412,6 +413,8 @@ function HotelsPageContent() {
     setSelectedHolidayTypes([]);
     setKeyword("");
     setDestination("all");
+    setCheckIn("");
+    setCheckOut("");
   };
 
   // Filter & Sort hotels
@@ -627,9 +630,9 @@ function HotelsPageContent() {
   return (
     <div className="min-h-screen bg-gray-50/70 pb-20">
       {/* 1. HERO & INTERACTIVE FILTER HEADER */}
-      <div className="relative text-white pt-10 sm:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-[#071746] border-b border-amber-500/20">
+      <div className="relative z-30 text-white pt-10 sm:pt-14 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 bg-[#071746] border-b border-amber-500/20">
         {/* Full Background Banner Image with Gradient */}
-        <div className="absolute inset-0 pointer-events-none select-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/HOTEL OVERVIEW/Hotel Overview Banner.jpg"
@@ -680,13 +683,27 @@ function HotelsPageContent() {
               {/* CHECK-IN */}
               <div className="lg:col-span-2 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-in Date</label>
-                <DatePicker value={checkIn} onChange={setCheckIn} placeholder="Select check-in" />
+                <DatePicker
+                  value={checkIn}
+                  onChange={(val) => {
+                    setCheckIn(val);
+                    if (val && checkOut && val >= checkOut) {
+                      setCheckOut("");
+                    }
+                  }}
+                  placeholder="Select check-in"
+                />
               </div>
 
               {/* CHECK-OUT */}
               <div className="lg:col-span-2 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-out Date</label>
-                <DatePicker value={checkOut} onChange={setCheckOut} placeholder="Select check-out" minDate={checkIn} />
+                <DatePicker
+                  value={checkOut}
+                  onChange={setCheckOut}
+                  placeholder="Select check-out"
+                  minDate={checkIn || undefined}
+                />
               </div>
 
               {/* TRAVELLERS & ROOMS */}
@@ -850,9 +867,11 @@ function HotelsPageContent() {
                           setShowTravellersPopover(false);
                           setSearchVersion((v) => v + 1);
                         }}
-                        className="ml-auto rounded-lg bg-[#1D1248] text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer"
+                        disabled={loading}
+                        className="ml-auto rounded-lg bg-[#1D1248] disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer inline-flex items-center gap-1.5"
                       >
-                        Apply &amp; Search
+                        {loading && <FaSpinner className="animate-spin text-xs" />}
+                        {loading ? "Searching..." : "Apply & Search"}
                       </button>
                     </div>
                   </div>
@@ -864,9 +883,18 @@ function HotelsPageContent() {
                 <button
                   type="button"
                   onClick={() => setSearchVersion((v) => v + 1)}
-                  className="w-full h-[46px] rounded-xl bg-[#F7941D] hover:bg-[#e08316] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  disabled={loading}
+                  className="w-full h-[46px] rounded-xl bg-[#F7941D] hover:bg-[#e08316] disabled:bg-[#F7941D]/70 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <FaSearch /> Update
+                  {loading ? (
+                    <>
+                      <FaSpinner className="animate-spin text-sm" /> Searching...
+                    </>
+                  ) : (
+                    <>
+                      <FaSearch /> Update
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1160,33 +1188,82 @@ function HotelsPageContent() {
           {/* RIGHT HOTEL CARDS LIST */}
           <div className="lg:col-span-3 space-y-6">
             {/* TOP BAR: SHOWING COUNT & SORT */}
-            {!loading && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/60">
-                <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-[#1D1248]">
-                    {isOverview ? "Handpicked Featured Hotels" : `Hotels in ${currentDestinationName}`}
-                  </h2>
-                  <p className="text-xs text-gray-500 font-medium">
-                    Showing <span className="text-[#F7941D] font-bold">{filteredHotels.length}</span> verified properties
-                  </p>
-                </div>
-                <div className="w-full sm:w-64">
-                  <SearchableSelect
-                    options={SORT_OPTIONS}
-                    value={sortBy}
-                    onChange={setSortBy}
-                    placeholder="Sort hotels..."
-                    searchPlaceholder="Filter sorting..."
-                    triggerClassName="py-2 rounded-xl text-xs sm:text-sm bg-white"
-                  />
-                </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200/60">
+              <div>
+                <h2 className="text-base sm:text-lg font-extrabold text-[#1D1248]">
+                  {isOverview ? "Handpicked Featured Hotels" : `Hotels in ${currentDestinationName}`}
+                </h2>
+                <p className="text-xs text-gray-500 font-medium">
+                  {loading ? (
+                    <span className="inline-flex items-center gap-1.5 text-amber-600 font-bold">
+                      <FaSpinner className="animate-spin text-xs" /> Fetching verified hotel availability...
+                    </span>
+                  ) : (
+                    <>
+                      Showing <span className="text-[#F7941D] font-bold">{filteredHotels.length}</span> verified properties
+                    </>
+                  )}
+                </p>
               </div>
-            )}
+              <div className="w-full sm:w-64">
+                <SearchableSelect
+                  options={SORT_OPTIONS}
+                  value={sortBy}
+                  onChange={setSortBy}
+                  placeholder="Sort hotels..."
+                  searchPlaceholder="Filter sorting..."
+                  triggerClassName="py-2 rounded-xl text-xs sm:text-sm bg-white"
+                />
+              </div>
+            </div>
 
             {loading ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* PROMINENT ANIMATED LOADING CARD */}
+                <div className="bg-white rounded-3xl p-8 sm:p-10 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+                  <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border-4 border-amber-200 border-t-[#F7941D] animate-spin" />
+                    <FaHotel className="text-[#1D1248] text-xl animate-pulse" />
+                  </div>
+                  <h3 className="text-lg font-extrabold text-[#1D1248]">
+                    Searching Live Hotel Inventory...
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md">
+                    Checking real-time rates and verified availability for{" "}
+                    <span className="font-semibold text-gray-700">
+                      {isOverview ? "featured destinations" : currentDestinationName}
+                    </span>
+                    .
+                  </p>
+                </div>
+
+                {/* REALISTIC HOTEL CARD SKELETONS */}
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-64 rounded-3xl bg-white animate-pulse border border-gray-100" />
+                  <div
+                    key={i}
+                    className="flex flex-col md:flex-row overflow-hidden rounded-3xl bg-white border border-gray-100 shadow-xs animate-pulse"
+                  >
+                    <div className="w-full md:w-[38%] h-56 md:h-64 bg-gray-200/80 shrink-0" />
+                    <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gray-200 rounded-md w-1/4" />
+                        <div className="h-6 bg-gray-200 rounded-md w-3/4" />
+                        <div className="h-3 bg-gray-200 rounded-md w-1/2" />
+                        <div className="h-3 bg-gray-100 rounded-md w-full mt-3" />
+                        <div className="h-3 bg-gray-100 rounded-md w-4/5" />
+                      </div>
+                      <div className="pt-4 border-t border-gray-100 flex items-end justify-between">
+                        <div className="space-y-2">
+                          <div className="h-3 bg-gray-200 rounded w-28" />
+                          <div className="h-3 bg-gray-100 rounded w-20" />
+                        </div>
+                        <div className="space-y-2 flex flex-col items-end">
+                          <div className="h-6 bg-gray-200 rounded w-24" />
+                          <div className="h-8 bg-gray-200 rounded-xl w-32" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : filteredHotels.length === 0 ? (
@@ -1291,13 +1368,12 @@ function HotelsPageContent() {
                             <FaPhoneAlt className="text-[10px]" /> Call to Book
                           </a>
                           {/* VIEW DETAILS BUTTON */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedHotel(hotel)}
-                            className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap"
+                          <Link
+                            href={`/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(destination || hotel.city || "")}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(rooms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`}
+                            className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap inline-flex items-center justify-center text-center"
                           >
                             View Details
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
