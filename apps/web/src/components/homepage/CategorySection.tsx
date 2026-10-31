@@ -15,7 +15,7 @@ const categories: CategoryItem[] = [
         id: "beach",
         title: "Beach Holidays",
         href: "/holidays?type=beach",
-        icon: "/assets/HOME PAGE/ICONS/Beach Holidays.png",
+        icon: "/assets/HOME PAGE/ICONS/beach_holiday.png",
     },
     {
         id: "family",
