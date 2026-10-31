@@ -8,10 +8,69 @@ body {
   font-weight: 500;
 }
 
-
 /* Hide Next.js Dev Tools badge */
 [data-next-badge="true"],
 #next-logo,
 [data-nextjs-dev-tools-button="true"] {
   display: none !important;
+}
+
+/* Global sleek, reduced-thickness scrollbars (6px instead of default 17px on Windows) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.7);
+}
+
+/* Firefox support for thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+/* Utility: Dark modal / dark surface slim scrollbar */
+.scrollbar-thin-dark {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.08);
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+/* Utility: completely hide scrollbar when desired */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

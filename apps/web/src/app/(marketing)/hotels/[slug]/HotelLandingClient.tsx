@@ -1760,7 +1760,7 @@ export default function HotelLandingClient({
           </div>
 
           {/* Thumbnails strip in modal */}
-          <div className="max-w-5xl w-full flex items-center gap-2 overflow-x-auto py-3 mt-2 no-scrollbar">
+          <div className="max-w-5xl w-full flex items-center gap-2 overflow-x-auto overflow-y-hidden py-3 mt-2 scrollbar-thin-dark">
             {allImages.map((img, i) => (
               <button
                 key={i}
