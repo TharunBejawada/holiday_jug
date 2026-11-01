@@ -22,7 +22,6 @@ import {
   FaMinus,
   FaSpinner,
   FaArrowLeft,
-  FaSortAmountDown,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
@@ -178,8 +177,8 @@ function HotelsPageContent() {
     }
   }, [initialCheckOut]);
 
-  // Mobile Bottom Sheet Filter / Sort / Location Drawer State
-  const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "sort" | "location" | null>(null);
+  // Mobile Bottom Sheet Filter / Location Drawer State
+  const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "location" | null>(null);
 
   // Prevent background scroll when mobile filter sheet is open
   useEffect(() => {
@@ -1003,20 +1002,6 @@ function HotelsPageContent() {
               <span>{destination && destination !== "all" ? (destination.charAt(0).toUpperCase() + destination.slice(1)) : "Location"}</span>
             </button>
 
-            {/* SORT BY PILL (Image 1) */}
-            <button
-              type="button"
-              onClick={() => setMobileSheetOpen("sort")}
-              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
-                sortBy !== "recommended"
-                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
-                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
-              }`}
-            >
-              <FaSortAmountDown className="text-sky-600 text-xs" />
-              <span>Sort By</span>
-            </button>
-
             {/* FILTERS PILL (Image 1) */}
             <button
               type="button"
@@ -1524,11 +1509,7 @@ function HotelsPageContent() {
                     <FaArrowLeft className="text-base" />
                   </button>
                   <h3 className="text-base sm:text-lg font-black text-gray-900 capitalize">
-                    {mobileSheetOpen === "filters"
-                      ? "Filters"
-                      : mobileSheetOpen === "sort"
-                      ? "Sort By"
-                      : "Location"}
+                    {mobileSheetOpen === "filters" ? "Filters" : "Location"}
                   </h3>
                 </div>
 
@@ -1802,36 +1783,6 @@ function HotelsPageContent() {
                   </>
                 )}
 
-                {/* SORT BY SHEET CONTENT */}
-                {mobileSheetOpen === "sort" && (
-                  <div className="space-y-2">
-                    {SORT_OPTIONS.map((opt) => {
-                      const isSelected = sortBy === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setSortBy(opt.value);
-                            setMobileSheetOpen(null);
-                          }}
-                          className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                            isSelected
-                              ? "border-[#F7941D] bg-amber-50/60 text-[#1D1248]"
-                              : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
-                          }`}
-                        >
-                          <div>
-                            <div className="font-bold text-sm">{opt.label}</div>
-                            {opt.subtitle && <div className="text-xs text-gray-400 mt-0.5">{opt.subtitle}</div>}
-                          </div>
-                          {isSelected && <FaCheck className="text-[#F7941D] text-sm shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {/* LOCATION SHEET CONTENT */}
                 {mobileSheetOpen === "location" && (
                   <div className="space-y-4">
@@ -1847,32 +1798,6 @@ function HotelsPageContent() {
                         placeholder="Select destination..."
                         triggerClassName="bg-gray-50 border-gray-300 py-3"
                       />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-700 block mb-2">Popular Destinations</label>
-                      <div className="flex flex-wrap gap-2">
-                        {["all", "antalya", "dubai", "turkey", "spain", "greece", "portugal"].map((slug) => {
-                          const isSelected = destination === slug;
-                          const label = slug === "all" ? "All Featured" : (slug.charAt(0).toUpperCase() + slug.slice(1));
-                          return (
-                            <button
-                              key={slug}
-                              type="button"
-                              onClick={() => {
-                                setDestination(slug);
-                                setMobileSheetOpen(null);
-                              }}
-                              className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                                isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
-                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
                     </div>
                   </div>
                 )}
