@@ -22,6 +22,7 @@ import {
   FaMinus,
   FaSpinner,
   FaArrowLeft,
+  FaSortAmountDown,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
@@ -177,8 +178,80 @@ function HotelsPageContent() {
     }
   }, [initialCheckOut]);
 
-  // Mobile Bottom Sheet Filter / Location Drawer State
-  const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "location" | null>(null);
+  // Mobile Bottom Sheet Filter / Sort / Location Drawer State
+  const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "sort" | "location" | null>(null);
+
+  // Draft filter states for Mobile Bottom Sheet (only applied on SUBMIT)
+  const [draftStars, setDraftStars] = useState<number[]>([]);
+  const [draftMinPrice, setDraftMinPrice] = useState<number>(50);
+  const [draftMaxPrice, setDraftMaxPrice] = useState<number>(500);
+  const [draftBoards, setDraftBoards] = useState<string[]>([]);
+  const [draftPropertyTypes, setDraftPropertyTypes] = useState<string[]>([]);
+  const [draftFacilities, setDraftFacilities] = useState<string[]>([]);
+  const [draftHolidayTypes, setDraftHolidayTypes] = useState<string[]>([]);
+
+  const openMobileFilters = () => {
+    setDraftStars([...selectedStars]);
+    setDraftMinPrice(minPrice);
+    setDraftMaxPrice(maxPrice);
+    setDraftBoards([...selectedBoards]);
+    setDraftPropertyTypes([...selectedPropertyTypes]);
+    setDraftFacilities([...selectedFacilities]);
+    setDraftHolidayTypes([...selectedHolidayTypes]);
+    setMobileSheetOpen("filters");
+  };
+
+  const applyMobileFilters = () => {
+    setSelectedStars(draftStars);
+    setMinPrice(draftMinPrice);
+    setMaxPrice(draftMaxPrice);
+    setSelectedBoards(draftBoards);
+    setSelectedPropertyTypes(draftPropertyTypes);
+    setSelectedFacilities(draftFacilities);
+    setSelectedHolidayTypes(draftHolidayTypes);
+    setMobileSheetOpen(null);
+    scrollToResults();
+  };
+
+  const resetDraftFilters = () => {
+    setDraftStars([]);
+    setDraftMinPrice(50);
+    setDraftMaxPrice(500);
+    setDraftBoards([]);
+    setDraftPropertyTypes([]);
+    setDraftFacilities([]);
+    setDraftHolidayTypes([]);
+  };
+
+  const toggleDraftStar = (stars: number) => {
+    setDraftStars((prev) =>
+      prev.includes(stars) ? prev.filter((s) => s !== stars) : [...prev, stars]
+    );
+  };
+
+  const toggleDraftBoard = (board: string) => {
+    setDraftBoards((prev) =>
+      prev.includes(board) ? prev.filter((b) => b !== board) : [...prev, board]
+    );
+  };
+
+  const toggleDraftPropertyType = (type: string) => {
+    setDraftPropertyTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const toggleDraftFacility = (facility: string) => {
+    setDraftFacilities((prev) =>
+      prev.includes(facility) ? prev.filter((f) => f !== facility) : [...prev, facility]
+    );
+  };
+
+  const toggleDraftHolidayType = (type: string) => {
+    setDraftHolidayTypes((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
 
   // Prevent background scroll when mobile filter sheet is open
   useEffect(() => {
@@ -691,6 +764,69 @@ function HotelsPageContent() {
     nights,
   ]);
 
+  // Real-time matched hotel count preview for Mobile Filter Drawer SUBMIT button
+  const draftFilteredHotelsCount = useMemo(() => {
+    return hotels.filter((h) => {
+      if (draftStars.length > 0 && !draftStars.includes(h.starRating)) return false;
+      const hotelNightly = h.leadPricing?.hotelPrice
+        ? h.leadPricing.hotelPrice / nights
+        : h.leadPricing.totalPrice / nights;
+      if (hotelNightly < draftMinPrice) return false;
+      if (draftMaxPrice < 500 && hotelNightly > draftMaxPrice) return false;
+      if (draftBoards.length > 0) {
+        const matchesBoard = h.availableRates?.some((r) =>
+          draftBoards.some((b) => r.boardBasis?.toLowerCase().includes(b.toLowerCase()))
+        );
+        if (!matchesBoard) return false;
+      }
+      if (draftPropertyTypes.length > 0) {
+        const combined = `${h.hotelName} ${h.description || ""}`.toLowerCase();
+        const matchesType = draftPropertyTypes.some((type) => {
+          if (type === "Resort") return combined.includes("resort") || combined.includes("palace");
+          if (type === "Aparthotel")
+            return combined.includes("apartment") || combined.includes("aparthotel") || combined.includes("suite");
+          if (type === "Villa")
+            return combined.includes("villa") || combined.includes("bungalow");
+          if (type === "Hotel") return !combined.includes("apartment") && !combined.includes("villa");
+          return false;
+        });
+        if (!matchesType) return false;
+      }
+      if (draftFacilities.length > 0) {
+        const facs = (h.facilities || []).map((f) => f.toLowerCase());
+        const matchesAll = draftFacilities.every((fac) => {
+          const target = fac.toLowerCase();
+          return facs.some((f) => f.includes(target) || target.includes(f));
+        });
+        if (!matchesAll) return false;
+      }
+      if (draftHolidayTypes.length > 0) {
+        const combined = `${h.hotelName} ${h.description || ""} ${(h.facilities || []).join(" ")}`.toLowerCase();
+        const matchesAny = draftHolidayTypes.some((ht) => {
+          const t = ht.toLowerCase();
+          if (t === "beach") return combined.includes("beach") || combined.includes("sea");
+          if (t === "family") return combined.includes("family") || combined.includes("kid") || combined.includes("children");
+          if (t === "couples") return combined.includes("couple") || combined.includes("adult") || combined.includes("romantic");
+          if (t === "luxury") return h.starRating >= 5 || combined.includes("luxury") || combined.includes("deluxe") || combined.includes("premium");
+          if (t === "all inclusive") return combined.includes("all inclusive");
+          return false;
+        });
+        if (!matchesAny) return false;
+      }
+      return true;
+    }).length;
+  }, [
+    hotels,
+    draftStars,
+    draftMinPrice,
+    draftMaxPrice,
+    draftBoards,
+    draftPropertyTypes,
+    draftFacilities,
+    draftHolidayTypes,
+    nights,
+  ]);
+
   const isOverview = destination === "all" || !destination;
   const currentDestinationName = isOverview
     ? "Featured Worldwide Stays"
@@ -983,7 +1119,7 @@ function HotelsPageContent() {
             <button
               type="button"
               onClick={handleClearAll}
-              className="shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
+              className="shrink-0 px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-[#FEE2E2] text-[#991B1B] border border-[#FCA5A5]/60 hover:bg-[#FECACA] transition-colors cursor-pointer"
             >
               Reset
             </button>
@@ -992,27 +1128,38 @@ function HotelsPageContent() {
             <button
               type="button"
               onClick={() => setMobileSheetOpen("location")}
-              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
                 destination && destination !== "all"
                   ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
-                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
+                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
               }`}
             >
-              <FaMapMarkerAlt className="text-[#F7941D] text-xs" />
               <span>{destination && destination !== "all" ? (destination.charAt(0).toUpperCase() + destination.slice(1)) : "Location"}</span>
+            </button>
+
+            {/* SORT BY PILL (Image 1 - Restored for Mobile) */}
+            <button
+              type="button"
+              onClick={() => setMobileSheetOpen("sort")}
+              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
+                sortBy !== "recommended"
+                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
+                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
+              }`}
+            >
+              <span>Sort By</span>
             </button>
 
             {/* FILTERS PILL (Image 1) */}
             <button
               type="button"
-              onClick={() => setMobileSheetOpen("filters")}
-              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+              onClick={openMobileFilters}
+              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeFiltersCount > 0
                   ? "border-[#F7941D] bg-amber-50 text-[#1D1248] font-bold"
-                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
+                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
               }`}
             >
-              <FaSlidersH className="text-[#F7941D] text-xs" />
               <span>Filters</span>
               {activeFiltersCount > 0 && (
                 <span className="w-5 h-5 rounded-full bg-[#F7941D] text-white text-[10px] font-bold flex items-center justify-center">
@@ -1301,7 +1448,8 @@ function HotelsPageContent() {
                   )}
                 </p>
               </div>
-              <div className="w-full sm:w-64">
+              {/* DESKTOP-ONLY RECOMMENDED SORT DROPDOWN (Mobile uses Sort By pill) */}
+              <div className="hidden lg:block w-full sm:w-64">
                 <SearchableSelect
                   options={SORT_OPTIONS}
                   value={sortBy}
@@ -1491,7 +1639,11 @@ function HotelsPageContent() {
             />
 
             {/* Bottom Sheet Card */}
-            <div className="relative z-10 w-full max-h-[88vh] bg-white rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-250">
+            <div
+              className={`relative z-10 w-full ${
+                mobileSheetOpen === "location" ? "h-[82vh] min-h-[560px]" : "max-h-[88vh]"
+              } bg-white rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-250`}
+            >
               {/* Drag Handle Bar */}
               <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setMobileSheetOpen(null)}>
                 <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
@@ -1509,14 +1661,18 @@ function HotelsPageContent() {
                     <FaArrowLeft className="text-base" />
                   </button>
                   <h3 className="text-base sm:text-lg font-black text-gray-900 capitalize">
-                    {mobileSheetOpen === "filters" ? "Filters" : "Location"}
+                    {mobileSheetOpen === "filters"
+                      ? "Filters"
+                      : mobileSheetOpen === "sort"
+                      ? "Sort By"
+                      : "Location"}
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleClearAll}
+                    onClick={mobileSheetOpen === "filters" ? resetDraftFilters : handleClearAll}
                     className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer px-2 py-1"
                   >
                     Reset
@@ -1536,14 +1692,14 @@ function HotelsPageContent() {
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
                 {mobileSheetOpen === "filters" && (
                   <>
-                    {/* 1. PROPERTY TYPE (Chips as shown in Image 2!) */}
+                    {/* 1. PROPERTY TYPE (Draft Chips) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-bold text-gray-900">Property Type</h4>
-                        {selectedPropertyTypes.length > 0 && (
+                        {draftPropertyTypes.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setSelectedPropertyTypes([])}
+                            onClick={() => setDraftPropertyTypes([])}
                             className="text-xs text-[#F7941D] font-semibold cursor-pointer"
                           >
                             Clear
@@ -1552,12 +1708,12 @@ function HotelsPageContent() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {PROPERTY_TYPE_OPTIONS.map((type) => {
-                          const isSelected = selectedPropertyTypes.includes(type);
+                          const isSelected = draftPropertyTypes.includes(type);
                           return (
                             <button
                               key={type}
                               type="button"
-                              onClick={() => togglePropertyType(type)}
+                              onClick={() => toggleDraftPropertyType(type)}
                               className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
@@ -1573,14 +1729,14 @@ function HotelsPageContent() {
 
                     <div className="border-b border-gray-150" />
 
-                    {/* 2. STAR RATING (Chips) */}
+                    {/* 2. STAR RATING (Draft Chips) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-bold text-gray-900">Hotel Rating</h4>
-                        {selectedStars.length > 0 && (
+                        {draftStars.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setSelectedStars([])}
+                            onClick={() => setDraftStars([])}
                             className="text-xs text-[#F7941D] font-semibold cursor-pointer"
                           >
                             Clear
@@ -1589,12 +1745,12 @@ function HotelsPageContent() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {STAR_OPTIONS.map((stars) => {
-                          const isSelected = selectedStars.includes(stars);
+                          const isSelected = draftStars.includes(stars);
                           return (
                             <button
                               key={stars}
                               type="button"
-                              onClick={() => toggleStar(stars)}
+                              onClick={() => toggleDraftStar(stars)}
                               className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
                                 isSelected
                                   ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
@@ -1611,14 +1767,14 @@ function HotelsPageContent() {
 
                     <div className="border-b border-gray-150" />
 
-                    {/* 3. BOARD BASIS (Chips) */}
+                    {/* 3. BOARD BASIS (Draft Chips) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-bold text-gray-900">Board Basis</h4>
-                        {selectedBoards.length > 0 && (
+                        {draftBoards.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setSelectedBoards([])}
+                            onClick={() => setDraftBoards([])}
                             className="text-xs text-[#F7941D] font-semibold cursor-pointer"
                           >
                             Clear
@@ -1627,12 +1783,12 @@ function HotelsPageContent() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {BOARD_OPTIONS.map((board) => {
-                          const isSelected = selectedBoards.includes(board);
+                          const isSelected = draftBoards.includes(board);
                           return (
                             <button
                               key={board}
                               type="button"
-                              onClick={() => toggleBoard(board)}
+                              onClick={() => toggleDraftBoard(board)}
                               className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
@@ -1648,19 +1804,19 @@ function HotelsPageContent() {
 
                     <div className="border-b border-gray-150" />
 
-                    {/* 4. PRICE FILTER (Dual Slider as shown in Image 2!) */}
+                    {/* 4. PRICE FILTER (Draft Dual Slider) */}
                     <div>
                       <h4 className="text-sm font-bold text-gray-900 mb-1">Price Filter</h4>
                       <p className="text-xs font-bold text-[#F7941D] mb-3">
-                        £{minPrice} - {maxPrice >= 500 ? "£500+" : `£${maxPrice}`} per night
+                        £{draftMinPrice} - {draftMaxPrice >= 500 ? "£500+" : `£${draftMaxPrice}`} per night
                       </p>
                       <div className="relative pt-2 pb-2 px-1">
                         <div className="relative w-full h-1.5 bg-gray-200 rounded-full">
                           <div
                             className="absolute h-1.5 bg-[#F7941D] rounded-full"
                             style={{
-                              left: `${((minPrice - 50) / 450) * 100}%`,
-                              right: `${100 - ((maxPrice - 50) / 450) * 100}%`,
+                              left: `${((draftMinPrice - 50) / 450) * 100}%`,
+                              right: `${100 - ((draftMaxPrice - 50) / 450) * 100}%`,
                             }}
                           />
                         </div>
@@ -1669,13 +1825,13 @@ function HotelsPageContent() {
                           min={50}
                           max={500}
                           step={10}
-                          value={minPrice}
+                          value={draftMinPrice}
                           onChange={(e) => {
-                            const val = Math.min(Number(e.target.value), maxPrice - 10);
-                            setMinPrice(val);
+                            const val = Math.min(Number(e.target.value), draftMaxPrice - 10);
+                            setDraftMinPrice(val);
                           }}
                           className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
-                          style={{ zIndex: minPrice > 450 ? 5 : 3 }}
+                          style={{ zIndex: draftMinPrice > 450 ? 5 : 3 }}
                           aria-label="Minimum price per night"
                         />
                         <input
@@ -1683,10 +1839,10 @@ function HotelsPageContent() {
                           min={50}
                           max={500}
                           step={10}
-                          value={maxPrice}
+                          value={draftMaxPrice}
                           onChange={(e) => {
-                            const val = Math.max(Number(e.target.value), minPrice + 10);
-                            setMaxPrice(val);
+                            const val = Math.max(Number(e.target.value), draftMinPrice + 10);
+                            setDraftMaxPrice(val);
                           }}
                           className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
                           style={{ zIndex: 4 }}
@@ -1694,11 +1850,11 @@ function HotelsPageContent() {
                         />
                         <div
                           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-[#F7941D] bg-white pointer-events-none shadow-xs"
-                          style={{ left: `calc(${((minPrice - 50) / 450) * 100}% + 4px)` }}
+                          style={{ left: `calc(${((draftMinPrice - 50) / 450) * 100}% + 4px)` }}
                         />
                         <div
                           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#F7941D] border-2 border-[#F7941D] pointer-events-none shadow-xs"
-                          style={{ left: `calc(${((maxPrice - 50) / 450) * 100}% + 4px)` }}
+                          style={{ left: `calc(${((draftMaxPrice - 50) / 450) * 100}% + 4px)` }}
                         />
                       </div>
                       <div className="flex justify-between items-center text-xs font-semibold text-gray-500 mt-2">
@@ -1709,14 +1865,14 @@ function HotelsPageContent() {
 
                     <div className="border-b border-gray-150" />
 
-                    {/* 5. POPULAR FACILITIES (Chips) */}
+                    {/* 5. POPULAR FACILITIES (Draft Chips) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-bold text-gray-900">Popular Facilities</h4>
-                        {selectedFacilities.length > 0 && (
+                        {draftFacilities.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setSelectedFacilities([])}
+                            onClick={() => setDraftFacilities([])}
                             className="text-xs text-[#F7941D] font-semibold cursor-pointer"
                           >
                             Clear
@@ -1725,12 +1881,12 @@ function HotelsPageContent() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {FACILITY_OPTIONS.map((facility) => {
-                          const isSelected = selectedFacilities.includes(facility);
+                          const isSelected = draftFacilities.includes(facility);
                           return (
                             <button
                               key={facility}
                               type="button"
-                              onClick={() => toggleFacility(facility)}
+                              onClick={() => toggleDraftFacility(facility)}
                               className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
@@ -1746,14 +1902,14 @@ function HotelsPageContent() {
 
                     <div className="border-b border-gray-150" />
 
-                    {/* 6. HOLIDAY TYPE (Chips) */}
+                    {/* 6. HOLIDAY TYPE (Draft Chips) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
                         <h4 className="text-sm font-bold text-gray-900">Holiday Type</h4>
-                        {selectedHolidayTypes.length > 0 && (
+                        {draftHolidayTypes.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setSelectedHolidayTypes([])}
+                            onClick={() => setDraftHolidayTypes([])}
                             className="text-xs text-[#F7941D] font-semibold cursor-pointer"
                           >
                             Clear
@@ -1762,12 +1918,12 @@ function HotelsPageContent() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {HOLIDAY_TYPE_OPTIONS.map((ht) => {
-                          const isSelected = selectedHolidayTypes.includes(ht);
+                          const isSelected = draftHolidayTypes.includes(ht);
                           return (
                             <button
                               key={ht}
                               type="button"
-                              onClick={() => toggleHolidayType(ht)}
+                              onClick={() => toggleDraftHolidayType(ht)}
                               className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isSelected
                                   ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
@@ -1783,9 +1939,39 @@ function HotelsPageContent() {
                   </>
                 )}
 
-                {/* LOCATION SHEET CONTENT */}
+                {/* SORT BY SHEET CONTENT (Restored for Mobile) */}
+                {mobileSheetOpen === "sort" && (
+                  <div className="space-y-2">
+                    {SORT_OPTIONS.map((opt) => {
+                      const isSelected = sortBy === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setSortBy(opt.value);
+                            setMobileSheetOpen(null);
+                          }}
+                          className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-[#F7941D] bg-amber-50/60 text-[#1D1248]"
+                              : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-sm">{opt.label}</div>
+                            {opt.subtitle && <div className="text-xs text-gray-400 mt-0.5">{opt.subtitle}</div>}
+                          </div>
+                          {isSelected && <FaCheck className="text-[#F7941D] text-sm shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* LOCATION SHEET CONTENT (Increased height with pb-64 for dropdown visibility) */}
                 {mobileSheetOpen === "location" && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 pb-64">
                     <div>
                       <label className="text-xs font-bold text-gray-700 block mb-2">Search Destination</label>
                       <SearchableSelect
@@ -1795,7 +1981,7 @@ function HotelsPageContent() {
                           setDestination(val);
                           setMobileSheetOpen(null);
                         }}
-                        placeholder="Select destination..."
+                        placeholder="Search country or city..."
                         triggerClassName="bg-gray-50 border-gray-300 py-3"
                       />
                     </div>
@@ -1803,19 +1989,23 @@ function HotelsPageContent() {
                 )}
               </div>
 
-              {/* SHEET FOOTER: SUBMIT BUTTON (Image 2) */}
-              <div className="p-4 border-t border-gray-200 bg-white">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileSheetOpen(null);
-                    scrollToResults();
-                  }}
-                  className="w-full py-3.5 px-6 rounded-xl bg-[#1D1248] hover:bg-[#2B1B6D] active:scale-[0.99] text-white font-extrabold text-sm uppercase tracking-wider shadow-md cursor-pointer transition-all flex items-center justify-center gap-2"
-                >
-                  SUBMIT ({filteredHotels.length} Properties)
-                </button>
-              </div>
+              {/* SHEET FOOTER: SUBMIT BUTTON (Only applied on click, mobile section only) */}
+              {mobileSheetOpen === "filters" && (
+                <div className="p-4 border-t border-gray-200 bg-white">
+                  <button
+                    type="button"
+                    onClick={applyMobileFilters}
+                    className="w-full py-3.5 px-6 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] active:scale-[0.99] text-white font-extrabold text-sm uppercase tracking-wider shadow-md cursor-pointer transition-all flex items-center justify-center gap-2"
+                  >
+                    SUBMIT
+                    {draftFilteredHotelsCount > 0 && (
+                      <span className="text-xs font-medium opacity-90 normal-case">
+                        ({draftFilteredHotelsCount} {draftFilteredHotelsCount === 1 ? "Property" : "Properties"})
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
