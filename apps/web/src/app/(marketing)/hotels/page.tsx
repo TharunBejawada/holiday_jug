@@ -245,7 +245,6 @@ function HotelsPageContent() {
   const [searchId, setSearchId] = useState<string>("");
   const [priceCheckedAt, setPriceCheckedAt] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const [selectedHotel, setSelectedHotel] = useState<HotelResult | null>(null);
 
   const activeDestinations = getActiveSearchDestinations();
 
@@ -336,14 +335,6 @@ function HotelsPageContent() {
           setHotels(list);
           setSearchId(data.searchId || "");
           setPriceCheckedAt(data.priceCheckedAt || "");
-
-          // If a specific hotel was targeted in the URL, open its availability directly
-          if (initialHotelCode) {
-            const targeted = list.find((h) => h.hotelCode === initialHotelCode);
-            if (targeted) {
-              setSelectedHotel(targeted);
-            }
-          }
         } else if (!isCancelled && (!data.success || !data.hotels || data.hotels.length === 0)) {
           // If no data from API response, navigate to homepage
           router.replace("/");
@@ -1384,89 +1375,6 @@ function HotelsPageContent() {
           </div>
         </div>
       </div>
-
-      {/* 3. INTERACTIVE ROOM RATES & AVAILABILITY MODAL */}
-      {selectedHotel && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in"
-          onClick={() => setSelectedHotel(null)}
-        >
-          <div
-            className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 sm:p-8 shadow-2xl border border-gray-100 text-[#1D1248]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <div>
-                <h3 className="text-xl sm:text-2xl font-extrabold">{selectedHotel.hotelName}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Live verified room availability and rates
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedHotel(null)}
-                className="text-gray-400 hover:text-gray-700 text-lg font-bold p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* QUOTE ID BANNER INSIDE MODAL */}
-            <div className="my-4 rounded-xl bg-amber-50 p-3.5 border border-amber-200 flex items-center justify-between text-xs font-semibold">
-              <span className="text-[#071746]">
-                Quote Search ID:{" "}
-                <strong className="font-mono text-sm text-[#F7941D]">{searchId}</strong>
-              </span>
-              <a
-                href="tel:03301658879"
-                className="text-[#F7941D] hover:underline flex items-center gap-1 font-bold"
-              >
-                <FaPhoneAlt /> 0330 165 8879
-              </a>
-            </div>
-
-            {/* RATES LIST */}
-            <div className="space-y-3.5 my-4">
-              {selectedHotel.availableRates.map((rate) => (
-                <div
-                  key={rate.rateKey}
-                  className="rounded-2xl border border-gray-200 p-4 hover:border-[#F7941D] transition-colors flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50"
-                >
-                  <div>
-                    <span className="inline-block rounded-md bg-[#1D1248] px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider mb-1">
-                      {rate.boardBasis}
-                    </span>
-                    <h4 className="font-bold text-sm sm:text-base text-[#1D1248]">
-                      {rate.roomType}
-                    </h4>
-                    <p className="text-xs text-green-600 font-semibold mt-0.5">
-                      {rate.cancellationPolicy}
-                    </p>
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      Includes £{rate.customerPricing.localTax.toFixed(2)} taxes
-                    </p>
-                  </div>
-
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className="text-xl font-extrabold text-[#F7941D] block">
-                      £{rate.customerPricing.totalPrice.toFixed(2)}
-                    </span>
-                    <span className="text-[10px] text-gray-500 font-medium">Total stay price</span>
-                    <a
-                      href="tel:03301658879"
-                      className="mt-2 inline-flex items-center gap-1 rounded-lg bg-[#F7941D] px-3.5 py-1.5 text-xs font-bold text-white shadow-xs"
-                    >
-                      <FaPhoneAlt className="text-[10px]" /> Call to Book
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -34,6 +34,12 @@ body {
   background: rgba(156, 163, 175, 0.7);
 }
 
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* Firefox support for thin scrollbar */
 * {
   scrollbar-width: thin;
@@ -63,6 +69,12 @@ body {
 
 .scrollbar-thin-dark::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.65);
+}
+
+.scrollbar-thin-dark::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Utility: completely hide scrollbar when desired */
