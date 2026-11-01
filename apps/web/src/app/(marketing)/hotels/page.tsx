@@ -21,6 +21,8 @@ import {
   FaPlus,
   FaMinus,
   FaSpinner,
+  FaArrowLeft,
+  FaSortAmountDown,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
@@ -157,6 +159,61 @@ function HotelsPageContent() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchVersion, setSearchVersion] = useState(0);
 
+  // Sync state if searchParams change via client navigation
+  useEffect(() => {
+    if (initialDestination) {
+      setDestination(initialDestination);
+    }
+  }, [initialDestination]);
+
+  useEffect(() => {
+    if (initialCheckIn !== undefined) {
+      setCheckIn(initialCheckIn);
+    }
+  }, [initialCheckIn]);
+
+  useEffect(() => {
+    if (initialCheckOut !== undefined) {
+      setCheckOut(initialCheckOut);
+    }
+  }, [initialCheckOut]);
+
+  // Mobile Bottom Sheet Filter / Sort / Location Drawer State
+  const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "sort" | "location" | null>(null);
+
+  // Prevent background scroll when mobile filter sheet is open
+  useEffect(() => {
+    if (mobileSheetOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileSheetOpen]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedStars.length > 0) count += selectedStars.length;
+    if (minPrice > 50 || maxPrice < 500) count += 1;
+    if (selectedBoards.length > 0) count += selectedBoards.length;
+    if (selectedPropertyTypes.length > 0) count += selectedPropertyTypes.length;
+    if (selectedFacilities.length > 0) count += selectedFacilities.length;
+    if (selectedHolidayTypes.length > 0) count += selectedHolidayTypes.length;
+    if (destination !== "all" && destination) count += 1;
+    return count;
+  }, [
+    selectedStars,
+    minPrice,
+    maxPrice,
+    selectedBoards,
+    selectedPropertyTypes,
+    selectedFacilities,
+    selectedHolidayTypes,
+    destination,
+  ]);
+
   const scrollToResults = () => {
     requestAnimationFrame(() => {
       if (resultsRef.current) {
@@ -172,6 +229,7 @@ function HotelsPageContent() {
   };
 
   const handleUpdate = () => {
+    setLoading(true);
     setShowTravellersPopover(false);
     setSearchVersion((v) => v + 1);
     scrollToResults();
@@ -875,16 +933,12 @@ function HotelsPageContent() {
                       )}
                       <button
                         type="button"
-                        onClick={() => {
-                          setShowTravellersPopover(false);
-                          setSearchVersion((v) => v + 1);
-                          scrollToResults();
-                        }}
+                        onClick={handleUpdate}
                         disabled={loading}
                         className="ml-auto rounded-lg bg-[#1D1248] disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer inline-flex items-center gap-1.5"
                       >
                         {loading && <FaSpinner className="animate-spin text-xs" />}
-                        {loading ? "Searching..." : "Apply & Search"}
+                        {loading ? "Loading..." : "Apply & Search"}
                       </button>
                     </div>
                   </div>
@@ -901,7 +955,7 @@ function HotelsPageContent() {
                 >
                   {loading ? (
                     <>
-                      <FaSpinner className="animate-spin text-sm" /> Searching...
+                      <FaSpinner className="animate-spin text-sm" /> Loading...
                     </>
                   ) : (
                     <>
@@ -923,9 +977,70 @@ function HotelsPageContent() {
       >
         <CallForHiddenPricesBanner variant="inline" />
 
+        {/* MOBILE STICKY FILTER PILLS BAR (Image 1: Reset, Location, Sort By, Filters) */}
+        <div className="lg:hidden sticky top-0 sm:top-14 z-30 bg-white/95 backdrop-blur-md -mx-4 px-4 py-2.5 border-b border-gray-200 shadow-2xs mt-4">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            {/* RESET BUTTON (Red pill, Image 1) */}
+            <button
+              type="button"
+              onClick={handleClearAll}
+              className="shrink-0 px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              Reset
+            </button>
+
+            {/* LOCATION PILL (Image 1) */}
+            <button
+              type="button"
+              onClick={() => setMobileSheetOpen("location")}
+              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+                destination && destination !== "all"
+                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
+                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
+              }`}
+            >
+              <FaMapMarkerAlt className="text-[#F7941D] text-xs" />
+              <span>{destination && destination !== "all" ? (destination.charAt(0).toUpperCase() + destination.slice(1)) : "Location"}</span>
+            </button>
+
+            {/* SORT BY PILL (Image 1) */}
+            <button
+              type="button"
+              onClick={() => setMobileSheetOpen("sort")}
+              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+                sortBy !== "recommended"
+                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
+                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
+              }`}
+            >
+              <FaSortAmountDown className="text-sky-600 text-xs" />
+              <span>Sort By</span>
+            </button>
+
+            {/* FILTERS PILL (Image 1) */}
+            <button
+              type="button"
+              onClick={() => setMobileSheetOpen("filters")}
+              className={`shrink-0 px-3.5 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeFiltersCount > 0
+                  ? "border-[#F7941D] bg-amber-50 text-[#1D1248] font-bold"
+                  : "border-sky-200 bg-white text-gray-800 hover:border-sky-300"
+              }`}
+            >
+              <FaSlidersH className="text-[#F7941D] text-xs" />
+              <span>Filters</span>
+              {activeFiltersCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[#F7941D] text-white text-[10px] font-bold flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-6">
-          {/* LEFT FILTERS SIDEBAR */}
-          <div className="lg:col-span-1 space-y-5">
+          {/* LEFT FILTERS SIDEBAR (Desktop Only) */}
+          <div className="hidden lg:block lg:col-span-1 space-y-5">
             <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-xs">
               {/* HEADER */}
               <div className="flex items-center justify-between pb-3.5 border-b border-gray-200/70">
@@ -946,34 +1061,13 @@ function HotelsPageContent() {
                 <label className="text-xs font-bold text-[#1D1248] block mb-2">
                   Destination / Area
                 </label>
-                <div className="relative">
-                  <select
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-medium text-gray-700 pr-9 focus:border-[#F7941D] focus:outline-none cursor-pointer shadow-2xs hover:border-gray-300 transition-colors"
-                  >
-                    <option value="all">All Destinations (Featured)</option>
-                    <option value="antalya">Antalya</option>
-                    <option value="dubai">Dubai</option>
-                    <option value="greece">Santorini (Greece)</option>
-                    <option value="spain">Tenerife (Spain)</option>
-                    <option value="turkey">Turkey (Riviera)</option>
-                    <option value="portugal">Algarve (Portugal)</option>
-                    {activeDestinations
-                      .filter(
-                        (d) =>
-                          !["antalya", "dubai", "greece", "spain", "turkey", "portugal", "all"].includes(
-                            d.slug
-                          )
-                      )
-                      .map((d) => (
-                        <option key={d.slug} value={d.slug}>
-                          {d.destination} ({d.country})
-                        </option>
-                      ))}
-                  </select>
-                  <FaChevronDown className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-[#1D1248]" />
-                </div>
+                <SearchableSelect
+                  options={destinationOptions}
+                  value={destination}
+                  onChange={(val) => setDestination(val)}
+                  placeholder="Select destination..."
+                  triggerClassName="bg-white border-gray-200 py-2 rounded-lg text-xs font-medium"
+                />
               </div>
 
               <div className="border-b border-gray-200/70 my-3.5" />
@@ -1380,17 +1474,18 @@ function HotelsPageContent() {
                           {/* CALL TO BOOK BUTTON */}
                           <a
                             href="tel:03301658879"
-                            className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
+                            className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
                           >
                             <FaPhoneAlt className="text-[10px]" /> Call to Book
                           </a>
-                          {/* VIEW DETAILS BUTTON */}
+                          {/* VIEW DETAILS BUTTON (Temporarily disabled as requested)
                           <Link
                             href={`/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(destination || hotel.city || "")}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(rooms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`}
                             className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap inline-flex items-center justify-center text-center"
                           >
                             View Details
                           </Link>
+                          */}
                         </div>
                       </div>
                     </div>
@@ -1400,6 +1495,405 @@ function HotelsPageContent() {
             )}
           </div>
         </div>
+
+        {/* MOBILE BOTTOM SHEET (Image 2: Drawer with Property Type, Star Rating, Board Basis, Price Filter, Facilities, Holiday Types, and SUBMIT button) */}
+        {mobileSheetOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end">
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+              onClick={() => setMobileSheetOpen(null)}
+            />
+
+            {/* Bottom Sheet Card */}
+            <div className="relative z-10 w-full max-h-[88vh] bg-white rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-250">
+              {/* Drag Handle Bar */}
+              <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setMobileSheetOpen(null)}>
+                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              </div>
+
+              {/* SHEET HEADER */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetOpen(null)}
+                    className="p-1.5 -ml-1.5 text-gray-700 hover:text-gray-900 rounded-full hover:bg-gray-100 cursor-pointer"
+                    aria-label="Back"
+                  >
+                    <FaArrowLeft className="text-base" />
+                  </button>
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 capitalize">
+                    {mobileSheetOpen === "filters"
+                      ? "Filters"
+                      : mobileSheetOpen === "sort"
+                      ? "Sort By"
+                      : "Location"}
+                  </h3>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer px-2 py-1"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMobileSheetOpen(null)}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 cursor-pointer"
+                    aria-label="Close"
+                  >
+                    <FaTimes className="text-sm" />
+                  </button>
+                </div>
+              </div>
+
+              {/* SHEET BODY (Scrollable) */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+                {mobileSheetOpen === "filters" && (
+                  <>
+                    {/* 1. PROPERTY TYPE (Chips as shown in Image 2!) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-bold text-gray-900">Property Type</h4>
+                        {selectedPropertyTypes.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPropertyTypes([])}
+                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {PROPERTY_TYPE_OPTIONS.map((type) => {
+                          const isSelected = selectedPropertyTypes.includes(type);
+                          return (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => togglePropertyType(type)}
+                              className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              {type}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-b border-gray-150" />
+
+                    {/* 2. STAR RATING (Chips) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-bold text-gray-900">Hotel Rating</h4>
+                        {selectedStars.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStars([])}
+                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {STAR_OPTIONS.map((stars) => {
+                          const isSelected = selectedStars.includes(stars);
+                          return (
+                            <button
+                              key={stars}
+                              type="button"
+                              onClick={() => toggleStar(stars)}
+                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              <span>{stars}</span>
+                              <FaStar className="text-amber-400 text-xs" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-b border-gray-150" />
+
+                    {/* 3. BOARD BASIS (Chips) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-bold text-gray-900">Board Basis</h4>
+                        {selectedBoards.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBoards([])}
+                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {BOARD_OPTIONS.map((board) => {
+                          const isSelected = selectedBoards.includes(board);
+                          return (
+                            <button
+                              key={board}
+                              type="button"
+                              onClick={() => toggleBoard(board)}
+                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              {board}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-b border-gray-150" />
+
+                    {/* 4. PRICE FILTER (Dual Slider as shown in Image 2!) */}
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-900 mb-1">Price Filter</h4>
+                      <p className="text-xs font-bold text-[#F7941D] mb-3">
+                        £{minPrice} - {maxPrice >= 500 ? "£500+" : `£${maxPrice}`} per night
+                      </p>
+                      <div className="relative pt-2 pb-2 px-1">
+                        <div className="relative w-full h-1.5 bg-gray-200 rounded-full">
+                          <div
+                            className="absolute h-1.5 bg-[#F7941D] rounded-full"
+                            style={{
+                              left: `${((minPrice - 50) / 450) * 100}%`,
+                              right: `${100 - ((maxPrice - 50) / 450) * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <input
+                          type="range"
+                          min={50}
+                          max={500}
+                          step={10}
+                          value={minPrice}
+                          onChange={(e) => {
+                            const val = Math.min(Number(e.target.value), maxPrice - 10);
+                            setMinPrice(val);
+                          }}
+                          className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
+                          style={{ zIndex: minPrice > 450 ? 5 : 3 }}
+                          aria-label="Minimum price per night"
+                        />
+                        <input
+                          type="range"
+                          min={50}
+                          max={500}
+                          step={10}
+                          value={maxPrice}
+                          onChange={(e) => {
+                            const val = Math.max(Number(e.target.value), minPrice + 10);
+                            setMaxPrice(val);
+                          }}
+                          className="absolute inset-x-1 inset-y-0 w-[calc(100%-8px)] opacity-0 cursor-pointer pointer-events-auto"
+                          style={{ zIndex: 4 }}
+                          aria-label="Maximum price per night"
+                        />
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-[#F7941D] bg-white pointer-events-none shadow-xs"
+                          style={{ left: `calc(${((minPrice - 50) / 450) * 100}% + 4px)` }}
+                        />
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#F7941D] border-2 border-[#F7941D] pointer-events-none shadow-xs"
+                          style={{ left: `calc(${((maxPrice - 50) / 450) * 100}% + 4px)` }}
+                        />
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-500 mt-2">
+                        <span>£50</span>
+                        <span>£500+</span>
+                      </div>
+                    </div>
+
+                    <div className="border-b border-gray-150" />
+
+                    {/* 5. POPULAR FACILITIES (Chips) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-bold text-gray-900">Popular Facilities</h4>
+                        {selectedFacilities.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedFacilities([])}
+                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {FACILITY_OPTIONS.map((facility) => {
+                          const isSelected = selectedFacilities.includes(facility);
+                          return (
+                            <button
+                              key={facility}
+                              type="button"
+                              onClick={() => toggleFacility(facility)}
+                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              {facility}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="border-b border-gray-150" />
+
+                    {/* 6. HOLIDAY TYPE (Chips) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <h4 className="text-sm font-bold text-gray-900">Holiday Type</h4>
+                        {selectedHolidayTypes.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHolidayTypes([])}
+                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {HOLIDAY_TYPE_OPTIONS.map((ht) => {
+                          const isSelected = selectedHolidayTypes.includes(ht);
+                          return (
+                            <button
+                              key={ht}
+                              type="button"
+                              onClick={() => toggleHolidayType(ht)}
+                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              {ht}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* SORT BY SHEET CONTENT */}
+                {mobileSheetOpen === "sort" && (
+                  <div className="space-y-2">
+                    {SORT_OPTIONS.map((opt) => {
+                      const isSelected = sortBy === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setSortBy(opt.value);
+                            setMobileSheetOpen(null);
+                          }}
+                          className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-[#F7941D] bg-amber-50/60 text-[#1D1248]"
+                              : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-sm">{opt.label}</div>
+                            {opt.subtitle && <div className="text-xs text-gray-400 mt-0.5">{opt.subtitle}</div>}
+                          </div>
+                          {isSelected && <FaCheck className="text-[#F7941D] text-sm shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* LOCATION SHEET CONTENT */}
+                {mobileSheetOpen === "location" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-2">Search Destination</label>
+                      <SearchableSelect
+                        options={destinationOptions}
+                        value={destination}
+                        onChange={(val) => {
+                          setDestination(val);
+                          setMobileSheetOpen(null);
+                        }}
+                        placeholder="Select destination..."
+                        triggerClassName="bg-gray-50 border-gray-300 py-3"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-2">Popular Destinations</label>
+                      <div className="flex flex-wrap gap-2">
+                        {["all", "antalya", "dubai", "turkey", "spain", "greece", "portugal"].map((slug) => {
+                          const isSelected = destination === slug;
+                          const label = slug === "all" ? "All Featured" : (slug.charAt(0).toUpperCase() + slug.slice(1));
+                          return (
+                            <button
+                              key={slug}
+                              type="button"
+                              onClick={() => {
+                                setDestination(slug);
+                                setMobileSheetOpen(null);
+                              }}
+                              className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* SHEET FOOTER: SUBMIT BUTTON (Image 2) */}
+              <div className="p-4 border-t border-gray-200 bg-white">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileSheetOpen(null);
+                    scrollToResults();
+                  }}
+                  className="w-full py-3.5 px-6 rounded-xl bg-[#1D1248] hover:bg-[#2B1B6D] active:scale-[0.99] text-white font-extrabold text-sm uppercase tracking-wider shadow-md cursor-pointer transition-all flex items-center justify-center gap-2"
+                >
+                  SUBMIT ({filteredHotels.length} Properties)
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findDestination } from "@/lib/destinations-master";
-import { searchGrnHotels } from "@/lib/grn-client";
+import { searchGrnHotels, searchAllGrnHotelsForDestination, HotelSearchResultItem } from "@/lib/grn-client";
 import { generateSearchId, formatUkTime, formatUkTimeShort, saveSearchRecord, StoredSearchRecord } from "@/lib/search-id";
 import { getPricingConfig } from "@/lib/pricing";
 
@@ -61,6 +61,7 @@ async function handleSearch(payload: SearchPayload) {
   let countryName = "Top Destinations";
   let destinationSlug = "all";
   let hotelCodesToSearch: string[] = [];
+  let grnCityIdToSearch: string | undefined = undefined;
 
   if (payload.hotelCode) {
     hotelCodesToSearch = [payload.hotelCode];
@@ -71,43 +72,67 @@ async function handleSearch(payload: SearchPayload) {
       destinationSlug = item.slug;
     }
   } else if (!destinationInput || destinationInput === "all" || destinationInput === "featured") {
-    // Show a curated selection of "few hotels" across diverse top destinations on overview
-    hotelCodesToSearch = [
-      "rixos-downtown-antalya", // Rixos Downtown Antalya (Antalya, Turkey)
-      "1848131", // Sheraton Dubai Creek (Dubai, UAE)
-      "TR-ANT-01", // Antalya Riviera Luxury Palace (Antalya, Turkey)
-      "GR-SAN-01", // Santorini Caldera View Suites (Santorini, Greece)
-      "ES-TEN-01", // Tenerife Royal Sun Resort (Tenerife, Spain)
-      "1847658", // Al Habtoor Grand Resort (Dubai JBR)
-      "PT-ALG-01", // Algarve Cliffside Resort (Algarve, Portugal)
-      "1847631", // Grand Hyatt Dubai (Dubai, UAE)
-      "ES-MAJ-01", // Palma Bay Luxury Resort (Majorca, Spain)
-    ];
     destinationName = "Featured Worldwide";
     countryName = "Top Destinations";
     destinationSlug = "all";
+    grnCityIdToSearch = "122419"; // Live Antalya & Turkish Riviera hotels from GRN
+    hotelCodesToSearch = [
+      "rixos-downtown-antalya",
+      "1848131",
+      "TR-ANT-01",
+      "1847658",
+      "1847631",
+    ];
   } else {
-    const destinationItem = findDestination(destinationInput) || findDestination("dubai")!;
+    const destinationItem =
+      findDestination(destinationInput) || findDestination("antalya") || findDestination("dubai")!;
     destinationName = destinationItem.destination;
     countryName = destinationItem.country;
     destinationSlug = destinationItem.slug;
     hotelCodesToSearch = destinationItem.featuredHotelCodes;
+    grnCityIdToSearch = destinationItem.grnCityId;
   }
 
   // Hotel search only: No flight fare added
   const flightFareGbp = 0;
 
   // Search GRN availability (Hotels Only)
-  const hotels = await searchGrnHotels(
-    {
-      hotelCodes: hotelCodesToSearch,
-      checkIn,
-      checkOut,
-      rooms,
-      clientNationality: "GB",
-    },
-    flightFareGbp
-  );
+  let hotels: HotelSearchResultItem[] = [];
+
+  if (payload.hotelCode) {
+    hotels = await searchGrnHotels(
+      {
+        hotelCodes: hotelCodesToSearch,
+        checkIn,
+        checkOut,
+        rooms,
+        clientNationality: "GB",
+      },
+      flightFareGbp
+    );
+  } else if (grnCityIdToSearch) {
+    hotels = await searchAllGrnHotelsForDestination({
+      cityId: grnCityIdToSearch,
+      secondaryCityId: destinationSlug === "all" ? "121449" : undefined,
+      destinationName,
+      countryName,
+      destinationSlug,
+      featuredHotelCodes: hotelCodesToSearch,
+      totalAdults,
+      flightFareGbp,
+    });
+  } else {
+    hotels = await searchGrnHotels(
+      {
+        hotelCodes: hotelCodesToSearch,
+        checkIn,
+        checkOut,
+        rooms,
+        clientNationality: "GB",
+      },
+      flightFareGbp
+    );
+  }
 
   const now = new Date();
   const ukTimeNow = formatUkTime(now);

@@ -12,11 +12,12 @@ import {
   FaPlus,
   FaMinus,
   FaTimes,
+  FaSpinner,
 } from "react-icons/fa";
 
 import { DatePicker } from "@/components/DatePicker";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { DEPARTURE_AIRPORTS } from "@/lib/destinations-master";
+import { DEPARTURE_AIRPORTS, getActiveSearchDestinations } from "@/lib/destinations-master";
 
 interface RoomConfig {
   adults: number;
@@ -46,6 +47,7 @@ export function HeroSection() {
   const [destination, setDestination] = useState("");
   const [destinationQuery, setDestinationQuery] = useState("");
   const [adminDestinations, setAdminDestinations] = useState<AdminDestinationItem[]>(DEFAULT_ADMIN_DESTINATIONS);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -87,42 +89,81 @@ export function HeroSection() {
   }, []);
 
   const destinationOptions = useMemo(() => {
-    return adminDestinations.map((d) => ({
-      value: d.slug,
-      label: `${d.name} (${d.region})`,
-      subtitle: d.priceFrom ? `From £${d.priceFrom} pp` : undefined,
-      searchTerms: [d.name, d.slug, d.region],
-    }));
+    const list: Array<{
+      value: string;
+      label: string;
+      subtitle?: string;
+      tags?: string[];
+      searchTerms?: string[];
+    }> = [
+      {
+        value: "all",
+        label: "All Destinations (Featured)",
+        subtitle: "Worldwide Handpicked Stays",
+        tags: ["all", "featured", "worldwide", "any"],
+        searchTerms: ["all", "featured", "worldwide", "any"],
+      },
+    ];
+
+    adminDestinations.forEach((d) => {
+      if (!list.some((existing) => existing.value.toLowerCase() === d.slug.toLowerCase())) {
+        list.push({
+          value: d.slug,
+          label: `${d.name} (${d.region})`,
+          subtitle: d.priceFrom ? `From £${d.priceFrom} pp` : undefined,
+          tags: [d.name, d.slug, d.region],
+          searchTerms: [d.name, d.slug, d.region],
+        });
+      }
+    });
+
+    const activeDestinations = getActiveSearchDestinations();
+    activeDestinations.forEach((d) => {
+      if (!list.some((existing) => existing.value.toLowerCase() === d.slug.toLowerCase())) {
+        list.push({
+          value: d.slug,
+          label: `${d.destination} (${d.country})`,
+          subtitle: d.displayGroup || d.country,
+          tags: [d.destination, d.country, ...(d.aliases || [])],
+          searchTerms: [d.destination, d.country, ...(d.aliases || [])],
+        });
+      }
+    });
+
+    return list;
   }, [adminDestinations]);
 
   // Summary labels for Travellers
   const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
   const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.length, 0);
-  const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
-    }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+  const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${
+    totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
+  }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+
+  // Reset navigation loading state on tab switch or timeout
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [activeTab]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsNavigating(true);
 
-    if (activeTab === "hotels") {
-      const queryParams = new URLSearchParams({
-        destination: destination || "all",
-        type: "hotels",
-        rooms: JSON.stringify(rooms),
-        adults: totalAdults.toString(),
-        children: totalChildren.toString(),
-      });
-      if (checkIn) queryParams.set("checkIn", checkIn);
-      if (checkOut) queryParams.set("checkOut", checkOut);
-      router.push(`/hotels?${queryParams.toString()}`);
-    } else {
-      // For Holidays / Destination search: navigate directly to destination details page based on Admin Dashboard data
-      if (destination) {
-        router.push(`/destinations/${destination}`);
-      } else {
-        router.push(`/destinations`);
-      }
+    // Navigate to hotels overview page for both Holidays and Hotels
+    const queryParams = new URLSearchParams({
+      destination: destination || "all",
+      type: activeTab,
+      rooms: JSON.stringify(rooms),
+      adults: totalAdults.toString(),
+      children: totalChildren.toString(),
+    });
+    if (activeTab === "holidays" && departureAirport) {
+      queryParams.set("departureAirport", departureAirport);
     }
+    if (checkIn) queryParams.set("checkIn", checkIn);
+    if (checkOut) queryParams.set("checkOut", checkOut);
+
+    router.push(`/hotels?${queryParams.toString()}`);
   };
 
   const addRoom = () => {
@@ -414,10 +455,20 @@ export function HeroSection() {
                 <div className={`${activeTab === "holidays" ? "col-span-full mt-2" : "lg:col-span-2"} flex flex-col`}>
                   <button
                     type="submit"
-                    className="w-full rounded-xl bg-[#F7941D] hover:bg-[#e08314] active:scale-[0.98] py-3 sm:py-3.5 px-6 text-sm sm:text-base font-extrabold text-white transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={isNavigating}
+                    className="w-full rounded-xl bg-[#F7941D] hover:bg-[#e08314] disabled:bg-[#F7941D]/80 disabled:cursor-wait active:scale-[0.98] py-3 sm:py-3.5 px-6 text-sm sm:text-base font-extrabold text-white transition-all shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <FaSearch className="text-xs sm:text-sm" />
-                    <span>{activeTab === "holidays" ? "Explore Destination" : "Search"}</span>
+                    {isNavigating ? (
+                      <>
+                        <FaSpinner className="animate-spin text-sm" />
+                        <span>{activeTab === "holidays" ? "Loading Hotels..." : "Loading..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <FaSearch className="text-xs sm:text-sm" />
+                        <span>{activeTab === "holidays" ? "Explore Destination" : "Search"}</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

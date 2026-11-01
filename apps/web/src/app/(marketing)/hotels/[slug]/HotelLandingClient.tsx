@@ -36,7 +36,7 @@ import {
   FaMinus,
   FaSpinner,
 } from "react-icons/fa";
-import { SANDBOX_HOTELS_DATABASE } from "@/lib/grn-client";
+import { SANDBOX_HOTELS_DATABASE, getKnownHotel } from "@/lib/grn-client";
 import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 
 interface HotelData {
@@ -94,6 +94,11 @@ export default function HotelLandingClient({
 
     if (found) {
       return found;
+    }
+
+    const known = getKnownHotel(slug);
+    if (known) {
+      return known;
     }
 
     // Default to Rixos Downtown Antalya if matching or fallback
