@@ -154,7 +154,28 @@ function HotelsPageContent() {
   const [rooms, setRooms] = useState<RoomConfig[]>(defaultRooms);
   const [showTravellersPopover, setShowTravellersPopover] = useState(false);
   const travellersRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const [searchVersion, setSearchVersion] = useState(0);
+
+  const scrollToResults = () => {
+    requestAnimationFrame(() => {
+      if (resultsRef.current) {
+        const headerOffset = 80;
+        const elementPosition = resultsRef.current.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: "smooth",
+        });
+      }
+    });
+  };
+
+  const handleUpdate = () => {
+    setShowTravellersPopover(false);
+    setSearchVersion((v) => v + 1);
+    scrollToResults();
+  };
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -857,6 +878,7 @@ function HotelsPageContent() {
                         onClick={() => {
                           setShowTravellersPopover(false);
                           setSearchVersion((v) => v + 1);
+                          scrollToResults();
                         }}
                         disabled={loading}
                         className="ml-auto rounded-lg bg-[#1D1248] disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer inline-flex items-center gap-1.5"
@@ -873,7 +895,7 @@ function HotelsPageContent() {
               <div className="lg:col-span-2">
                 <button
                   type="button"
-                  onClick={() => setSearchVersion((v) => v + 1)}
+                  onClick={handleUpdate}
                   disabled={loading}
                   className="w-full h-[46px] rounded-xl bg-[#F7941D] hover:bg-[#e08316] disabled:bg-[#F7941D]/70 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
@@ -894,7 +916,11 @@ function HotelsPageContent() {
       </div>
 
       {/* 2. SUB-FILTER BAR & RESULTS SECTION */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div
+        ref={resultsRef}
+        id="hotel-results"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 scroll-mt-24"
+      >
         <CallForHiddenPricesBanner variant="inline" />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-6">
