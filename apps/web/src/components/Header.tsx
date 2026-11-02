@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   FaChevronDown,
+  FaChevronRight,
   FaUmbrellaBeach,
   FaHotel,
   FaMapMarkerAlt,
@@ -21,17 +22,38 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 import { UserAccountMenu } from "@/components/UserAccountMenu";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
+import { DESTINATIONS_NAV_DATA } from "@/lib/destinations-nav-data";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [destinationsMenuOpen, setDestinationsMenuOpen] = useState(false);
+  const [activeCountryIndex, setActiveCountryIndex] = useState(0);
   const [mobileDestinationsOpen, setMobileDestinationsOpen] = useState(false);
+  const [mobileCountryOpen, setMobileCountryOpen] = useState<string | null>("Spain");
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnterDestinations = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setDestinationsMenuOpen(true);
+  };
+
+  const handleMouseLeaveDestinations = () => {
+    closeTimerRef.current = setTimeout(() => {
+      setDestinationsMenuOpen(false);
+    }, 150);
+  };
+
+  const activeCountry = DESTINATIONS_NAV_DATA[activeCountryIndex] || DESTINATIONS_NAV_DATA[0];
 
   return (
     <>
       {/* 1. TOP ANNOUNCEMENT BAR (G2: "Call for hidden prices" bar on all pages) */}
       <CallForHiddenPricesBanner variant="top-bar" />
 
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-xs font-medium">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-xs font-medium relative">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           {/* LOGO */}
           <Link href="/" className="flex items-center group">
@@ -43,101 +65,48 @@ export function Header() {
             />
           </Link>
 
-          {/* DESKTOP NAVIGATION MENU */}
-          <nav className="hidden lg:flex items-center gap-6 text-[15px] font-semibold text-[#1D1248]">
-            {/* Holidays */}
-            <Link
-              href="/holidays"
-              className="hover:text-[#F7941D] transition-colors py-2"
+          {/* DESKTOP NAVIGATION MENU (Shifted to right, ordered: Destinations -> Hotels Only -> About Us) */}
+          <nav className="hidden lg:flex items-center gap-7 text-[15px] font-semibold text-[#1D1248] ml-auto mr-8">
+            {/* 1. Destinations with Mega Menu */}
+            <div
+              className="relative py-2"
+              onMouseEnter={handleMouseEnterDestinations}
+              onMouseLeave={handleMouseLeaveDestinations}
             >
-              Holidays
-            </Link>
-
-            {/* Hotels */}
-            <Link
-              href="/hotels"
-              className="hover:text-[#F7941D] transition-colors py-2"
-            >
-              Hotels
-            </Link>
-
-            {/* Destinations (G3: Only destinations with mapped hotels) */}
-            <div className="relative group">
-              <Link
-                href="/destinations"
-                className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setDestinationsMenuOpen(!destinationsMenuOpen);
+                }}
+                className={`flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer ${
+                  destinationsMenuOpen ? "text-[#F7941D]" : "hover:text-[#F7941D]"
+                }`}
               >
-                Destinations
-                <FaChevronDown className="text-[10px] text-[#F7941D] transition-transform duration-200 group-hover:rotate-180" />
-              </Link>
-              <div className="absolute left-0 top-full hidden group-hover:block w-60 rounded-xl bg-white p-2 shadow-xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
-                <Link
-                  href="/destinations"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#F7941D] hover:bg-amber-50 transition-colors border-b border-gray-100 mb-1"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> All Destinations
-                </Link>
-                <Link
-                  href="/destinations/turkey"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Turkey
-                </Link>
-                <Link
-                  href="/destinations/greece"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Greece
-                </Link>
-                <Link
-                  href="/destinations/dubai"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Dubai
-                </Link>
-                <Link
-                  href="/destinations/spain"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Spain
-                </Link>
-                <Link
-                  href="/destinations/antalya"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Antalya
-                </Link>
-                <Link
-                  href="/destinations/portugal"
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-[#F7941D] transition-colors"
-                >
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Portugal
-                </Link>
-              </div>
+                <span>Destinations</span>
+                <FaChevronDown
+                  className={`text-[10px] text-[#F7941D] transition-transform duration-200 ${
+                    destinationsMenuOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
             </div>
 
-            {/* Hot Deals (H2) */}
+            {/* 2. Hotels Only */}
             <Link
-              href="/"
-              className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
+              href="/hotels"
+              className="hover:text-[#F7941D] transition-colors py-2 whitespace-nowrap"
             >
-              Hot Deals
+              Hotels Only
             </Link>
 
+            {/* 3. About Us */}
             <Link
               href="/about"
-              className="flex items-center gap-1.5 hover:text-[#F7941D] transition-colors py-2"
+              className="hover:text-[#F7941D] transition-colors py-2 whitespace-nowrap"
             >
               About Us
             </Link>
-
-            {/* Agent Lookup (Internal Tool A1) */}
-            {/* <Link
-              href="/agent"
-              className="flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#1D1248] py-2 border-l border-gray-200 pl-4"
-            >
-              <FaHeadset className="text-[#F7941D]" /> Agent Tool
-            </Link> */}
           </nav>
 
           {/* CALL US & SEARCH BUTTON */}
@@ -163,7 +132,8 @@ export function Header() {
               <span>Search Hotels</span>
             </Link>
 
-            <UserAccountMenu />
+            {/* Sign in - Hidden per request */}
+            {/* <UserAccountMenu /> */}
           </div>
 
           {/* MOBILE CALL BUTTON & HAMBURGER */}
@@ -187,44 +157,78 @@ export function Header() {
           </div>
         </div>
 
+        {/* DESTINATIONS MEGA MENU DROPDOWN (Reference layout from TX Hospitals) */}
+        {destinationsMenuOpen && (
+          <div
+            className="hidden lg:block absolute top-full left-0 right-0 w-full bg-white border-t border-b border-gray-200 shadow-xl z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+            onMouseEnter={handleMouseEnterDestinations}
+            onMouseLeave={handleMouseLeaveDestinations}
+          >
+            <div className="max-w-7xl mx-auto flex min-h-[360px] bg-white">
+              {/* LEFT COLUMN: COUNTRIES LIST */}
+              <div className="w-72 bg-slate-50/70 border-r border-gray-100 p-4 space-y-1 shrink-0">
+                {DESTINATIONS_NAV_DATA.map((group, idx) => {
+                  const isActive = activeCountryIndex === idx;
+                  return (
+                    <button
+                      key={group.country}
+                      type="button"
+                      onMouseEnter={() => setActiveCountryIndex(idx)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveCountryIndex(idx);
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all text-left cursor-pointer ${
+                        isActive
+                          ? "bg-amber-50 text-[#F7941D] font-bold shadow-xs"
+                          : "text-slate-700 hover:text-[#1D1248] hover:bg-white/80 font-semibold"
+                      }`}
+                    >
+                      <span>{group.country}</span>
+                      <FaChevronRight
+                        className={`text-xs transition-colors ${
+                          isActive ? "text-[#F7941D]" : "text-slate-400"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* RIGHT COLUMN: DESTINATIONS GRID */}
+              <div className="flex-1 p-8">
+                <div className="grid grid-cols-3 gap-x-12 gap-y-4">
+                  {activeCountry.destinations.map((dest) => (
+                    <button
+                      key={dest.slug}
+                      type="button"
+                      onClick={(e) => e.preventDefault()}
+                      className="text-left text-sm font-medium text-slate-800 hover:text-[#F7941D] transition-colors py-1 cursor-pointer truncate"
+                    >
+                      {dest.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* MOBILE NAV DRAWER */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-gray-100 bg-white px-4 pb-6 pt-2 shadow-lg animate-in slide-in-from-top-2">
             <nav className="flex flex-col space-y-1 font-semibold text-[#1D1248]">
-              {/* Holidays */}
-              <Link
-                href="/holidays"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
-              >
-                <FaUmbrellaBeach className="text-[#F7941D]" /> Holidays
-              </Link>
-
-              {/* Hotels */}
-              <Link
-                href="/hotels"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
-              >
-                <FaHotel className="text-[#F7941D]" /> Hotels
-              </Link>
-
-              {/* Destinations with dropdown */}
+              {/* 1. Destinations with Expandable Countries & Sub-destinations */}
               <div>
                 <div className="flex items-center justify-between py-2.5">
-                  <Link
-                    href="/destinations"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-2.5 hover:text-[#F7941D] transition-colors flex-1"
-                  >
-                    <FaMapMarkerAlt className="text-[#F7941D]" /> Destinations
-                  </Link>
                   <button
                     type="button"
                     onClick={() => setMobileDestinationsOpen(!mobileDestinationsOpen)}
-                    className="p-2 text-gray-500 hover:text-[#F7941D] cursor-pointer"
-                    aria-label="Toggle Destinations submenu"
+                    className="flex items-center justify-between w-full hover:text-[#F7941D] transition-colors"
                   >
+                    <span className="flex items-center gap-2.5">
+                      <FaMapMarkerAlt className="text-[#F7941D]" /> Destinations
+                    </span>
                     <FaChevronDown
                       className={`text-xs text-[#F7941D] transition-transform duration-200 ${
                         mobileDestinationsOpen ? "rotate-180" : ""
@@ -234,70 +238,52 @@ export function Header() {
                 </div>
 
                 {mobileDestinationsOpen && (
-                  <div className="ml-6 pl-3 border-l-2 border-amber-200 flex flex-col space-y-2 py-2 text-sm text-gray-700 bg-amber-50/40 rounded-r-lg mb-2">
-                    <Link
-                      href="/destinations"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="font-bold text-[#F7941D] hover:underline"
-                    >
-                      All Destinations
-                    </Link>
-                    <Link
-                      href="/destinations/turkey"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Turkey
-                    </Link>
-                    <Link
-                      href="/destinations/greece"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Greece
-                    </Link>
-                    <Link
-                      href="/destinations/dubai"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Dubai
-                    </Link>
-                    <Link
-                      href="/destinations/spain"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Spain
-                    </Link>
-                    <Link
-                      href="/destinations/antalya"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Antalya
-                    </Link>
-                    <Link
-                      href="/destinations/portugal"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="hover:text-[#F7941D]"
-                    >
-                      Portugal
-                    </Link>
+                  <div className="ml-4 pl-3 border-l-2 border-amber-300 space-y-2 py-2 text-sm bg-amber-50/30 rounded-r-xl pr-2">
+                    {DESTINATIONS_NAV_DATA.map((group) => {
+                      const isCountryExpanded = mobileCountryOpen === group.country;
+                      return (
+                        <div key={group.country} className="border-b border-amber-200/40 pb-1.5 last:border-b-0">
+                          <button
+                            type="button"
+                            onClick={() => setMobileCountryOpen(isCountryExpanded ? null : group.country)}
+                            className="w-full flex items-center justify-between py-1 text-xs font-bold text-slate-800 hover:text-[#F7941D]"
+                          >
+                            <span>{group.country}</span>
+                            <span className="text-[10px] text-slate-400">
+                              {isCountryExpanded ? "−" : "+"}
+                            </span>
+                          </button>
+                          {isCountryExpanded && (
+                            <div className="grid grid-cols-2 gap-1.5 pt-1.5 pl-2">
+                              {group.destinations.map((d) => (
+                                <button
+                                  key={d.slug}
+                                  type="button"
+                                  onClick={(e) => e.preventDefault()}
+                                  className="text-left text-[11px] font-medium text-slate-600 hover:text-[#F7941D] py-0.5 truncate cursor-pointer"
+                                >
+                                  • {d.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* Hot Deals */}
+              {/* 2. Hotels Only */}
               <Link
-                href="/"
+                href="/hotels"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2.5 py-2.5 hover:text-[#F7941D] transition-colors"
               >
-                <FaFire className="text-[#F7941D]" /> Hot Deals
+                <FaHotel className="text-[#F7941D]" /> Hotels Only
               </Link>
 
-              {/* About Us */}
+              {/* 3. About Us */}
               <Link
                 href="/about"
                 onClick={() => setMobileMenuOpen(false)}
@@ -323,9 +309,6 @@ export function Header() {
                 <a href="tel:03301658879" className="text-lg font-bold text-[#F7941D] flex items-center gap-2">
                   <FaPhoneAlt className="text-sm" /> 0330 165 8879
                 </a>
-              </div>
-              <div onClick={() => setMobileMenuOpen(false)}>
-                <UserAccountMenu variant="mobile" />
               </div>
 
               {/* Social Media Links */}

@@ -10,23 +10,10 @@
  * G3: Hide any destination with no hotels mapped yet.
  */
 
-export interface DepartureAirport {
-  code: string;
-  name: string;
-  city: string;
-}
+import { WORLDWIDE_AIRPORTS, type DepartureAirport } from "./airports-data";
+export { WORLDWIDE_AIRPORTS, type DepartureAirport };
 
-export const DEPARTURE_AIRPORTS: DepartureAirport[] = [
-  { code: "LGW", name: "London Gatwick", city: "London" },
-  { code: "LHR", name: "London Heathrow", city: "London" },
-  { code: "LTN", name: "London Luton", city: "London" },
-  { code: "STN", name: "London Stansted", city: "London" },
-  { code: "MAN", name: "Manchester Airport", city: "Manchester" },
-  { code: "BHX", name: "Birmingham Airport", city: "Birmingham" },
-  { code: "BRS", name: "Bristol Airport", city: "Bristol" },
-  { code: "EDI", name: "Edinburgh Airport", city: "Edinburgh" },
-  { code: "GLA", name: "Glasgow Airport", city: "Glasgow" },
-];
+export const DEPARTURE_AIRPORTS: DepartureAirport[] = WORLDWIDE_AIRPORTS;
 
 export interface DestinationMasterItem {
   slug: string;

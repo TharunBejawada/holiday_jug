@@ -26,6 +26,14 @@ function buildAuthOptions(): NextAuthOptions {
 
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              status: true,
+              passwordHash: true,
+            },
           });
           if (!user?.passwordHash) return null;
           if (user.status !== "ACTIVE") return null;
@@ -36,14 +44,19 @@ function buildAuthOptions(): NextAuthOptions {
           const ip =
             req?.headers?.["x-forwarded-for"]?.toString().split(",")[0]?.trim() ?? null;
 
-          await prisma.user.update({
-            where: { id: user.id },
-            data: {
-              loginCount: { increment: 1 },
-              lastLoginAt: new Date(),
-              lastLoginIp: ip,
-            },
-          });
+          // Non-blocking background audit update to avoid delaying login response
+          prisma.user
+            .update({
+              where: { id: user.id },
+              data: {
+                loginCount: { increment: 1 },
+                lastLoginAt: new Date(),
+                lastLoginIp: ip,
+              },
+            })
+            .catch((err) => {
+              console.error("[auth] Failed to update user login audit metadata:", err);
+            });
 
           return { id: user.id, email: user.email, name: user.name, role: user.role };
         },

@@ -35,6 +35,8 @@ import {
   FaPlus,
   FaMinus,
   FaSpinner,
+  FaBed,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import { SANDBOX_HOTELS_DATABASE, getKnownHotel } from "@/lib/grn-client";
 import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
@@ -425,9 +427,11 @@ export default function HotelLandingClient({
     }
   };
 
-  // Background fetch initial live rates if dates were passed from overview
+  // Background fetch live rates for current checkIn / checkOut dates
   useEffect(() => {
-    if (checkInParam && checkOutParam) {
+    const activeCheckIn = checkInParam || checkIn;
+    const activeCheckOut = checkOutParam || checkOut;
+    if (activeCheckIn && activeCheckOut && hotel.hotelCode) {
       fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -435,8 +439,8 @@ export default function HotelLandingClient({
           type: "hotels",
           destination: hotel.city,
           hotelCode: hotel.hotelCode,
-          checkIn: checkInParam,
-          checkOut: checkOutParam,
+          checkIn: activeCheckIn,
+          checkOut: activeCheckOut,
           adults: totalAdults,
           rooms: roomsConfig,
         }),
@@ -444,7 +448,9 @@ export default function HotelLandingClient({
         .then((r) => r.json())
         .then((data) => {
           if (data.success && Array.isArray(data.hotels) && data.hotels.length > 0) {
-            const found = data.hotels.find((h: any) => h.hotelCode === hotel.hotelCode) || data.hotels[0];
+            const found =
+              data.hotels.find((h: any) => h.hotelCode === hotel.hotelCode) ||
+              data.hotels[0];
             if (found && Array.isArray(found.availableRates) && found.availableRates.length > 0) {
               setLiveRates(found.availableRates);
             }
@@ -458,7 +464,7 @@ export default function HotelLandingClient({
         })
         .catch(() => { });
     }
-  }, []);
+  }, [hotel.hotelCode, checkInParam, checkOutParam, checkIn, checkOut, totalAdults, roomsConfig]);
 
   // Interactive States
   const [selectedAirport, setSelectedAirport] = useState<string>("LGW");
@@ -551,55 +557,135 @@ export default function HotelLandingClient({
       }));
     }
 
-    const basePp = 599;
+    const basePp = 549;
     return [
       {
-        id: "room-deluxe",
-        name: "Deluxe Room",
-        capacity: "Up to 2 guests • Double bed",
+        id: "room-deluxe-ro",
+        name: "Deluxe King Room",
+        capacity: "Up to 2 guests • King bed",
         pricePp: basePp,
         totalPrice: basePp * adults,
-        boardBasis: "All Inclusive",
-        boardingDetails: ["All Inclusive"],
-        otherInclusions: ["Balcony with garden view", "Free High-speed Wi-Fi"],
+        boardBasis: "Room Only",
+        boardingDetails: ["Room Only"],
+        otherInclusions: ["Free High-speed Wi-Fi", "Walk-in Rain Shower", "Air Conditioning"],
         cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
-        features: ["Balcony with garden view", "Free High-speed Wi-Fi", "Walk-in rain shower", "Complimentary minibar"],
+        features: ["King size bed", "Free High-speed Wi-Fi", "Walk-in rain shower", "Complimentary mineral water"],
+        image: hotel.galleryImages[0] || hotel.mainImage,
+      },
+      {
+        id: "room-deluxe-bb",
+        name: "Deluxe Garden View Room",
+        capacity: "Up to 2 guests • Double bed",
+        pricePp: basePp + 50,
+        totalPrice: (basePp + 50) * adults,
+        boardBasis: "Bed & Breakfast",
+        boardingDetails: ["Bed & Breakfast"],
+        otherInclusions: ["Breakfast Buffet", "Balcony with Garden View", "Free High-speed Wi-Fi"],
+        cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
+        features: ["Balcony with garden view", "Breakfast included", "Free High-speed Wi-Fi", "Complimentary minibar"],
         image: hotel.galleryImages[1] || hotel.mainImage,
       },
       {
-        id: "room-superior",
-        name: "Superior Room",
+        id: "room-superior-hb",
+        name: "Superior Sea View Room",
         capacity: "Up to 2 guests • King bed",
-        pricePp: basePp + 50,
-        totalPrice: (basePp + 50) * adults,
-        boardBasis: "All Inclusive",
-        boardingDetails: ["All Inclusive"],
-        otherInclusions: ["Panoramic sea view", "Espresso coffee machine"],
-        cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
+        pricePp: basePp + 110,
+        totalPrice: (basePp + 110) * adults,
+        boardBasis: "Half Board",
+        boardingDetails: ["Half Board (Breakfast & Dinner)"],
+        otherInclusions: ["Breakfast & Dinner", "Panoramic Sea View", "Espresso Coffee Machine"],
+        cancellationPolicy: "Free cancellation up to 72 hours prior to check-in.",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
-        features: ["Panoramic sea view", "Espresso coffee machine", "Bathrobes & luxury slippers", "Late checkout (subject to availability)"],
+        features: ["Panoramic sea view", "Breakfast & dinner included", "Espresso coffee machine", "Late checkout (subject to availability)"],
         image: hotel.galleryImages[2] || hotel.mainImage,
       },
       {
-        id: "room-junior-suite",
-        name: "Junior Suite",
-        capacity: "Up to 3 guests • Sea View Balcony",
-        pricePp: 1210,
-        totalPrice: 1210 * adults,
+        id: "room-premium-ai",
+        name: "Premium Oceanfront Balcony Room",
+        capacity: "Up to 2 guests • King bed",
+        pricePp: basePp + 180,
+        totalPrice: (basePp + 180) * adults,
         boardBasis: "All Inclusive",
         boardingDetails: ["All Inclusive"],
-        otherInclusions: ["Direct Mediterranean panoramic view", "Jacuzzi bath & luxury toiletries"],
+        otherInclusions: ["All Meals & Unlimited Drinks", "Oceanfront Balcony", "Beach Towel Service"],
+        cancellationPolicy: "Free cancellation up to 72 hours prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
+        features: ["Direct oceanfront balcony", "All meals & drinks included", "Bathrobes & luxury slippers", "Complimentary mini-bar refilled daily"],
+        image: hotel.galleryImages[3] || hotel.mainImage,
+      },
+      {
+        id: "room-junior-suite",
+        name: "Executive Junior Suite",
+        capacity: "Up to 3 guests • Sea View Balcony",
+        pricePp: basePp + 290,
+        totalPrice: (basePp + 290) * adults,
+        boardBasis: "All Inclusive",
+        boardingDetails: ["All Inclusive Plus"],
+        otherInclusions: ["All Meals & Selected Premium Spirits", "Direct Mediterranean View", "Jacuzzi Bath"],
         cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
         features: ["Direct Mediterranean panoramic view", "Separate lounge seating area", "Jacuzzi bath & luxury toiletries", "VIP airport arrival greeting"],
-        image: hotel.galleryImages[3] || hotel.mainImage,
+        image: hotel.galleryImages[4] || hotel.mainImage,
+      },
+      {
+        id: "room-family-suite",
+        name: "Family Connecting Suite (2 Bedrooms)",
+        capacity: "Up to 4 guests • 2 King beds",
+        pricePp: basePp + 380,
+        totalPrice: (basePp + 380) * adults,
+        boardBasis: "All Inclusive",
+        boardingDetails: ["All Inclusive Family"],
+        otherInclusions: ["2 Connecting Bedrooms", "Kids Club Access Included", "All Meals & Snacks"],
+        cancellationPolicy: "Free cancellation up to 7 days prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
+        features: ["2 separate interconnecting bedrooms", "2 private en-suite bathrooms", "Kids welcome gifts & amenities", "All meals, ice cream & drinks included"],
+        image: hotel.galleryImages[5] || hotel.mainImage,
+      },
+      {
+        id: "room-panoramic-suite",
+        name: "Signature Panoramic Terrace Suite",
+        capacity: "Up to 3 guests • Private Rooftop Terrace",
+        pricePp: basePp + 520,
+        totalPrice: (basePp + 520) * adults,
+        boardBasis: "All Inclusive",
+        boardingDetails: ["Ultra All Inclusive"],
+        otherInclusions: ["Private Rooftop Terrace & Daybeds", "Butler Service", "A La Carte Dining"],
+        cancellationPolicy: "Non-refundable promotional rate",
+        cancelByDate: null,
+        isNonRefundable: true,
+        rateComments: null,
+        features: ["Private 40m² rooftop sun terrace", "Dedicated concierge service", "Priority reservations for all a la carte restaurants", "Complimentary airport limousine transfer"],
+        image: hotel.galleryImages[1] || hotel.mainImage,
+      },
+      {
+        id: "room-presidential-villa",
+        name: "Royal Presidential Villa with Private Pool",
+        capacity: "Up to 6 guests • 3 Bedrooms & Private Pool",
+        pricePp: basePp + 890,
+        totalPrice: (basePp + 890) * adults,
+        boardBasis: "Ultra All Inclusive",
+        boardingDetails: ["Ultra All Inclusive VIP"],
+        otherInclusions: ["Private Infinity Pool & Cabana", "Private Chef on Request", "24hr Butler Service"],
+        cancellationPolicy: "Free cancellation up to 14 days prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
+        features: ["Private heated infinity swimming pool", "3 master bedrooms with direct pool access", "Private beach pavilion cabana", "Personal chef & private bar service"],
+        image: hotel.galleryImages[2] || hotel.mainImage,
       },
     ];
   }, [hotel, liveRates, adults]);
@@ -615,6 +701,9 @@ export default function HotelLandingClient({
 
   // Facilities list
   const facilitiesList = useMemo(() => {
+    if (hotel.facilities && hotel.facilities.length > 0) {
+      return hotel.facilities;
+    }
     return [
       "Outdoor swimming pool",
       "24-hour front desk",
@@ -629,7 +718,7 @@ export default function HotelLandingClient({
       "Air conditioning",
       "Fitness centre",
     ];
-  }, []);
+  }, [hotel.facilities]);
 
   // Nearby attractions
   const nearbyAttractions = useMemo(() => {
@@ -1153,11 +1242,17 @@ export default function HotelLandingClient({
                                       onChange={(e) => updateEditChildAge(rIdx, cIdx, Number(e.target.value))}
                                       className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 focus:outline-none"
                                     >
-                                      {Array.from({ length: 18 }).map((_, a) => (
-                                        <option key={a} value={a}>
-                                          {a === 0 ? "Under 1" : `${a} yrs`}
-                                        </option>
-                                      ))}
+                                      <optgroup label="Infant">
+                                        <option value={0}>Less than 1</option>
+                                        <option value={1}>1</option>
+                                      </optgroup>
+                                      <optgroup label="Child">
+                                        {Array.from({ length: 16 }, (_, i) => i + 2).map((a) => (
+                                          <option key={a} value={a}>
+                                            {a} yrs
+                                          </option>
+                                        ))}
+                                      </optgroup>
                                     </select>
                                   </div>
                                 ))}
@@ -1363,135 +1458,117 @@ export default function HotelLandingClient({
           </div>
         </div>
 
-        {/* OVERVIEW & ROOMS SIDE-BY-SIDE SECTION */}
-        <div id="overview" className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start scroll-mt-24">
-          {/* LEFT: ABOUT THE HOTEL */}
-          <div className="lg:col-span-5 xl:col-span-4 space-y-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55]">
-              About the Hotel
+        {/* SECTION 1: ABOUT THE HOTEL */}
+        <div id="overview" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs scroll-mt-24 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
+              <FaHotel className="text-[#F7941D] text-lg" /> About the Hotel
             </h2>
-            <div className="space-y-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
-              <p>
-                {hotel.name} offers the perfect combination of beachfront luxury,
-                modern comfort and warm Turkish hospitality.
-              </p>
-              <p>
-                Located on the stunning Mediterranean coastline, the resort features
-                spacious rooms, multiple dining options, a private beach and a
-                range of leisure facilities.
-              </p>
-              <p>
-                Whether you&apos;re looking to relax by the pool, explore the local
-                culture or enjoy water sports, this resort has something for
-                everyone.
+            <span className="text-xs font-semibold text-slate-500">
+              {hotel.name} • {hotel.city}, {hotel.country}
+            </span>
+          </div>
+          <div className="space-y-3.5 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-5xl">
+            <p>
+              {hotel.description || `${hotel.name} offers the perfect combination of luxury, modern comfort and warm hospitality.`}
+            </p>
+            <p>
+              Located in {hotel.city}, {hotel.country}, the property features spacious designer rooms, multiple dining options, swimming pool areas, and a comprehensive range of leisure facilities.
+            </p>
+            <p>
+              Whether you&apos;re looking to relax and unwind, explore the vibrant local culture, or enjoy bespoke resort amenities, {hotel.name} provides an exceptional setting for couples, families, and solo travellers alike.
+            </p>
+          </div>
+        </div>
+
+        {/* SECTION 2: ROOMS & SUITES (BELOW ABOUT, FULL WIDTH) */}
+        <div id="rooms" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs scroll-mt-24 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2.5">
+                <FaBed className="text-[#F7941D]" /> Rooms &amp; Suites
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                Showing all {rooms.length} available room types &amp; rates for your stay ({nights} nights · {adults} {adults === 1 ? "Guest" : "Guests"})
               </p>
             </div>
+            <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-blue-50 text-[#071a55] border border-blue-200/80 shrink-0 w-fit">
+              {rooms.length} {rooms.length === 1 ? "Room Option" : "Room Options"} Available
+            </span>
           </div>
 
-          {/* RIGHT: ROOMS & SUITES */}
-          <div id="rooms" className="lg:col-span-7 xl:col-span-8 scroll-mt-24">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55]">
-                Rooms &amp; Suites
-              </h2>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToSection("rooms");
-                }}
-                className="text-xs sm:text-sm font-semibold text-[#071a55] hover:underline cursor-pointer"
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            {rooms.map((room, idx) => (
+              <div
+                key={room.id}
+                onClick={() => setSelectedRoomIndex(idx)}
+                className="group bg-white hover:bg-[#f8fbff] border border-slate-200/90 hover:border-[#071a55]/40 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               >
-                View all rooms
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-              {rooms.map((room, idx) => (
-                <div
-                  key={room.id}
-                  className="bg-[#f0f9ff] border border-[#d6ebfa] rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all"
-                >
-                  <div>
-                    {/* Room Image - Common image for all rooms as requested */}
-                    <div className="relative h-28 sm:h-32 rounded-xl overflow-hidden mb-3">
-                      <img
-                        src="/assets/HOTEL LANDING PAGE/room-img.jpg"
-                        alt={room.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Room Details Centered */}
-                    <div className="text-center space-y-1.5">
-                      <h3 className="font-semibold text-sm sm:text-base text-[#071a55] leading-tight">
-                        {room.name}
-                      </h3>
-
-                      {/* Boarding Badge */}
-                      <div className="pt-0.5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100/90 text-[#1D1248] border border-amber-200">
-                          🍽️ {room.boardBasis}
-                        </span>
-                      </div>
-
-                      {/* Cancellation Badge */}
-                      <div>
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            room.isNonRefundable
-                              ? "bg-rose-50 text-rose-700 border border-rose-200"
-                              : "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                          }`}
-                        >
-                          <FaShieldAlt className="text-[9px]" />
-                          {room.cancellationPolicy}
-                        </span>
-                      </div>
-
-                      {/* Other Inclusions Chips */}
-                      {room.otherInclusions && room.otherInclusions.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-1 pt-0.5">
-                          {room.otherInclusions.slice(0, 2).map((inc: string, i: number) => (
-                            <span
-                              key={i}
-                              className="text-[10px] font-medium text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200"
-                            >
-                              ✓ {inc}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="pt-2 border-t border-[#d6ebfa]/60">
-                        <span className="font-semibold text-sm sm:text-base text-[#071a55] block">
-                          From £{room.pricePp} pp
-                        </span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5">
-                          {nights} nights • Total £{room.totalPrice}
-                        </span>
-                      </div>
-                    </div>
+                <div>
+                  {/* Room Image - Common image for all rooms */}
+                  <div className="relative h-32 sm:h-36 rounded-xl overflow-hidden mb-3 bg-slate-100">
+                    <img
+                      src="/assets/HOTEL LANDING PAGE/room-img.jpg"
+                      alt={room.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
 
-                  {/* View Details Button with Navigation Blocked */}
-                  <div className="mt-3 pt-1">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setSelectedRoomIndex(idx);
-                      }}
-                      className="w-full py-2 px-3 rounded-xl bg-[#e3f0fb] hover:bg-[#d5e8f8] text-[#071a55] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <span>View details</span>
-                      <span>&rarr;</span>
-                    </button>
+                  {/* Room Details Centered */}
+                  <div className="text-center space-y-2">
+                    <h3 className="font-semibold text-sm sm:text-base text-[#071a55] group-hover:text-blue-950 transition-colors leading-tight line-clamp-2">
+                      {room.name}
+                    </h3>
+
+                    {/* Boarding Badge */}
+                    <div className="pt-0.5">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                        <FaUtensils className="text-[10px] text-amber-700 shrink-0" />
+                        <span>{room.boardBasis}</span>
+                      </span>
+                    </div>
+
+                    {/* Cancellation Badge */}
+                    <div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                          room.isNonRefundable
+                            ? "bg-rose-50 text-rose-700 border border-rose-200"
+                            : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        }`}
+                      >
+                        <FaShieldAlt className="text-[9px] shrink-0" />
+                        <span>{room.cancellationPolicy}</span>
+                      </span>
+                    </div>
+
+                    {/* Other Inclusions Chips */}
+                    {room.otherInclusions && room.otherInclusions.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-1 pt-0.5">
+                        {room.otherInclusions.slice(0, 2).map((inc: string, i: number) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200"
+                          >
+                            <FaCheck className="text-[8px] text-emerald-600 shrink-0" />
+                            <span>{inc}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="pt-2.5 mt-2 border-t border-slate-100">
+                      <span className="font-bold text-sm sm:text-base text-[#071a55] block">
+                        From £{room.pricePp} pp
+                      </span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">
+                        {nights} nights • Total £{room.totalPrice}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -1552,84 +1629,114 @@ export default function HotelLandingClient({
               </div>
             </div> */}
 
-        {/* SECTION: HOTEL FACILITIES */}
-        <div id="facilities" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24">
-          <h2 className="text-xl sm:text-2xl font-semibold text-[#1D1248] mb-6">
-            Hotel Facilities
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-            {facilitiesList.map((facility, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-700"
-              >
-                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                  <FaCheck className="text-[10px]" />
-                </div>
-                <span>{facility}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SECTION: LOCATION & INTERACTIVE MAP */}
-        <div id="location" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        {/* SECTION: FACILITIES & LOCATION MAP SIDE-BY-SIDE */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch">
+          {/* LEFT: HOTEL FACILITIES */}
+          <div
+            id="facilities"
+            className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs scroll-mt-24 flex flex-col justify-between space-y-6"
+          >
             <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
-                <FaMapMarkerAlt className="text-[#F7941D]" /> Location &amp; Map
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-                {hotel.address || `${hotel.city}, ${hotel.country}`}
-              </p>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
+                    <FaCheckCircle className="text-[#F7941D] text-lg" /> Hotel Facilities
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                    Popular amenities &amp; services provided for your comfort
+                  </p>
+                </div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-[#071a55] border border-blue-200/80 shrink-0">
+                  {facilitiesList.length} Highlights
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
+                {facilitiesList.map((facility, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/80 hover:bg-slate-100/80 p-2.5 rounded-xl border border-slate-200/60 transition-colors"
+                  >
+                    <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                      <FaCheck className="text-[10px]" />
+                    </div>
+                    <span className="truncate">{facility}</span>
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* RIGHT: LOCATION & INTERACTIVE MAP */}
+          <div
+            id="location"
+            className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs scroll-mt-24 flex flex-col justify-between space-y-5"
+          >
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-[#F7941D] text-lg" /> Location &amp; Map
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                    {hotel.address || `${hotel.city}, ${hotel.country}`}
+                  </p>
+                </div>
+                {liveGeolocation && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${liveGeolocation.latitude},${liveGeolocation.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#071a55] hover:bg-[#0c246f] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 w-fit cursor-pointer"
+                  >
+                    <span>Open Maps</span>
+                    <FaChevronRight className="text-[10px]" />
+                  </a>
+                )}
+              </div>
+
+              <div className="mt-4">
+                {liveGeolocation ? (
+                  <div className="relative w-full h-[320px] sm:h-[350px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+                    <iframe
+                      title={`Interactive Map for ${hotel.name}`}
+                      width="100%"
+                      height="100%"
+                      className="w-full h-full border-0"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://maps.google.com/maps?q=${liveGeolocation.latitude},${liveGeolocation.longitude}&hl=en&z=15&output=embed`}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm h-[320px] sm:h-[350px] flex flex-col items-center justify-center">
+                    <FaMapMarkerAlt className="text-3xl text-slate-300 mb-2" />
+                    <p className="font-semibold text-slate-700">{hotel.name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{hotel.address || `${hotel.city}, ${hotel.country}`}</p>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hotel.name} ${hotel.address || hotel.city}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-blue-600 hover:underline"
+                    >
+                      Search on Google Maps &rarr;
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {liveGeolocation && (
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <span className="text-xs font-mono font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1">
-                  <FaMapMarkerAlt className="text-[#F7941D] text-xs" />
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span className="font-mono text-[11px] text-slate-600">
                   {liveGeolocation.latitude.toFixed(4)}° N, {liveGeolocation.longitude.toFixed(4)}° E
                 </span>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${liveGeolocation.latitude},${liveGeolocation.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-[#0b1b4f] hover:bg-[#12286e] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <span>Open in Google Maps</span>
-                  <FaChevronRight className="text-[10px]" />
-                </a>
+                <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                  <FaCheck className="text-[9px]" /> Verified Coordinates
+                </span>
               </div>
             )}
           </div>
-
-          {liveGeolocation ? (
-            <div className="relative w-full h-[360px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
-              <iframe
-                title={`Interactive Map for ${hotel.name}`}
-                width="100%"
-                height="100%"
-                className="w-full h-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                src={`https://maps.google.com/maps?q=${liveGeolocation.latitude},${liveGeolocation.longitude}&hl=en&z=15&output=embed`}
-              />
-            </div>
-          ) : (
-            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm">
-              <FaMapMarkerAlt className="text-3xl text-slate-300 mx-auto mb-2" />
-              <p className="font-semibold text-slate-700">{hotel.name}</p>
-              <p className="text-xs text-slate-500 mt-0.5">{hotel.address || `${hotel.city}, ${hotel.country}`}</p>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hotel.name} ${hotel.address || hotel.city}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-blue-600 hover:underline"
-              >
-                Search on Google Maps &rarr;
-              </a>
-            </div>
-          )}
         </div>
 
         {/* SECTION: POLICIES & RATE REMARKS */}
@@ -1655,13 +1762,15 @@ export default function HotelLandingClient({
                   <p>All standard resort taxes, VAT and municipality fees are calculated in the quote. Discretionary hotel amenities are confirmed upon arrival.</p>
                 )}
                 {rooms[selectedRoomIndex]?.rateComments?.mandatoryTax && (
-                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 font-medium">
-                    ⚠️ Mandatory Local Charge: {rooms[selectedRoomIndex].rateComments.mandatoryTax}
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 font-medium flex items-center gap-2">
+                    <FaExclamationTriangle className="text-xs text-amber-700 shrink-0" />
+                    <span>Mandatory Local Charge: {rooms[selectedRoomIndex].rateComments.mandatoryTax}</span>
                   </div>
                 )}
                 {rooms[selectedRoomIndex]?.rateComments?.paxComments && (
-                  <p className="text-[11px] text-slate-500 italic">
-                    ℹ️ Occupancy Note: {rooms[selectedRoomIndex].rateComments.paxComments}
+                  <p className="text-[11px] text-slate-500 italic flex items-center gap-1.5">
+                    <FaInfoCircle className="text-xs text-slate-400 shrink-0" />
+                    <span>Occupancy Note: {rooms[selectedRoomIndex].rateComments.paxComments}</span>
                   </p>
                 )}
               </div>

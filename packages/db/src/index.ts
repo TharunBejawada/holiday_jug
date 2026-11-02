@@ -23,9 +23,7 @@ function getPrismaClient(): PrismaClient {
 
   try {
     const client = new PrismaClient();
-    if (process.env.NODE_ENV !== "production") {
-      global.__prisma = client;
-    }
+    global.__prisma = client;
     return client;
   } catch {
     return new Proxy({} as PrismaClient, {

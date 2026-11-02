@@ -17,11 +17,13 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiHeadphones,
+  FiDatabase,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: FiGrid },
   { href: "/admin/agent", label: "Agent Tool", icon: FiHeadphones },
+  { href: "/admin/master-data", label: "Master Data", icon: FiDatabase },
   { href: "/admin/hotels", label: "Hotels & Inventory", icon: FiHome },
   { href: "/admin/bookings", label: "Quotes & Bookings", icon: FiCalendar },
   { href: "/admin/destinations", label: "Destinations", icon: FiMapPin },

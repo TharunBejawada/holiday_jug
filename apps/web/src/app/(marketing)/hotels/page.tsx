@@ -23,12 +23,15 @@ import {
   FaSpinner,
   FaArrowLeft,
   FaSortAmountDown,
+  FaUtensils,
+  FaCalendarAlt,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
 import { CallForHiddenPricesBanner } from "@/components/CallForHiddenPricesBanner";
 import { CallForHiddenPricesModal } from "@/components/CallForHiddenPricesModal";
 import { getActiveSearchDestinations } from "@/lib/destinations-master";
+import { DESTINATIONS_NAV_DATA } from "@/lib/destinations-nav-data";
 
 export interface RoomConfig {
   adults: number;
@@ -136,7 +139,8 @@ const HOLIDAY_TYPE_OPTIONS = [
 function HotelsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialDestination = searchParams.get("destination") || "all";
+  const destParam = searchParams.get("destination");
+  const initialDestination = destParam && destParam !== "all" ? destParam : "";
   const initialHotelCode = searchParams.get("hotelCode") || "";
   const initialRating = searchParams.get("rating") ? Number(searchParams.get("rating")) : null;
   const initialCheckIn = searchParams.get("checkIn") || "";
@@ -159,6 +163,7 @@ function HotelsPageContent() {
   // Default dates removed: displays placeholder until user selects
   const [checkIn, setCheckIn] = useState(initialCheckIn);
   const [checkOut, setCheckOut] = useState(initialCheckOut);
+  const [dateErrors, setDateErrors] = useState<{ checkIn?: string; checkOut?: string }>({});
 
   // Filter States
   const [selectedStars, setSelectedStars] = useState<number[]>(
@@ -180,8 +185,36 @@ function HotelsPageContent() {
   const [rooms, setRooms] = useState<RoomConfig[]>(defaultRooms);
   const [showTravellersPopover, setShowTravellersPopover] = useState(false);
   const travellersRef = useRef<HTMLDivElement>(null);
+  const [popoverPlacement, setPopoverPlacement] = useState<"down" | "up">("down");
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchVersion, setSearchVersion] = useState(0);
+
+  // Dynamic placement for Travellers & Rooms popover to avoid hiding under sticky navbar
+  useEffect(() => {
+    if (!showTravellersPopover) return;
+
+    const calculatePlacement = () => {
+      if (!travellersRef.current) return;
+      const rect = travellersRef.current.getBoundingClientRect();
+      const navbarHeight = 85;
+      const popoverHeight = 360;
+      const spaceAbove = rect.top - navbarHeight;
+
+      if (spaceAbove < popoverHeight) {
+        setPopoverPlacement("down");
+      } else {
+        setPopoverPlacement("up");
+      }
+    };
+
+    calculatePlacement();
+    window.addEventListener("scroll", calculatePlacement, { passive: true });
+    window.addEventListener("resize", calculatePlacement, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", calculatePlacement);
+      window.removeEventListener("resize", calculatePlacement);
+    };
+  }, [showTravellersPopover]);
 
   // Sync state if searchParams change via client navigation
   useEffect(() => {
@@ -343,6 +376,24 @@ function HotelsPageContent() {
   };
 
   const handleUpdate = () => {
+    // Check-in and check-out are strictly mandatory
+    const errors: { checkIn?: string; checkOut?: string } = {};
+    if (!checkIn) {
+      errors.checkIn = "Check-in date is required";
+    }
+    if (!checkOut) {
+      errors.checkOut = "Check-out date is required";
+    } else if (checkIn && checkOut <= checkIn) {
+      errors.checkOut = "Check-out must be after check-in date";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setDateErrors(errors);
+      return;
+    }
+
+    setDateErrors({});
+    setHasSearched(true);
     setLoading(true);
     setShowTravellersPopover(false);
     setSearchVersion((v) => v + 1);
@@ -419,10 +470,11 @@ function HotelsPageContent() {
   };
 
   const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
-  const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.length, 0);
+  const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.filter((a) => a >= 2).length, 0);
+  const totalInfants = rooms.reduce((acc, r) => acc + r.childrenAges.filter((a) => a < 2).length, 0);
   const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${
     totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
-  }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+  }${totalInfants > 0 ? `, ${totalInfants} Infant${totalInfants > 1 ? "s" : ""}` : ""}, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 7;
@@ -433,7 +485,9 @@ function HotelsPageContent() {
   }, [checkIn, checkOut]);
 
   // API State
-  const [loading, setLoading] = useState(true);
+  const hasInitialDates = Boolean(initialCheckIn && initialCheckOut);
+  const [hasSearched, setHasSearched] = useState(hasInitialDates);
+  const [loading, setLoading] = useState(hasInitialDates);
   const [hotels, setHotels] = useState<HotelResult[]>([]);
   const [searchId, setSearchId] = useState<string>("");
   const [priceCheckedAt, setPriceCheckedAt] = useState<string>("");
@@ -442,57 +496,85 @@ function HotelsPageContent() {
   const activeDestinations = getActiveSearchDestinations();
 
   const destinationOptions = useMemo(() => {
-    const list = [
-      {
-        value: "all",
-        label: "All Destinations (Featured)",
-        subtitle: "Worldwide Handpicked Stays",
-        searchTerms: ["all", "featured", "worldwide", "top", "recommend"],
-      },
-      {
-        value: "turkey",
-        label: "Turkey (Antalya & Riviera)",
-        subtitle: "Turkish Mediterranean",
-        searchTerms: ["turkey", "antalya", "lara"],
-      },
-      {
-        value: "greece",
-        label: "Greece (Santorini & Islands)",
-        subtitle: "Aegean Paradise",
-        searchTerms: ["greece", "santorini", "oia"],
-      },
-      {
-        value: "dubai",
-        label: "Dubai (United Arab Emirates)",
-        subtitle: "Luxury Skyline & Beach",
-        searchTerms: ["dubai", "uae", "emirates", "jbr"],
-      },
-      {
-        value: "spain",
-        label: "Spain (Canary Islands & Balearics)",
-        subtitle: "Mediterranean Sunshine",
-        searchTerms: ["spain", "tenerife", "majorca", "palma"],
-      },
-      {
-        value: "antalya",
-        label: "Antalya (Turkish Riviera)",
-        subtitle: "All-Inclusive Resorts",
-        searchTerms: ["antalya", "turkey"],
-      },
-      {
-        value: "portugal",
-        label: "Portugal (Algarve & Coast)",
-        subtitle: "Atlantic Clifftops",
-        searchTerms: ["portugal", "algarve", "albufeira"],
-      },
-    ];
+    const list: Array<{
+      value: string;
+      label: string;
+      subtitle?: string;
+      badge?: string;
+      tags?: string[];
+      searchTerms?: string[];
+    }> = [];
 
+    // 1. Add all core countries from navbar master data (e.g. Spain, Canary Islands, Turkey, Greece, Portugal, Cyprus, Egypt, UAE)
+    DESTINATIONS_NAV_DATA.forEach((group) => {
+      const countrySlug = group.slug;
+      if (!list.some((existing) => existing.value.toLowerCase() === countrySlug.toLowerCase())) {
+        list.push({
+          value: countrySlug,
+          label: `${group.country} (All Destinations)`,
+          subtitle: `Country • ${group.destinations.length} Core Destinations`,
+          badge: "Country",
+          tags: [group.country, group.slug, ...(group.countryAliases || [])],
+          searchTerms: [
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...group.destinations.map((d) => d.name),
+            ...group.destinations.flatMap((d) => d.aliases || []),
+            ...group.destinations.flatMap((d) => d.iata || []),
+          ],
+        });
+      }
+
+      // 2. Add each individual core destination under the country with all aliases & IATA codes
+      group.destinations.forEach((dest) => {
+        const destSlug = dest.slug;
+        const existingIdx = list.findIndex((existing) => existing.value.toLowerCase() === destSlug.toLowerCase());
+        const iataBadge = dest.iata && dest.iata[0] ? dest.iata[0] : "Core";
+        const item = {
+          value: destSlug,
+          label: `${dest.name} (${group.country})`,
+          subtitle: `Core Destination • ${group.country}${dest.iata && dest.iata.length > 0 ? ` • ${dest.iata.join(", ")}` : ""}`,
+          badge: iataBadge,
+          tags: [
+            dest.name,
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...(dest.aliases || []),
+            ...(dest.iata || []),
+          ],
+          searchTerms: [
+            dest.name,
+            dest.slug,
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...(dest.aliases || []),
+            ...(dest.iata || []),
+          ],
+        };
+
+        if (existingIdx >= 0) {
+          list[existingIdx] = item;
+        } else {
+          list.push(item);
+        }
+      });
+    });
+
+    // 3. Mapped destinations from DESTINATIONS_MASTER
     activeDestinations.forEach((d) => {
-      if (!list.some((existing) => existing.value === d.slug)) {
+      const match = list.find((existing) => existing.value.toLowerCase() === d.slug.toLowerCase());
+      if (match) {
+        match.tags = Array.from(new Set([...(match.tags || []), ...(d.aliases || [])]));
+        match.searchTerms = Array.from(new Set([...(match.searchTerms || []), ...(d.aliases || [])]));
+      } else {
         list.push({
           value: d.slug,
           label: `${d.destination} (${d.country})`,
           subtitle: d.displayGroup || d.country,
+          tags: [d.destination, d.country, ...(d.aliases || [])],
           searchTerms: [d.destination, d.country, ...(d.aliases || [])],
         });
       }
@@ -515,6 +597,12 @@ function HotelsPageContent() {
   // Execute Hotel Search & Availability API (Hotels Only)
   useEffect(() => {
     let isCancelled = false;
+
+    // Do not load hotels immediately if mandatory fields are missing
+    if (!checkIn || !checkOut) {
+      setLoading(false);
+      return;
+    }
 
     async function loadHotels() {
       setLoading(true);
@@ -539,14 +627,13 @@ function HotelsPageContent() {
           setHotels(list);
           setSearchId(data.searchId || "");
           setPriceCheckedAt(data.priceCheckedAt || "");
-        } else if (!isCancelled && (!data.success || !data.hotels || data.hotels.length === 0)) {
-          // If no data from API response, navigate to homepage
-          router.replace("/");
+        } else if (!isCancelled) {
+          setHotels([]);
         }
       } catch (err) {
         console.error("Failed to load hotels:", err);
         if (!isCancelled) {
-          router.replace("/");
+          setHotels([]);
         }
       } finally {
         if (!isCancelled) setLoading(false);
@@ -973,35 +1060,53 @@ function HotelsPageContent() {
                   options={destinationOptions}
                   value={destination}
                   onChange={(val) => setDestination(val)}
-                  placeholder="Select destination..."
-                  searchPlaceholder="Search country or city..."
-                  triggerClassName="bg-gray-50 border-gray-200 py-3"
+                  openOnKeywordOnly={true}
+                  icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
+                  trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs sm:text-sm" />}
+                  placeholder="Search destination or country..."
+                  searchPlaceholder="Search destination, country or abbreviation..."
                 />
               </div>
 
               {/* CHECK-IN */}
               <div className="lg:col-span-2 flex flex-col gap-1.5">
-                <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-in Date</label>
+                <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                  Check-in Date <span className="text-red-500">*</span>
+                </label>
                 <DatePicker
                   value={checkIn}
                   onChange={(val) => {
                     setCheckIn(val);
+                    if (dateErrors.checkIn) {
+                      setDateErrors((prev) => ({ ...prev, checkIn: undefined }));
+                    }
                     if (val && checkOut && val >= checkOut) {
                       setCheckOut("");
                     }
                   }}
                   placeholder="Select check-in"
+                  error={dateErrors.checkIn}
+                  required={true}
                 />
               </div>
 
               {/* CHECK-OUT */}
               <div className="lg:col-span-2 flex flex-col gap-1.5">
-                <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-out Date</label>
+                <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                  Check-out Date <span className="text-red-500">*</span>
+                </label>
                 <DatePicker
                   value={checkOut}
-                  onChange={setCheckOut}
+                  onChange={(val) => {
+                    setCheckOut(val);
+                    if (dateErrors.checkOut) {
+                      setDateErrors((prev) => ({ ...prev, checkOut: undefined }));
+                    }
+                  }}
                   placeholder="Select check-out"
                   minDate={checkIn || undefined}
+                  error={dateErrors.checkOut}
+                  required={true}
                 />
               </div>
 
@@ -1025,7 +1130,11 @@ function HotelsPageContent() {
 
                 {/* ROOMS & GUESTS POPOVER */}
                 {showTravellersPopover && (
-                  <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95">
+                  <div
+                    className={`absolute right-0 ${
+                      popoverPlacement === "down" ? "top-full mt-2" : "bottom-full mb-2"
+                    } w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95`}
+                  >
                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                       <div>
                         <span className="font-bold text-sm sm:text-base block">Travellers &amp; Rooms</span>
@@ -1135,11 +1244,17 @@ function HotelsPageContent() {
                                       }
                                       className="rounded-lg bg-white border border-gray-200 px-2 py-1 text-xs font-semibold focus:border-[#F7941D] focus:outline-none"
                                     >
-                                      {Array.from({ length: 18 }, (_, a) => (
-                                        <option key={a} value={a}>
-                                          {a === 0 ? "Under 1" : `${a} yr${a > 1 ? "s" : ""}`}
-                                        </option>
-                                      ))}
+                                      <optgroup label="Infant">
+                                        <option value={0}>Less than 1</option>
+                                        <option value={1}>1</option>
+                                      </optgroup>
+                                      <optgroup label="Child">
+                                        {Array.from({ length: 16 }, (_, i) => i + 2).map((a) => (
+                                          <option key={a} value={a}>
+                                            {a} yrs
+                                          </option>
+                                        ))}
+                                      </optgroup>
                                     </select>
                                   </div>
                                 ))}
@@ -1167,7 +1282,7 @@ function HotelsPageContent() {
                         className="ml-auto rounded-lg bg-[#1D1248] disabled:opacity-60 disabled:cursor-not-allowed text-white px-4 py-2 text-xs font-bold hover:bg-[#2B1B6D] transition-colors cursor-pointer inline-flex items-center gap-1.5"
                       >
                         {loading && <FaSpinner className="animate-spin text-xs" />}
-                        {loading ? "Loading..." : "Apply & Search"}
+                        {loading ? "Loading..." : "Search"}
                       </button>
                     </div>
                   </div>
@@ -1188,7 +1303,7 @@ function HotelsPageContent() {
                     </>
                   ) : (
                     <>
-                      <FaSearch /> Update
+                      <FaSearch /> Search
                     </>
                   )}
                 </button>
@@ -1300,7 +1415,11 @@ function HotelsPageContent() {
                   options={destinationOptions}
                   value={destination}
                   onChange={(val) => setDestination(val)}
-                  placeholder="Select destination..."
+                  openOnKeywordOnly={true}
+                  icon={<FaSearch className="text-gray-400 text-xs" />}
+                  trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs" />}
+                  placeholder="Search destination or country..."
+                  searchPlaceholder="Search destination, country or abbreviation..."
                   triggerClassName="bg-white border-gray-200 py-2 rounded-lg text-xs font-medium"
                 />
               </div>
@@ -1544,6 +1663,10 @@ function HotelsPageContent() {
                     <span className="inline-flex items-center gap-1.5 text-amber-600 font-bold">
                       <FaSpinner className="animate-spin text-xs" /> Fetching verified hotel availability...
                     </span>
+                  ) : (!checkIn || !checkOut || !hasSearched) ? (
+                    <span className="text-gray-500">
+                      Select dates above and click Search to check live hotel availability
+                    </span>
                   ) : (
                     <>
                       Showing <span className="text-[#F7941D] font-bold">{filteredHotels.length}</span> verified properties
@@ -1613,19 +1736,40 @@ function HotelsPageContent() {
                   </div>
                 ))}
               </div>
+            ) : (!checkIn || !checkOut || !hasSearched) ? (
+              <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#F7941D] mb-4">
+                  <FaCalendarAlt className="text-2xl" />
+                </div>
+                <h3 className="text-xl font-extrabold text-[#1D1248]">
+                  Select Travel Dates to View Hotels
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 mt-2 max-w-md leading-relaxed">
+                  Check-in and Check-out dates are mandatory to check live availability and confirmed hotel rates. Please enter your destination and dates above, then click <span className="font-bold text-[#F7941D]">Search</span>.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="mt-6 px-6 py-2.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <FaSearch className="text-xs" /> Enter Dates &amp; Search
+                </button>
+              </div>
             ) : filteredHotels.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
                 <FaHotel className="text-5xl text-gray-300 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-gray-800">No hotels matched your filters</h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Try clearing your search query or choosing another destination.
+                <p className="text-sm text-gray-500 mt-1 max-w-md">
+                  We couldn&apos;t find any hotels matching your current selection. Please adjust your destination, dates, or filters above and try again.
                 </p>
                 <button
                   type="button"
                   onClick={handleClearAll}
                   className="mt-4 px-5 py-2.5 rounded-xl bg-[#F7941D] text-white text-xs font-bold hover:bg-[#e08316] transition-colors cursor-pointer"
                 >
-                  Reset Filters &amp; View All Featured Hotels
+                  Reset Filters &amp; Try Again
                 </button>
               </div>
             ) : (
@@ -1687,13 +1831,15 @@ function HotelsPageContent() {
                         {(hotel.availableRates?.[0]?.boardBasis || hotel.availableRates?.[0]?.cancellationPolicy) && (
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             {hotel.availableRates?.[0]?.boardBasis && (
-                              <span className="rounded-lg bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-[#1D1248] flex items-center gap-1">
-                                🍽️ {hotel.availableRates[0].boardBasis}
+                              <span className="rounded-lg bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-[#1D1248] flex items-center gap-1.5">
+                                <FaUtensils className="text-[10px] text-amber-700 shrink-0" />
+                                <span>{hotel.availableRates[0].boardBasis}</span>
                               </span>
                             )}
                             {hotel.availableRates?.[0]?.cancellationPolicy && (
-                              <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                                ✓ {hotel.availableRates[0].cancellationPolicy}
+                              <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 flex items-center gap-1.5">
+                                <FaShieldAlt className="text-[10px] text-emerald-600 shrink-0" />
+                                <span>{hotel.availableRates[0].cancellationPolicy}</span>
                               </span>
                             )}
                           </div>

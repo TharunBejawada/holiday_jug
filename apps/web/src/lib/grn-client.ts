@@ -948,18 +948,53 @@ export async function searchAllGrnHotelsForDestination(
           isNonRefundable: false,
         },
         {
-          roomType: "Superior Sea View Room",
+          roomType: "Deluxe Garden View Room",
           boardBasis: "Bed & Breakfast",
+          rateMultiplier: 1.08,
+          cancellationPolicy: "Free cancellation up to 48 hours before check-in",
+          isNonRefundable: false,
+        },
+        {
+          roomType: "Superior Sea View Room",
+          boardBasis: "Half Board",
           rateMultiplier: 1.18,
           cancellationPolicy: "Free cancellation up to 72 hours before check-in",
           isNonRefundable: false,
         },
         {
-          roomType: "Executive Marina Suite",
+          roomType: "Premium Oceanfront Balcony Room",
+          boardBasis: "All Inclusive",
+          rateMultiplier: 1.32,
+          cancellationPolicy: "Free cancellation up to 72 hours before check-in",
+          isNonRefundable: false,
+        },
+        {
+          roomType: "Executive Marina Junior Suite",
           boardBasis: "All Inclusive",
           rateMultiplier: 1.45,
+          cancellationPolicy: "Free cancellation available",
+          isNonRefundable: false,
+        },
+        {
+          roomType: "Family Connecting Suite (2 Bedrooms)",
+          boardBasis: "All Inclusive",
+          rateMultiplier: 1.65,
+          cancellationPolicy: "Free cancellation up to 7 days before check-in",
+          isNonRefundable: false,
+        },
+        {
+          roomType: "Signature Panoramic Terrace Suite",
+          boardBasis: "All Inclusive",
+          rateMultiplier: 1.85,
           cancellationPolicy: "Non-refundable promotional rate",
           isNonRefundable: true,
+        },
+        {
+          roomType: "Royal Presidential Villa with Private Pool",
+          boardBasis: "Ultra All Inclusive",
+          rateMultiplier: 2.25,
+          cancellationPolicy: "Free cancellation up to 14 days before check-in",
+          isNonRefundable: false,
         },
       ];
 
@@ -1034,9 +1069,23 @@ export async function searchAllGrnHotelsForDestination(
         isNonRefundable: false,
       },
       {
-        roomType: "Superior Sea View Room",
+        roomType: "Deluxe Garden View Room",
         boardBasis: "Bed & Breakfast",
+        rateMultiplier: 1.08,
+        cancellationPolicy: "Free cancellation up to 48 hours before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Superior Sea View Room",
+        boardBasis: "Half Board",
         rateMultiplier: 1.18,
+        cancellationPolicy: "Free cancellation up to 72 hours before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Premium Oceanfront Balcony Room",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.32,
         cancellationPolicy: "Free cancellation up to 72 hours before check-in",
         isNonRefundable: false,
       },
@@ -1044,8 +1093,29 @@ export async function searchAllGrnHotelsForDestination(
         roomType: "All Inclusive Resort Suite",
         boardBasis: "All Inclusive",
         rateMultiplier: 1.45,
+        cancellationPolicy: "Free cancellation available",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Family Connecting Suite (2 Bedrooms)",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.65,
+        cancellationPolicy: "Free cancellation up to 7 days before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Signature Panoramic Terrace Suite",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.85,
         cancellationPolicy: "Non-refundable promotional rate",
         isNonRefundable: true,
+      },
+      {
+        roomType: "Royal Presidential Villa with Private Pool",
+        boardBasis: "Ultra All Inclusive",
+        rateMultiplier: 2.25,
+        cancellationPolicy: "Free cancellation up to 14 days before check-in",
+        isNonRefundable: false,
       },
     ];
 
@@ -1198,25 +1268,60 @@ export async function searchGrnHotels(
         isNonRefundable: false,
       },
       {
-        roomType: "Superior Sea View Room",
+        roomType: "Deluxe Garden View Room",
         boardBasis: "Bed & Breakfast",
+        rateMultiplier: 1.08,
+        cancellationPolicy: "Free cancellation up to 48 hours before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Superior Sea View Room",
+        boardBasis: "Half Board",
         rateMultiplier: 1.18,
         cancellationPolicy: "Free cancellation up to 72 hours before check-in",
         isNonRefundable: false,
       },
       {
-        roomType: "Executive Marina Suite",
+        roomType: "Premium Oceanfront Balcony Room",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.32,
+        cancellationPolicy: "Free cancellation up to 72 hours before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Executive Marina Junior Suite",
         boardBasis: "All Inclusive",
         rateMultiplier: 1.45,
+        cancellationPolicy: "Free cancellation available",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Family Connecting Suite (2 Bedrooms)",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.65,
+        cancellationPolicy: "Free cancellation up to 7 days before check-in",
+        isNonRefundable: false,
+      },
+      {
+        roomType: "Signature Panoramic Terrace Suite",
+        boardBasis: "All Inclusive",
+        rateMultiplier: 1.85,
         cancellationPolicy: "Non-refundable promotional rate",
         isNonRefundable: true,
+      },
+      {
+        roomType: "Royal Presidential Villa with Private Pool",
+        boardBasis: "Ultra All Inclusive",
+        rateMultiplier: 2.25,
+        cancellationPolicy: "Free cancellation up to 14 days before check-in",
+        isNonRefundable: false,
       },
     ];
 
     const hasLiveApiRates = Array.isArray(apiHotel?.rates) && apiHotel.rates.length > 0;
 
     const availableRates = hasLiveApiRates
-      ? apiHotel.rates.slice(0, 5).map((r: any, idx: number) => {
+      ? apiHotel.rates.map((r: any, idx: number) => {
           const costInr = Number(r.price) || (fallbackHotel.baseRateInr || 9000);
           const serverCalculation = calculateQuoteOnServer(
             {

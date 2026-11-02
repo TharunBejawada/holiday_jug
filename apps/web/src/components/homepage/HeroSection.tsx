@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   FaMapMarkerAlt,
@@ -18,6 +18,7 @@ import {
 import { DatePicker } from "@/components/DatePicker";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DEPARTURE_AIRPORTS, getActiveSearchDestinations } from "@/lib/destinations-master";
+import { DESTINATIONS_NAV_DATA } from "@/lib/destinations-nav-data";
 
 interface RoomConfig {
   adults: number;
@@ -51,12 +52,60 @@ export function HeroSection() {
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [dateErrors, setDateErrors] = useState<{ checkIn?: string; checkOut?: string }>({});
 
   // Comprehensive Travellers & Rooms popover state (D3)
   const [rooms, setRooms] = useState<RoomConfig[]>([
     { adults: 2, childrenAges: [] },
   ]);
   const [showTravellersPopover, setShowTravellersPopover] = useState(false);
+  const travellersContainerRef = useRef<HTMLDivElement>(null);
+  const [popoverPlacement, setPopoverPlacement] = useState<"down" | "up">("down");
+
+  // Dynamic placement for Travellers & Rooms popover to avoid going under sticky navbar
+  useEffect(() => {
+    if (!showTravellersPopover) return;
+
+    const calculatePlacement = () => {
+      if (!travellersContainerRef.current) return;
+      const rect = travellersContainerRef.current.getBoundingClientRect();
+      const navbarHeight = 85; // sticky header is ~80px
+      const popoverHeight = 360;
+      const spaceAbove = rect.top - navbarHeight;
+
+      if (spaceAbove < popoverHeight) {
+        setPopoverPlacement("down");
+      } else {
+        setPopoverPlacement("up");
+      }
+    };
+
+    calculatePlacement();
+    window.addEventListener("scroll", calculatePlacement, { passive: true });
+    window.addEventListener("resize", calculatePlacement, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", calculatePlacement);
+      window.removeEventListener("resize", calculatePlacement);
+    };
+  }, [showTravellersPopover]);
+
+  // Click outside to close Travellers & Rooms popover
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        travellersContainerRef.current &&
+        !travellersContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowTravellersPopover(false);
+      }
+    }
+    if (showTravellersPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTravellersPopover]);
 
   // Fetch published destinations dynamically from Admin Dashboard
   useEffect(() => {
@@ -83,8 +132,24 @@ export function HeroSection() {
     return DEPARTURE_AIRPORTS.map((apt) => ({
       value: apt.code,
       label: `${apt.city} (${apt.code})`,
-      subtitle: apt.name,
-      searchTerms: [apt.city, apt.code, apt.name],
+      subtitle: `${apt.name}, ${apt.country}`,
+      badge: apt.code,
+      searchTerms: [
+        apt.city,
+        apt.code,
+        apt.name,
+        apt.country,
+        // Common city and country abbreviations
+        ...(apt.city.toLowerCase() === "london" ? ["lon", "uk", "gb", "england"] : []),
+        ...(apt.city.toLowerCase() === "manchester" ? ["man", "uk"] : []),
+        ...(apt.city.toLowerCase() === "birmingham" ? ["bhx", "uk"] : []),
+        ...(apt.city.toLowerCase() === "edinburgh" ? ["edi", "scotland", "uk"] : []),
+        ...(apt.city.toLowerCase() === "glasgow" ? ["gla", "scotland", "uk"] : []),
+        ...(apt.city.toLowerCase() === "dublin" ? ["dub", "ireland"] : []),
+        ...(apt.city.toLowerCase().includes("new york") ? ["nyc", "us", "usa", "america"] : []),
+        ...(apt.city.toLowerCase() === "paris" ? ["par", "france"] : []),
+        ...(apt.city.toLowerCase() === "dubai" ? ["uae", "emirates"] : []),
+      ],
     }));
   }, []);
 
@@ -93,6 +158,7 @@ export function HeroSection() {
       value: string;
       label: string;
       subtitle?: string;
+      badge?: string;
       tags?: string[];
       searchTerms?: string[];
     }> = [
@@ -100,26 +166,95 @@ export function HeroSection() {
         value: "all",
         label: "All Destinations (Featured)",
         subtitle: "Worldwide Handpicked Stays",
-        tags: ["all", "featured", "worldwide", "any"],
-        searchTerms: ["all", "featured", "worldwide", "any"],
+        tags: ["all", "featured", "worldwide", "any", "global"],
+        searchTerms: ["all", "featured", "worldwide", "any", "global"],
       },
     ];
 
+    // 1. Add all core countries from navbar master data (e.g. Spain, Canary Islands, Turkey, Greece, Portugal, Cyprus, Egypt, UAE)
+    DESTINATIONS_NAV_DATA.forEach((group) => {
+      const countrySlug = group.slug;
+      if (!list.some((existing) => existing.value.toLowerCase() === countrySlug.toLowerCase())) {
+        list.push({
+          value: countrySlug,
+          label: `${group.country} (All Destinations)`,
+          subtitle: `Country • ${group.destinations.length} Core Destinations`,
+          badge: "Country",
+          tags: [group.country, group.slug, ...(group.countryAliases || [])],
+          searchTerms: [
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...group.destinations.map((d) => d.name),
+            ...group.destinations.flatMap((d) => d.aliases || []),
+            ...group.destinations.flatMap((d) => d.iata || []),
+          ],
+        });
+      }
+
+      // 2. Add each individual core destination under the country with all aliases & IATA codes
+      group.destinations.forEach((dest) => {
+        const destSlug = dest.slug;
+        const existingIdx = list.findIndex((existing) => existing.value.toLowerCase() === destSlug.toLowerCase());
+        const iataBadge = dest.iata && dest.iata[0] ? dest.iata[0] : "Core";
+        const item = {
+          value: destSlug,
+          label: `${dest.name} (${group.country})`,
+          subtitle: `Core Destination • ${group.country}${dest.iata && dest.iata.length > 0 ? ` • ${dest.iata.join(", ")}` : ""}`,
+          badge: iataBadge,
+          tags: [
+            dest.name,
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...(dest.aliases || []),
+            ...(dest.iata || []),
+          ],
+          searchTerms: [
+            dest.name,
+            dest.slug,
+            group.country,
+            group.slug,
+            ...(group.countryAliases || []),
+            ...(dest.aliases || []),
+            ...(dest.iata || []),
+          ],
+        };
+
+        if (existingIdx >= 0) {
+          list[existingIdx] = item;
+        } else {
+          list.push(item);
+        }
+      });
+    });
+
+    // 3. Admin-published destinations
     adminDestinations.forEach((d) => {
-      if (!list.some((existing) => existing.value.toLowerCase() === d.slug.toLowerCase())) {
+      const match = list.find((existing) => existing.value.toLowerCase() === d.slug.toLowerCase());
+      if (match) {
+        if (d.priceFrom) {
+          match.subtitle = `From £${d.priceFrom} pp • ${match.subtitle}`;
+        }
+      } else {
         list.push({
           value: d.slug,
           label: `${d.name} (${d.region})`,
-          subtitle: d.priceFrom ? `From £${d.priceFrom} pp` : undefined,
+          subtitle: d.priceFrom ? `From £${d.priceFrom} pp • ${d.region}` : d.region,
           tags: [d.name, d.slug, d.region],
           searchTerms: [d.name, d.slug, d.region],
         });
       }
     });
 
+    // 4. Mapped destinations from DESTINATIONS_MASTER
     const activeDestinations = getActiveSearchDestinations();
     activeDestinations.forEach((d) => {
-      if (!list.some((existing) => existing.value.toLowerCase() === d.slug.toLowerCase())) {
+      const match = list.find((existing) => existing.value.toLowerCase() === d.slug.toLowerCase());
+      if (match) {
+        match.tags = Array.from(new Set([...(match.tags || []), ...(d.aliases || [])]));
+        match.searchTerms = Array.from(new Set([...(match.searchTerms || []), ...(d.aliases || [])]));
+      } else {
         list.push({
           value: d.slug,
           label: `${d.destination} (${d.country})`,
@@ -135,10 +270,11 @@ export function HeroSection() {
 
   // Summary labels for Travellers
   const totalAdults = rooms.reduce((acc, r) => acc + r.adults, 0);
-  const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.length, 0);
+  const totalChildren = rooms.reduce((acc, r) => acc + r.childrenAges.filter((a) => a >= 2).length, 0);
+  const totalInfants = rooms.reduce((acc, r) => acc + r.childrenAges.filter((a) => a < 2).length, 0);
   const travellersSummary = `${totalAdults} Adult${totalAdults > 1 ? "s" : ""}${
     totalChildren > 0 ? `, ${totalChildren} Child${totalChildren > 1 ? "ren" : ""}` : ""
-  }, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
+  }${totalInfants > 0 ? `, ${totalInfants} Infant${totalInfants > 1 ? "s" : ""}` : ""}, ${rooms.length} Room${rooms.length > 1 ? "s" : ""}`;
 
   // Reset navigation loading state on tab switch or timeout
   useEffect(() => {
@@ -147,6 +283,25 @@ export function HeroSection() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check-in and check-out are strictly mandatory
+    const errors: { checkIn?: string; checkOut?: string } = {};
+    if (!checkIn) {
+      errors.checkIn = "Check-in date is required";
+    }
+    if (!checkOut) {
+      errors.checkOut = "Check-out date is required";
+    } else if (checkIn && checkOut <= checkIn) {
+      errors.checkOut = "Check-out must be after check-in date";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setDateErrors(errors);
+      setIsNavigating(false);
+      return;
+    }
+
+    setDateErrors({});
     setIsNavigating(true);
 
     // Navigate to hotels overview page for both Holidays and Hotels
@@ -156,12 +311,12 @@ export function HeroSection() {
       rooms: JSON.stringify(rooms),
       adults: totalAdults.toString(),
       children: totalChildren.toString(),
+      checkIn: checkIn,
+      checkOut: checkOut,
     });
     if (activeTab === "holidays" && departureAirport) {
       queryParams.set("departureAirport", departureAirport);
     }
-    if (checkIn) queryParams.set("checkIn", checkIn);
-    if (checkOut) queryParams.set("checkOut", checkOut);
 
     router.push(`/hotels?${queryParams.toString()}`);
   };
@@ -227,23 +382,11 @@ export function HeroSection() {
               <button
                 type="button"
                 onClick={() => setActiveTab("holidays")}
-                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${activeTab === "holidays"
-                    ? "bg-[#F7941D] text-white"
-                    : "bg-white text-[#1D1248] hover:bg-gray-100"
-                  }`}
+                className="px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm bg-[#F7941D] text-white"
               >
                 Holidays (Destinations)
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("hotels")}
-                className={`px-5 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-lg font-bold transition-all duration-200 rounded-t-xl sm:rounded-t-2xl shadow-sm cursor-pointer ${activeTab === "hotels"
-                    ? "bg-[#F7941D] text-white"
-                    : "bg-white text-[#1D1248] hover:bg-gray-100"
-                  }`}
-              >
-                Hotels Only
-              </button>
+              {/* "Hotels Only" tab hidden per request */}
             </div>
 
             {/* MAIN SEARCH CARD */}
@@ -257,14 +400,16 @@ export function HeroSection() {
                       options={airportOptions}
                       value={departureAirport}
                       onChange={(val) => setDepartureAirport(val)}
-                      placeholder="Select airport"
-                      searchPlaceholder="Search airport or city..."
+                      openOnKeywordOnly={true}
+                      icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
                       trailingIcon={<FaPlaneDeparture className="text-gray-400 text-xs sm:text-sm" />}
+                      placeholder="Search airport or city..."
+                      searchPlaceholder="Search airport or city..."
                     />
                   </div>
                 )}
 
-                {/* 2. WHERE TO? (Destinations from Admin Dashboard) */}
+                {/* 2. WHERE TO? (Destinations from Admin Dashboard & Core Navigation) */}
                 <div className={`${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-4"} flex flex-col gap-1 sm:gap-1.5`}>
                   <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Where to?</label>
                   <SearchableSelect
@@ -272,29 +417,64 @@ export function HeroSection() {
                     value={destination}
                     onChange={(val) => {
                       setDestination(val);
-                      const match = adminDestinations.find((d) => d.slug === val);
-                      if (match) setDestinationQuery(`${match.name}, ${match.region}`);
+                      const match = destinationOptions.find((d) => d.value === val);
+                      if (match) setDestinationQuery(match.label);
                     }}
-                    placeholder="Select destination"
-                    searchPlaceholder="Search country or city..."
+                    openOnKeywordOnly={true}
+                    icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
                     trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs sm:text-sm" />}
+                    placeholder="Search destination or country..."
+                    searchPlaceholder="Search destination, country or abbreviation..."
                   />
                 </div>
 
                 {/* 3. CHECK-IN */}
                 <div className="lg:col-span-2 flex flex-col gap-1 sm:gap-1.5">
-                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-in</label>
-                  <DatePicker value={checkIn} onChange={setCheckIn} placeholder="Select date" />
+                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                    Check-in <span className="text-red-500">*</span>
+                  </label>
+                  <DatePicker
+                    value={checkIn}
+                    onChange={(val) => {
+                      setCheckIn(val);
+                      if (dateErrors.checkIn) {
+                        setDateErrors((prev) => ({ ...prev, checkIn: undefined }));
+                      }
+                      if (checkOut && val && checkOut <= val) {
+                        setCheckOut("");
+                      }
+                    }}
+                    placeholder="Select date"
+                    error={dateErrors.checkIn}
+                    required={true}
+                  />
                 </div>
 
                 {/* 4. CHECK-OUT */}
                 <div className="lg:col-span-2 flex flex-col gap-1 sm:gap-1.5">
-                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Check-out</label>
-                  <DatePicker value={checkOut} onChange={setCheckOut} placeholder="Select date" minDate={checkIn} />
+                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                    Check-out <span className="text-red-500">*</span>
+                  </label>
+                  <DatePicker
+                    value={checkOut}
+                    onChange={(val) => {
+                      setCheckOut(val);
+                      if (dateErrors.checkOut) {
+                        setDateErrors((prev) => ({ ...prev, checkOut: undefined }));
+                      }
+                    }}
+                    placeholder="Select date"
+                    minDate={checkIn}
+                    error={dateErrors.checkOut}
+                    required={true}
+                  />
                 </div>
 
                 {/* 5. TRAVELLERS & ROOMS (D3) */}
-                <div className={`relative ${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-2"} flex flex-col gap-1 sm:gap-1.5`}>
+                <div
+                  ref={travellersContainerRef}
+                  className={`relative ${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-2"} flex flex-col gap-1 sm:gap-1.5`}
+                >
                   <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Travellers &amp; Rooms</label>
                   <button
                     type="button"
@@ -307,13 +487,17 @@ export function HeroSection() {
 
                   {/* ROOMS & GUESTS POPOVER MODAL */}
                   {showTravellersPopover && (
-                    <div className="absolute right-0 bottom-full mb-2 w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95">
+                    <div
+                      className={`absolute right-0 ${
+                        popoverPlacement === "down" ? "top-full mt-2" : "bottom-full mb-2"
+                      } w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95`}
+                    >
                       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                         <span className="font-bold text-sm sm:text-base">Rooms &amp; Guests</span>
                         <button
                           type="button"
                           onClick={() => setShowTravellersPopover(false)}
-                          className="text-gray-400 hover:text-gray-600 p-1"
+                          className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
                         >
                           <FaTimes />
                         </button>
@@ -330,7 +514,7 @@ export function HeroSection() {
                                 <button
                                   type="button"
                                   onClick={() => removeRoom(roomIdx)}
-                                  className="text-red-500 hover:text-red-700 text-xs font-semibold"
+                                  className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer"
                                 >
                                   Remove Room
                                 </button>
@@ -348,7 +532,7 @@ export function HeroSection() {
                                   type="button"
                                   onClick={() => updateAdults(roomIdx, -1)}
                                   disabled={room.adults <= 1}
-                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   <FaMinus className="text-[9px]" />
                                 </button>
@@ -359,7 +543,7 @@ export function HeroSection() {
                                   type="button"
                                   onClick={() => updateAdults(roomIdx, 1)}
                                   disabled={room.adults >= 9}
-                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   <FaPlus className="text-[9px]" />
                                 </button>
@@ -377,7 +561,7 @@ export function HeroSection() {
                                   type="button"
                                   onClick={() => removeChild(roomIdx, room.childrenAges.length - 1)}
                                   disabled={room.childrenAges.length === 0}
-                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   <FaMinus className="text-[9px]" />
                                 </button>
@@ -388,7 +572,7 @@ export function HeroSection() {
                                   type="button"
                                   onClick={() => addChild(roomIdx)}
                                   disabled={room.childrenAges.length >= 8}
-                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                                  className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                   <FaPlus className="text-[9px]" />
                                 </button>
@@ -412,13 +596,19 @@ export function HeroSection() {
                                         onChange={(e) =>
                                           updateChildAge(roomIdx, childIdx, parseInt(e.target.value))
                                         }
-                                        className="rounded-lg bg-white border border-gray-200 px-2 py-1 text-xs font-semibold focus:border-[#F7941D] focus:outline-none"
+                                        className="rounded-lg bg-white border border-gray-200 px-2 py-1 text-xs font-semibold focus:border-[#F7941D] focus:outline-none cursor-pointer"
                                       >
-                                        {Array.from({ length: 18 }, (_, a) => (
-                                          <option key={a} value={a}>
-                                            {a === 0 ? "Under 1" : `${a} yr${a > 1 ? "s" : ""}`}
-                                          </option>
-                                        ))}
+                                        <optgroup label="Infant">
+                                          <option value={0}>Less than 1</option>
+                                          <option value={1}>1</option>
+                                        </optgroup>
+                                        <optgroup label="Child">
+                                          {Array.from({ length: 16 }, (_, i) => i + 2).map((a) => (
+                                            <option key={a} value={a}>
+                                              {a} yrs
+                                            </option>
+                                          ))}
+                                        </optgroup>
                                       </select>
                                     </div>
                                   ))}

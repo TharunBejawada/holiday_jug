@@ -10,7 +10,7 @@ import { FiLock, FiMail, FiAlertCircle, FiEye, FiEyeOff, FiArrowRight } from "re
 import { AdminLoginBackground } from "@/components/admin/AdminLoginBackground";
 
 const REMEMBER_KEY = "holidayjug-admin-remember-email";
-const FLY_DURATION_MS = 750;
+const FLY_DURATION_MS = 200;
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -25,6 +25,11 @@ export default function AdminLoginPage() {
   const [flyOrigin, setFlyOrigin] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
+    // 1. Prefetch admin bundle and pre-warm DB/NextAuth while user enters credentials
+    router.prefetch("/admin");
+    fetch("/api/auth/csrf").catch(() => {});
+    fetch("/api/admin/prewarm").catch(() => {});
+
     try {
       const saved = localStorage.getItem(REMEMBER_KEY);
       if (saved) {
@@ -34,7 +39,7 @@ export default function AdminLoginPage() {
     } catch {
       // localStorage unavailable — not remembering is a fine fallback
     }
-  }, []);
+  }, [router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,12 +67,10 @@ export default function AdminLoginPage() {
     if (rect) {
       setFlyOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
       setTimeout(() => {
-        router.push("/admin");
-        router.refresh();
+        window.location.href = "/admin";
       }, FLY_DURATION_MS);
     } else {
-      router.push("/admin");
-      router.refresh();
+      window.location.href = "/admin";
     }
   }
 

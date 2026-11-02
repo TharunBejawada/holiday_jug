@@ -36,6 +36,7 @@ export interface SearchableSelectProps {
   maxHeight?: string;
   autoFocusSearch?: boolean;
   showSubtitleInTrigger?: boolean;
+  openOnKeywordOnly?: boolean;
   renderOption?: (option: SearchableSelectOption, isSelected: boolean) => React.ReactNode;
 }
 
@@ -59,6 +60,7 @@ export function SearchableSelect({
   align = "left",
   maxHeight = "max-h-64",
   showSubtitleInTrigger = false,
+  openOnKeywordOnly = false,
   renderOption,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -85,22 +87,95 @@ export function SearchableSelect({
   // Filter options based on input value in the select area
   const filteredOptions = useMemo(() => {
     const trimmed = inputValue.trim().toLowerCase();
-    // If empty or exactly matches the current selected label, show all options
-    if (!trimmed || trimmed === displayLabel.toLowerCase()) return options;
+
+    // When openOnKeywordOnly is active:
+    // Only return matching options when a keyword is typed!
+    if (openOnKeywordOnly) {
+      if (!trimmed) return [];
+      // If user hasn't edited anything and menu isn't open, return []
+      if (!isOpen && trimmed === displayLabel.toLowerCase()) return [];
+    } else {
+      if (!trimmed || trimmed === displayLabel.toLowerCase()) return options;
+    }
+
+    // Clean alphanumeric query (e.g. "u.a.e." -> "uae", "u-k" -> "uk")
+    const cleanSearch = trimmed.replace(/[^a-z0-9]/g, "");
+    const searchWords = trimmed.split(/\s+/).filter(Boolean);
 
     return options.filter((opt) => {
-      if (opt.label.toLowerCase().includes(trimmed)) return true;
-      if (opt.subtitle && opt.subtitle.toLowerCase().includes(trimmed)) return true;
-      if (opt.value.toLowerCase().includes(trimmed)) return true;
-      if (opt.searchTerms && opt.searchTerms.some((t) => t.toLowerCase().includes(trimmed))) {
+      const labelLower = opt.label.toLowerCase();
+      const valLower = opt.value.toLowerCase();
+      const subLower = opt.subtitle ? opt.subtitle.toLowerCase() : "";
+
+      // 1. Direct substring match
+      if (labelLower.includes(trimmed)) return true;
+      if (subLower && subLower.includes(trimmed)) return true;
+      if (valLower.includes(trimmed)) return true;
+
+      // 2. Clean alphanumeric match (strips dots, hyphens, spaces)
+      if (cleanSearch) {
+        const cleanLabel = labelLower.replace(/[^a-z0-9]/g, "");
+        if (cleanLabel.includes(cleanSearch)) return true;
+        const cleanSub = subLower.replace(/[^a-z0-9]/g, "");
+        if (cleanSub && cleanSub.includes(cleanSearch)) return true;
+      }
+
+      // 3. Search terms & tags (including abbreviations like IATA codes, country codes, aliases)
+      if (
+        opt.searchTerms &&
+        opt.searchTerms.some((t) => {
+          const termLower = t.toLowerCase();
+          if (termLower.includes(trimmed)) return true;
+          if (cleanSearch) {
+            const cleanTerm = termLower.replace(/[^a-z0-9]/g, "");
+            if (cleanTerm === cleanSearch || cleanTerm.includes(cleanSearch) || cleanSearch.includes(cleanTerm)) {
+              return true;
+            }
+          }
+          return false;
+        })
+      ) {
         return true;
       }
-      if (opt.tags && opt.tags.some((t) => t.toLowerCase().includes(trimmed))) {
+
+      if (
+        opt.tags &&
+        opt.tags.some((t) => {
+          const tagLower = t.toLowerCase();
+          if (tagLower.includes(trimmed)) return true;
+          if (cleanSearch) {
+            const cleanTag = tagLower.replace(/[^a-z0-9]/g, "");
+            if (cleanTag === cleanSearch || cleanTag.includes(cleanSearch)) {
+              return true;
+            }
+          }
+          return false;
+        })
+      ) {
         return true;
       }
+
+      // 4. Acronym matching: checks if cleanSearch matches the acronym formed by words in the label
+      // (e.g., "uae" -> "United Arab Emirates", "rak" -> "Ras Al Khaimah", "cds" -> "Costa del Sol")
+      if (cleanSearch && cleanSearch.length >= 2) {
+        const words = opt.label.replace(/[^a-zA-Z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+        const acronym = words.map((w) => w[0].toLowerCase()).join("");
+        if (acronym === cleanSearch || acronym.includes(cleanSearch)) {
+          return true;
+        }
+      }
+
+      // 5. Multi-word search (all typed words match somewhere across label, subtitle, value, searchTerms)
+      if (searchWords.length > 1) {
+        const combined = `${labelLower} ${subLower} ${valLower} ${(opt.searchTerms || []).join(" ")} ${(opt.tags || []).join(" ")}`.toLowerCase();
+        if (searchWords.every((word) => combined.includes(word))) {
+          return true;
+        }
+      }
+
       return false;
     });
-  }, [options, inputValue, displayLabel]);
+  }, [options, inputValue, displayLabel, openOnKeywordOnly, isOpen]);
 
   // Reset highlight index when filtered results change
   useEffect(() => {
@@ -112,14 +187,30 @@ export function SearchableSelect({
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         const trimmed = inputValue.trim().toLowerCase();
+        const cleanSearch = trimmed.replace(/[^a-z0-9]/g, "");
         if (trimmed && trimmed !== displayLabel.toLowerCase()) {
-          const match = options.find(
-            (opt) =>
-              opt.label.toLowerCase() === trimmed ||
-              opt.value.toLowerCase() === trimmed ||
-              (opt.searchTerms && opt.searchTerms.some((t) => t.toLowerCase() === trimmed)) ||
-              (opt.tags && opt.tags.some((t) => t.toLowerCase() === trimmed))
-          );
+          const match = options.find((opt) => {
+            const labelLower = opt.label.toLowerCase();
+            const valLower = opt.value.toLowerCase();
+            if (labelLower === trimmed || valLower === trimmed) return true;
+            if (cleanSearch) {
+              if (labelLower.replace(/[^a-z0-9]/g, "") === cleanSearch) return true;
+              if (valLower.replace(/[^a-z0-9]/g, "") === cleanSearch) return true;
+            }
+            if (
+              opt.searchTerms &&
+              opt.searchTerms.some((t) => {
+                const tl = t.toLowerCase();
+                return tl === trimmed || (cleanSearch && tl.replace(/[^a-z0-9]/g, "") === cleanSearch);
+              })
+            ) {
+              return true;
+            }
+            if (opt.tags && opt.tags.some((t) => t.toLowerCase() === trimmed)) {
+              return true;
+            }
+            return false;
+          });
           if (match && match.value !== value) {
             onChange(match.value);
             setInputValue(match.label);
@@ -141,6 +232,9 @@ export function SearchableSelect({
 
     if (!isOpen) {
       if (e.key === "Enter" || e.key === "ArrowDown" || e.key === "ArrowUp") {
+        if (openOnKeywordOnly && !inputValue.trim()) {
+          return;
+        }
         e.preventDefault();
         setIsOpen(true);
         setTimeout(() => inputRef.current?.select(), 10);
@@ -203,21 +297,33 @@ export function SearchableSelect({
     e.stopPropagation();
     setInputValue("");
     onChange("");
-    setIsOpen(true);
+    if (openOnKeywordOnly) {
+      setIsOpen(false);
+    } else {
+      setIsOpen(true);
+    }
     inputRef.current?.focus();
   };
 
   const handleTriggerClick = () => {
     if (disabled) return;
+    inputRef.current?.focus();
+    if (openOnKeywordOnly) {
+      inputRef.current?.select();
+      return;
+    }
     if (!isOpen) {
       setIsOpen(true);
       setTimeout(() => inputRef.current?.select(), 10);
     }
-    inputRef.current?.focus();
   };
 
   const handleInputFocus = () => {
     if (disabled) return;
+    if (openOnKeywordOnly) {
+      inputRef.current?.select();
+      return;
+    }
     if (!isOpen) {
       setIsOpen(true);
       setTimeout(() => inputRef.current?.select(), 10);
@@ -225,15 +331,29 @@ export function SearchableSelect({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    if (!isOpen) {
-      setIsOpen(true);
+    const val = e.target.value;
+    setInputValue(val);
+    if (openOnKeywordOnly) {
+      // In keyword-only mode: open ONLY when user enters a keyword
+      if (val.trim().length > 0) {
+        setIsOpen(true);
+      } else {
+        setIsOpen(false);
+      }
+    } else {
+      if (!isOpen) {
+        setIsOpen(true);
+      }
     }
   };
 
   const handleChevronClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (disabled) return;
+    if (openOnKeywordOnly && !inputValue.trim()) {
+      inputRef.current?.focus();
+      return;
+    }
     if (isOpen) {
       setIsOpen(false);
       setInputValue(displayLabel);
@@ -281,7 +401,11 @@ export function SearchableSelect({
         } ${triggerClassName}`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          {icon && <span className="text-gray-400 shrink-0 text-xs sm:text-sm">{icon}</span>}
+          {(icon || openOnKeywordOnly) && (
+            <span className="text-gray-400 shrink-0 text-xs sm:text-sm">
+              {icon || <FaSearch className="text-gray-400" />}
+            </span>
+          )}
           <div className="flex flex-col min-w-0 flex-1">
             <input
               ref={inputRef}
@@ -434,7 +558,7 @@ export function SearchableSelect({
 
                     <div className="flex items-center gap-2 shrink-0">
                       {opt.badge !== undefined && (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
+                        <span className="rounded-full bg-amber-50 text-[#F7941D] border border-amber-200/60 px-2 py-0.5 text-[10px] font-bold shrink-0">
                           {opt.badge}
                         </span>
                       )}

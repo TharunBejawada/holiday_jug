@@ -354,3 +354,4 @@ export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): 
 
   return { isNonRefundable, cancelByDate, formattedPolicy };
 }
+

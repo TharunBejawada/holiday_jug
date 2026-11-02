@@ -451,3 +451,62 @@ model Asset {
 
   @@map("assets")
 }
+
+// Supplier Master Data (GRN Connect / Inventory Masters)
+model CountryMaster {
+  code2     String        @id
+  code3     String?
+  name      String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  cities    CityMaster[]
+  hotels    HotelMaster[]
+
+  @@index([name])
+  @@map("country_master")
+}
+
+model CityMaster {
+  code        String        @id
+  name        String
+  countryCode String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  country     CountryMaster @relation(fields: [countryCode], references: [code2], onDelete: Cascade)
+  hotels      HotelMaster[]
+
+  @@index([countryCode])
+  @@index([name])
+  @@map("city_master")
+}
+
+model HotelMaster {
+  code                     String        @id
+  name                     String
+  description              String?       @db.Text
+  cityCode                 String
+  destinationCode          String?
+  countryCode              String
+  starCategory             String?
+  address                  String?       @db.Text
+  postalCode               String?
+  latitude                 Decimal?      @db.Decimal(10, 7)
+  longitude                Decimal?      @db.Decimal(10, 7)
+  accommodationType        String?
+  accommodationTypeSubName String?
+  chainName                String?
+  featured                 String?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  city    CityMaster    @relation(fields: [cityCode], references: [code], onDelete: Cascade)
+  country CountryMaster @relation(fields: [countryCode], references: [code2], onDelete: Cascade)
+
+  @@index([cityCode])
+  @@index([countryCode])
+  @@index([name])
+  @@index([starCategory])
+  @@map("hotel_master")
+}
