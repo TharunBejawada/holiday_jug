@@ -252,12 +252,12 @@ export function Footer() {
         <p>
           &copy; 2026{" "}
           <a
-            href="https://vgdigitalmarketingagency.com/"
+            href="https://www.holidayjug.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#F7941D] hover:underline hover:text-white transition-colors font-medium"
           >
-            vgdigitalmarketingagency.com
+            holidayjug.com
           </a>
           . All rights reserved.
         </p>
