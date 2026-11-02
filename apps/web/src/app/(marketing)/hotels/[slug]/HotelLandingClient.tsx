@@ -52,6 +52,10 @@ interface HotelData {
   galleryImages: string[];
   baseRateInr: number;
   localTaxGbp: number;
+  geolocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
   reviewScore?: number;
   reviewCount?: number;
   nearbyAttractions?: { name: string; distance: string }[];
@@ -251,6 +255,9 @@ export default function HotelLandingClient({
 
   // Live Availability & Search State
   const [liveRates, setLiveRates] = useState<any[] | null>(null);
+  const [liveGeolocation, setLiveGeolocation] = useState<{ latitude: number; longitude: number } | null>(
+    hotel.geolocation || null
+  );
   const [isSearchingAvailability, setIsSearchingAvailability] = useState(false);
   const [searchFeedback, setSearchFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -384,6 +391,9 @@ export default function HotelLandingClient({
         if (found && Array.isArray(found.availableRates) && found.availableRates.length > 0) {
           setLiveRates(found.availableRates);
         }
+        if (found && found.geolocation) {
+          setLiveGeolocation(found.geolocation);
+        }
         if (data.searchId) {
           setSearchId(data.searchId);
         }
@@ -437,6 +447,9 @@ export default function HotelLandingClient({
             const found = data.hotels.find((h: any) => h.hotelCode === hotel.hotelCode) || data.hotels[0];
             if (found && Array.isArray(found.availableRates) && found.availableRates.length > 0) {
               setLiveRates(found.availableRates);
+            }
+            if (found && found.geolocation) {
+              setLiveGeolocation(found.geolocation);
             }
             if (data.searchId) {
               setSearchId(data.searchId);
@@ -521,11 +534,18 @@ export default function HotelLandingClient({
         pricePp: Math.round(rate.customerPricing?.pricePerPerson || 599),
         totalPrice: Math.round(rate.customerPricing?.totalPrice || 599 * adults),
         boardBasis: rate.boardBasis || "All Inclusive",
+        boardingDetails: rate.boardingDetails || [rate.boardBasis || "All Inclusive"],
+        otherInclusions: rate.otherInclusions || ["Free High-speed Wi-Fi", "Air Conditioning"],
+        cancellationPolicy: rate.cancellationPolicy || "Free cancellation available",
+        cancelByDate: rate.cancelByDate,
+        isNonRefundable: rate.isNonRefundable ?? false,
+        rateComments: rate.rateComments,
         features: [
           rate.cancellationPolicy || "Free cancellation available",
           rate.isNonRefundable ? "Non-refundable" : "Flexible booking",
-          "Free High-speed Wi-Fi",
-          "Air Conditioning",
+          ...(rate.otherInclusions && rate.otherInclusions.length > 0
+            ? rate.otherInclusions.slice(0, 2)
+            : ["Free High-speed Wi-Fi", "Air Conditioning"]),
         ],
         image: hotel.galleryImages[idx % hotel.galleryImages.length] || hotel.mainImage,
       }));
@@ -540,6 +560,12 @@ export default function HotelLandingClient({
         pricePp: basePp,
         totalPrice: basePp * adults,
         boardBasis: "All Inclusive",
+        boardingDetails: ["All Inclusive"],
+        otherInclusions: ["Balcony with garden view", "Free High-speed Wi-Fi"],
+        cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
         features: ["Balcony with garden view", "Free High-speed Wi-Fi", "Walk-in rain shower", "Complimentary minibar"],
         image: hotel.galleryImages[1] || hotel.mainImage,
       },
@@ -550,6 +576,12 @@ export default function HotelLandingClient({
         pricePp: basePp + 50,
         totalPrice: (basePp + 50) * adults,
         boardBasis: "All Inclusive",
+        boardingDetails: ["All Inclusive"],
+        otherInclusions: ["Panoramic sea view", "Espresso coffee machine"],
+        cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
         features: ["Panoramic sea view", "Espresso coffee machine", "Bathrobes & luxury slippers", "Late checkout (subject to availability)"],
         image: hotel.galleryImages[2] || hotel.mainImage,
       },
@@ -560,6 +592,12 @@ export default function HotelLandingClient({
         pricePp: 1210,
         totalPrice: 1210 * adults,
         boardBasis: "All Inclusive",
+        boardingDetails: ["All Inclusive"],
+        otherInclusions: ["Direct Mediterranean panoramic view", "Jacuzzi bath & luxury toiletries"],
+        cancellationPolicy: "Free cancellation up to 48 hours prior to check-in.",
+        cancelByDate: null,
+        isNonRefundable: false,
+        rateComments: null,
         features: ["Direct Mediterranean panoramic view", "Separate lounge seating area", "Jacuzzi bath & luxury toiletries", "VIP airport arrival greeting"],
         image: hotel.galleryImages[3] || hotel.mainImage,
       },
@@ -1302,11 +1340,10 @@ export default function HotelLandingClient({
           <div className="flex items-center gap-6 sm:gap-8 overflow-x-auto no-scrollbar whitespace-nowrap text-sm">
             {[
               { id: "overview", label: "Overview" },
-              { id: "rooms", label: "Rooms" },
-              // { id: "included", label: "What's Included" },
+              { id: "rooms", label: "Rooms & Rates" },
               { id: "facilities", label: "Facilities" },
-              // { id: "location", label: "Location" },
-              // { id: "reviews", label: "Reviews" },
+              { id: "location", label: "Location & Map" },
+              { id: "policies", label: "Policies & Remarks" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1386,23 +1423,52 @@ export default function HotelLandingClient({
                     </div>
 
                     {/* Room Details Centered */}
-                    <div className="text-center space-y-1">
+                    <div className="text-center space-y-1.5">
                       <h3 className="font-semibold text-sm sm:text-base text-[#071a55] leading-tight">
                         {room.name}
                       </h3>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        {idx === 0 ? "Garden view" : idx === 1 ? "Sea view" : "Garden view"}
-                      </p>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        {idx === 2 ? `Max ${adults + 1} adults` : `Max ${adults} adults`}
-                      </p>
 
-                      <div className="pt-2">
+                      {/* Boarding Badge */}
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100/90 text-[#1D1248] border border-amber-200">
+                          🍽️ {room.boardBasis}
+                        </span>
+                      </div>
+
+                      {/* Cancellation Badge */}
+                      <div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                            room.isNonRefundable
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                              : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          }`}
+                        >
+                          <FaShieldAlt className="text-[9px]" />
+                          {room.cancellationPolicy}
+                        </span>
+                      </div>
+
+                      {/* Other Inclusions Chips */}
+                      {room.otherInclusions && room.otherInclusions.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1 pt-0.5">
+                          {room.otherInclusions.slice(0, 2).map((inc: string, i: number) => (
+                            <span
+                              key={i}
+                              className="text-[10px] font-medium text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200"
+                            >
+                              ✓ {inc}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-2 border-t border-[#d6ebfa]/60">
                         <span className="font-semibold text-sm sm:text-base text-[#071a55] block">
                           From £{room.pricePp} pp
                         </span>
                         <span className="text-[10px] text-slate-400 block mt-0.5">
-                          {nights} nights • {room.boardBasis}
+                          {nights} nights • Total £{room.totalPrice}
                         </span>
                       </div>
                     </div>
@@ -1507,55 +1573,112 @@ export default function HotelLandingClient({
           </div>
         </div>
 
-        {/* SECTION: LOCATION & NEARBY ATTRACTIONS */}
-        {/* <div id="location" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24">
-          <h2 className="text-xl sm:text-2xl font-semibold text-[#1D1248] mb-6">
-            Location &amp; Nearby Attractions
-          </h2>
+        {/* SECTION: LOCATION & INTERACTIVE MAP */}
+        <div id="location" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
+                <FaMapMarkerAlt className="text-[#F7941D]" /> Location &amp; Map
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                {hotel.address || `${hotel.city}, ${hotel.country}`}
+              </p>
+            </div>
+            {liveGeolocation && (
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-xs font-mono font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1">
+                  <FaMapMarkerAlt className="text-[#F7941D] text-xs" />
+                  {liveGeolocation.latitude.toFixed(4)}° N, {liveGeolocation.longitude.toFixed(4)}° E
+                </span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${liveGeolocation.latitude},${liveGeolocation.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 rounded-xl bg-[#0b1b4f] hover:bg-[#12286e] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Open in Google Maps</span>
+                  <FaChevronRight className="text-[10px]" />
+                </a>
+              </div>
+            )}
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="relative h-64 rounded-2xl overflow-hidden border border-slate-200/80 group">
-              <img
-                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=800&q=80"
-                alt="Map Location"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          {liveGeolocation ? (
+            <div className="relative w-full h-[360px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200 shadow-inner">
+              <iframe
+                title={`Interactive Map for ${hotel.name}`}
+                width="100%"
+                height="100%"
+                className="w-full h-full border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://maps.google.com/maps?q=${liveGeolocation.latitude},${liveGeolocation.longitude}&hl=en&z=15&output=embed`}
               />
-              <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center p-4 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#F7941D] text-white flex items-center justify-center shadow-lg animate-bounce">
-                  <FaMapMarkerAlt className="text-xl" />
-                </div>
-                <span className="mt-2 text-white font-semibold text-sm drop-shadow-md">
-                  {hotel.name}
-                </span>
-                <span className="text-xs text-gray-200 drop-shadow-sm">
-                  {hotel.address}
-                </span>
+            </div>
+          ) : (
+            <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-sm">
+              <FaMapMarkerAlt className="text-3xl text-slate-300 mx-auto mb-2" />
+              <p className="font-semibold text-slate-700">{hotel.name}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{hotel.address || `${hotel.city}, ${hotel.country}`}</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hotel.name} ${hotel.address || hotel.city}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-3 text-xs font-bold text-blue-600 hover:underline"
+              >
+                Search on Google Maps &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* SECTION: POLICIES & RATE REMARKS */}
+        <div id="policies" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24 space-y-6">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-semibold text-[#071a55] flex items-center gap-2">
+              <FaInfoCircle className="text-[#071a55]" /> Policies &amp; Important Remarks
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+              Verified rate conditions, cancellation rules, and supplier remarks for {hotel.name}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3">
+              <h3 className="font-semibold text-sm text-[#071a55] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#F7941D]" /> Rate Comments &amp; Taxes
+              </h3>
+              <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
+                {rooms[selectedRoomIndex]?.rateComments?.remarks ? (
+                  <p>{rooms[selectedRoomIndex].rateComments.remarks}</p>
+                ) : (
+                  <p>All standard resort taxes, VAT and municipality fees are calculated in the quote. Discretionary hotel amenities are confirmed upon arrival.</p>
+                )}
+                {rooms[selectedRoomIndex]?.rateComments?.mandatoryTax && (
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-900 font-medium">
+                    ⚠️ Mandatory Local Charge: {rooms[selectedRoomIndex].rateComments.mandatoryTax}
+                  </div>
+                )}
+                {rooms[selectedRoomIndex]?.rateComments?.paxComments && (
+                  <p className="text-[11px] text-slate-500 italic">
+                    ℹ️ Occupancy Note: {rooms[selectedRoomIndex].rateComments.paxComments}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div>
-              <h3 className="font-semibold text-sm text-[#1D1248] mb-3">
-                Nearby Attractions
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3">
+              <h3 className="font-semibold text-sm text-[#071a55] flex items-center gap-2">
+                <FaShieldAlt className="text-emerald-600" /> Cancellation &amp; Booking Conditions
               </h3>
-              <div className="space-y-3">
-                {nearbyAttractions.map((attraction, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs sm:text-sm font-semibold text-slate-800"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FaMapMarkerAlt className="text-slate-400 text-xs shrink-0" />
-                      <span>{attraction.name}</span>
-                    </div>
-                    <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
-                      {attraction.distance}
-                    </span>
-                  </div>
-                ))}
+              <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
+                <p><strong>Cancellation:</strong> {rooms[selectedRoomIndex]?.cancellationPolicy || "Free cancellation up to 48 hours prior to check-in."}</p>
+                <p><strong>Board Basis:</strong> {rooms[selectedRoomIndex]?.boardBasis || "Room Only"}. Meals and beverages outside the stated plan may incur extra hotel charges.</p>
+                <p><strong>Telephone Booking Protection:</strong> Quote Search ID <span className="font-mono font-bold text-[#071a55]">{searchId}</span> when calling <strong>0330 165 8879</strong>.</p>
               </div>
             </div>
           </div>
-        </div> */}
+        </div>
 
         {/* SECTION: GUEST REVIEWS */}
         {/* <div id="reviews" className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm scroll-mt-24">

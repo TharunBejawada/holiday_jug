@@ -15,6 +15,16 @@
 import { calculateQuoteOnServer, sanitizePricingForClient, ServerPricingCalculation, ClientPricing } from "./pricing";
 import { RoomRequest } from "./search-id";
 import sandboxHotelsIndexData from "./data/sandbox-hotels-index.json";
+import {
+  normalizeGeolocation,
+  normalizeRateComments,
+  normalizeBoardingDetails,
+  normalizeInclusions,
+  normalizeCancellationPolicy,
+  cleanHtmlText,
+  NormalizedGeolocation,
+  NormalizedRateComments,
+} from "./grn-normalizer";
 
 const GRN_BASE_URL = process.env.GRN_BASE_URL || "https://api-sandbox.grnconnect.com/api/v3";
 const GRN_API_KEY = process.env.GRN_API_KEY || "653e6ee232c8d1bc58a91d1d252b5e78";
@@ -57,13 +67,18 @@ export interface HotelSearchResultItem {
   facilities: string[];
   mainImage: string;
   galleryImages: string[];
+  geolocation?: NormalizedGeolocation | null;
   availableRates: {
     rateKey: string;
     roomCode: string;
     roomType: string;
     boardBasis: string;
+    boardingDetails?: string[];
+    otherInclusions?: string[];
     cancellationPolicy: string;
+    cancelByDate?: string;
     isNonRefundable: boolean;
+    rateComments?: NormalizedRateComments;
     serverCalculation: ServerPricingCalculation;
     customerPricing: ClientPricing;
   }[];
@@ -92,6 +107,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Baniyas Street, P.O. Box 4250, Dubai Creek, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.261612, longitude: 55.314021 },
     description: "Iconic 5-star waterfront hotel on the banks of Dubai Creek with panoramic skyline views, award-winning Italian dining, outdoor temperature-controlled pool and world-class hospitality.",
     facilities: ["Outdoor Swimming Pool", "Free High-Speed Wi-Fi", "Full Service Spa", "Valet Parking", "Fitness Centre", "Italian Restaurant", "24-Hour Concierge"],
     mainImage: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
@@ -109,6 +125,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Riyadh Street, Sheikh Rashid Road, P.O. Box 7978, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.228543, longitude: 55.327318 },
     description: "Luxury resort set within 37 acres of landscaped gardens, featuring 13 award-winning restaurants, lavish indoor and outdoor lagoon pools, and the acclaimed Ahasees Spa.",
     facilities: ["Lagoon Swimming Pools", "Ahasees Spa", "13 Dining Venues", "Kidz Club", "Tennis Courts", "Free Airport Shuttle", "Private Cabanas"],
     mainImage: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80",
@@ -126,6 +143,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Sheikh Zayed Road, P.O. Box 23215, Financial Centre, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.217621, longitude: 55.279814 },
     description: "Centrally located on Sheikh Zayed Road facing the World Trade Centre and Museum of the Future. Modern elegant rooms with infinity pool overlooking Burj Khalifa.",
     facilities: ["Rooftop Infinity Pool", "Burj Khalifa Views", "Spa & Wellness", "Metro Access", "Executive Club Lounge", "Free High-Speed Wi-Fi"],
     mainImage: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80",
@@ -142,6 +160,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Baniyas Road, 476, Deira, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.263512, longitude: 55.308215 },
     description: "Dubai's very first five-star hotel legacy, situated moments from gold and spice souks with private balconies overlooking historic traditional dhow cruises.",
     facilities: ["Creek Balconies", "Dhow Cruise Dinner", "Steam Room", "Swimming Pool", "24-Hour Room Service"],
     mainImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
@@ -156,6 +175,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Al Falea Street, Jumeirah Beach Residence, Dubai Marina, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.086341, longitude: 55.138812 },
     description: "Beachfront sanctuary positioned on iconic JBR beach with private white sands, water slides, tennis courts, and beachfront sunset bars.",
     facilities: ["Private Beachfront", "Water Slides", "Poolside Bar", "Tennis Courts", "Water Sports", "Kids Club"],
     mainImage: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=800&q=80",
@@ -170,6 +190,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Al Sufouh Road, Jumeirah Beach, P.O. Box 53567, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.074712, longitude: 55.138214 },
     description: "Set amidst 200 landscaped palm trees on pristine Jumeirah Beach, offering extensive water sports, beach volleyball, and tranquil sea breezes.",
     facilities: ["Palm Garden", "Private Beach", "Spa & Sauna", "Squash Courts", "Outdoor Heated Pool"],
     mainImage: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=800&q=80",
@@ -184,6 +205,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Airport Road, Casablanca Street, Al Garhoud, PO Box 13018, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.079234, longitude: 55.134512 },
     description: "Contemporary 4-star hotel close to Dubai International Airport with salt-water outdoor pool, English pub, and complimentary airport transfers.",
     facilities: ["Outdoor Saltwater Pool", "Free Airport Shuttle", "Biggles British Pub", "Gymnasium", "Free Wi-Fi"],
     mainImage: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80",
@@ -198,6 +220,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Casablanca Road, Al Garhoud, Dubai Airport, P.O. Box 30880, Dubai",
     city: "Dubai",
     country: "United Arab Emirates",
+    geolocation: { latitude: 25.076312, longitude: 55.131924 },
     description: "Refined 5-star property blending Swiss hospitality with Arabic warmth, boasting 7 restaurants and bars, tennis courts and outdoor whirlpools.",
     facilities: ["7 Dining Venues", "Outdoor Whirlpool", "Floodlit Tennis Courts", "Sauna & Steam", "Grand Ballroom"],
     mainImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80",
@@ -527,6 +550,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Sakip Sabanci Bulvari No: 18, Konyaalti Beach, Antalya 07050, Turkey",
     city: "Antalya",
     country: "Turkey",
+    geolocation: { latitude: 36.885621, longitude: 30.672814 },
     description: "Rixos Downtown Antalya offers the perfect combination of beachfront luxury, modern comfort and warm Turkish hospitality. Located on the stunning Mediterranean coastline, the resort features spacious rooms, multiple dining options, a private beach and a range of leisure facilities. Whether you're looking to relax by the pool, explore the local culture or enjoy water sports, this resort has something for everyone.",
     facilities: [
       "Beachfront",
@@ -572,6 +596,7 @@ export const SANDBOX_HOTELS_DATABASE: Record<string, any> = {
     address: "Lara Turizm Yolu, Lara Beach, Antalya 07230, Turkey",
     city: "Antalya",
     country: "Turkey",
+    geolocation: { latitude: 36.856912, longitude: 30.771215 },
     description: "Ultra all-inclusive beachfront palace on Turkish Riviera's Lara Beach with private pier, aqua park, Turkish hammam, and 8 international restaurants.",
     facilities: ["Private Beach Pier", "Aqua Park", "Turkish Hammam", "Ultra All Inclusive", "Kids Club"],
     mainImage: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
@@ -839,6 +864,7 @@ export function getKnownHotel(codeOrSlug: string): any {
       galleryImages: [1, 2, 3, 4, 5, 6].map(
         (i) => `https://images.grnconnect.com/${grn.code || codeOrSlug}/${String(i).padStart(3, "0")}.jpg`
       ),
+      geolocation: normalizeGeolocation(grn),
       baseRateInr: star === 5 ? 11500 : star === 4 ? 8500 : 6200,
       localTaxGbp: 15.0,
       reviewScore: star === 5 ? 4.8 : 4.4,
@@ -971,6 +997,7 @@ export async function searchAllGrnHotelsForDestination(
         facilities: dbHotel.facilities || ["Swimming Pool", "Free Wi-Fi", "Restaurant", "Air Conditioning"],
         mainImage: dbHotel.mainImage,
         galleryImages: dbHotel.galleryImages || [dbHotel.mainImage],
+        geolocation: normalizeGeolocation(dbHotel),
         availableRates,
         leadPricing: availableRates[0].customerPricing,
       });
@@ -983,11 +1010,14 @@ export async function searchAllGrnHotelsForDestination(
     if (!code || seenCodes.has(code)) continue;
     seenCodes.add(code);
 
+    const geo = normalizeGeolocation(h);
+
     // Save in memory for landing page / quote lookup
     allKnownHotelsMap.set(code, {
       ...h,
       cityName: destinationName,
       countryName,
+      geolocation: geo,
     });
 
     const star = Math.max(1, Math.min(5, Math.round(parseFloat(h.category) || 4)));
@@ -1035,6 +1065,8 @@ export async function searchAllGrnHotelsForDestination(
         roomCode: `RM-${code}-00${idx + 1}`,
         roomType: rateCfg.roomType,
         boardBasis: rateCfg.boardBasis,
+        boardingDetails: [rateCfg.boardBasis],
+        otherInclusions: ["Free High-speed Wi-Fi", "Air Conditioning"],
         cancellationPolicy: rateCfg.cancellationPolicy,
         isNonRefundable: rateCfg.isNonRefundable,
         serverCalculation,
@@ -1043,7 +1075,7 @@ export async function searchAllGrnHotelsForDestination(
     });
 
     const facilities = h.facilities
-      ? (typeof h.facilities === "string" ? h.facilities.split(";").map((s: string) => s.trim()).filter(Boolean).slice(0, 8) : ["Swimming Pool", "Free Wi-Fi", "Restaurant", "Air Conditioning", "Spa"])
+      ? (typeof h.facilities === "string" ? h.facilities.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean).slice(0, 8) : ["Swimming Pool", "Free Wi-Fi", "Restaurant", "Air Conditioning", "Spa"])
       : ["Swimming Pool", "Free Wi-Fi", "Restaurant", "Air Conditioning", "Spa"];
 
     const description =
@@ -1064,6 +1096,7 @@ export async function searchAllGrnHotelsForDestination(
       galleryImages: [1, 2, 3, 4, 5, 6].map(
         (i) => `https://images.grnconnect.com/${code}/${String(i).padStart(3, "0")}.jpg`
       ),
+      geolocation: geo,
       availableRates,
       leadPricing: availableRates[0].customerPricing,
     });
@@ -1154,6 +1187,7 @@ export async function searchGrnHotels(
     };
 
     const apiHotel = apiResponse?.hotels?.find((h: any) => h.hotel_code === code);
+    const resolvedGeo = normalizeGeolocation(apiHotel) || normalizeGeolocation(fallbackHotel);
 
     const roomRatesConfig = [
       {
@@ -1179,32 +1213,75 @@ export async function searchGrnHotels(
       },
     ];
 
-    const availableRates = roomRatesConfig.map((rateCfg, idx) => {
-      let costInr = (fallbackHotel.baseRateInr || 9000) * rateCfg.rateMultiplier;
-      if (apiHotel?.rates?.[idx]?.price) {
-        costInr = apiHotel.rates[idx].price;
-      }
+    const hasLiveApiRates = Array.isArray(apiHotel?.rates) && apiHotel.rates.length > 0;
 
-      const serverCalculation = calculateQuoteOnServer(
-        {
-          supplierNetCostInr: costInr,
-          localTaxGbp: fallbackHotel.localTaxGbp || 15.00,
-          flightFareGbp,
-        },
-        totalAdults
-      );
+    const availableRates = hasLiveApiRates
+      ? apiHotel.rates.slice(0, 5).map((r: any, idx: number) => {
+          const costInr = Number(r.price) || (fallbackHotel.baseRateInr || 9000);
+          const serverCalculation = calculateQuoteOnServer(
+            {
+              supplierNetCostInr: costInr,
+              localTaxGbp: fallbackHotel.localTaxGbp || 15.00,
+              flightFareGbp,
+            },
+            totalAdults
+          );
 
-      return {
-        rateKey: `RATE-${code}-${idx + 1}`,
-        roomCode: `RM-${code}-00${idx + 1}`,
-        roomType: rateCfg.roomType,
-        boardBasis: rateCfg.boardBasis,
-        cancellationPolicy: rateCfg.cancellationPolicy,
-        isNonRefundable: rateCfg.isNonRefundable,
-        serverCalculation,
-        customerPricing: sanitizePricingForClient(serverCalculation),
-      };
-    });
+          const fallbackCfg = roomRatesConfig[idx % roomRatesConfig.length];
+          const roomType =
+            r.rooms?.[0]?.room_type ||
+            r.rooms?.[0]?.description ||
+            fallbackCfg.roomType;
+          const boarding = normalizeBoardingDetails(
+            r.boarding_details || r.board_type || r.meal_plan || r.board_basis,
+            fallbackCfg.boardBasis
+          );
+          const otherInclusions = normalizeInclusions(r.other_inclusions || r.inclusions);
+          const cancellation = normalizeCancellationPolicy(
+            r.cancellation_policy || { non_refundable: r.non_refundable },
+            fallbackCfg.cancellationPolicy
+          );
+          const rateComments = normalizeRateComments(r.rate_comments || r.remarks);
+
+          return {
+            rateKey: r.rate_key || `RATE-${code}-${idx + 1}`,
+            roomCode: r.room_code || `RM-${code}-00${idx + 1}`,
+            roomType,
+            boardBasis: boarding.boardBasis,
+            boardingDetails: boarding.boardingDetails,
+            otherInclusions,
+            cancellationPolicy: cancellation.formattedPolicy,
+            cancelByDate: cancellation.cancelByDate,
+            isNonRefundable: cancellation.isNonRefundable,
+            rateComments,
+            serverCalculation,
+            customerPricing: sanitizePricingForClient(serverCalculation),
+          };
+        })
+      : roomRatesConfig.map((rateCfg, idx) => {
+          const costInr = (fallbackHotel.baseRateInr || 9000) * rateCfg.rateMultiplier;
+          const serverCalculation = calculateQuoteOnServer(
+            {
+              supplierNetCostInr: costInr,
+              localTaxGbp: fallbackHotel.localTaxGbp || 15.00,
+              flightFareGbp,
+            },
+            totalAdults
+          );
+
+          return {
+            rateKey: `RATE-${code}-${idx + 1}`,
+            roomCode: `RM-${code}-00${idx + 1}`,
+            roomType: rateCfg.roomType,
+            boardBasis: rateCfg.boardBasis,
+            boardingDetails: [rateCfg.boardBasis],
+            otherInclusions: ["Free High-speed Wi-Fi", "Air Conditioning"],
+            cancellationPolicy: rateCfg.cancellationPolicy,
+            isNonRefundable: rateCfg.isNonRefundable,
+            serverCalculation,
+            customerPricing: sanitizePricingForClient(serverCalculation),
+          };
+        });
 
     const leadPricing = availableRates[0].customerPricing;
 
@@ -1239,14 +1316,17 @@ export async function searchGrnHotels(
     results.push({
       hotelCode: code,
       hotelName: finalName,
-      starRating: apiHotel?.category ? Math.round(apiHotel.category) : fallbackHotel.starRating,
+      starRating: apiHotel?.category ? Math.round(Number(apiHotel.category)) : fallbackHotel.starRating,
       address: finalAddress,
       city: finalCity,
       country: finalCountry,
       description: apiHotel?.description || fallbackHotel.description,
-      facilities: apiHotel?.facilities ? apiHotel.facilities.split(";").map((s: string) => s.trim()).filter(Boolean) : fallbackHotel.facilities,
+      facilities: apiHotel?.facilities
+        ? (typeof apiHotel.facilities === "string" ? apiHotel.facilities.split(/[,;]/).map((s: string) => s.trim()).filter(Boolean) : apiHotel.facilities)
+        : fallbackHotel.facilities,
       mainImage: resolvedImage,
       galleryImages: fallbackHotel.galleryImages,
+      geolocation: resolvedGeo,
       availableRates,
       leadPricing,
     });

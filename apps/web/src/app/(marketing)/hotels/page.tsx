@@ -46,6 +46,10 @@ interface HotelResult {
   facilities: string[];
   mainImage: string;
   galleryImages: string[];
+  geolocation?: {
+    latitude: number;
+    longitude: number;
+  } | null;
   availableRates: {
     rateKey: string;
     roomCode: string;
@@ -92,7 +96,24 @@ const BOARD_OPTIONS = [
   "All Inclusive",
 ];
 
-const PROPERTY_TYPE_OPTIONS = ["Hotel", "Resort", "Aparthotel", "Villa"];
+const PROPERTY_TYPE_OPTIONS = [
+  "service apartment",
+  "homestay",
+  "resort",
+  "hotel",
+  "villa",
+];
+
+const POPULAR_FILTER_OPTIONS = [
+  "Couple Friendly",
+  "Pay At Hotel",
+  "Leisure",
+  "Free Cancellation",
+  "Breakfast Included",
+  "Swimming Pool",
+  "Beachfront",
+  "Family Friendly",
+];
 
 const FACILITY_OPTIONS = [
   "Pool",
@@ -149,6 +170,9 @@ function HotelsPageContent() {
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
   const [selectedHolidayTypes, setSelectedHolidayTypes] = useState<string[]>([]);
+  const [selectedPopularFilters, setSelectedPopularFilters] = useState<string[]>([]);
+  const [showAllPropertyTypes, setShowAllPropertyTypes] = useState<boolean>(false);
+  const [locationSearchQuery, setLocationSearchQuery] = useState<string>("");
   const [keyword, setKeyword] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("recommended");
 
@@ -189,6 +213,7 @@ function HotelsPageContent() {
   const [draftPropertyTypes, setDraftPropertyTypes] = useState<string[]>([]);
   const [draftFacilities, setDraftFacilities] = useState<string[]>([]);
   const [draftHolidayTypes, setDraftHolidayTypes] = useState<string[]>([]);
+  const [draftPopularFilters, setDraftPopularFilters] = useState<string[]>([]);
 
   const openMobileFilters = () => {
     setDraftStars([...selectedStars]);
@@ -198,6 +223,7 @@ function HotelsPageContent() {
     setDraftPropertyTypes([...selectedPropertyTypes]);
     setDraftFacilities([...selectedFacilities]);
     setDraftHolidayTypes([...selectedHolidayTypes]);
+    setDraftPopularFilters([...selectedPopularFilters]);
     setMobileSheetOpen("filters");
   };
 
@@ -209,6 +235,7 @@ function HotelsPageContent() {
     setSelectedPropertyTypes(draftPropertyTypes);
     setSelectedFacilities(draftFacilities);
     setSelectedHolidayTypes(draftHolidayTypes);
+    setSelectedPopularFilters(draftPopularFilters);
     setMobileSheetOpen(null);
     scrollToResults();
   };
@@ -221,6 +248,19 @@ function HotelsPageContent() {
     setDraftPropertyTypes([]);
     setDraftFacilities([]);
     setDraftHolidayTypes([]);
+    setDraftPopularFilters([]);
+  };
+
+  const togglePopularFilter = (filter: string) => {
+    setSelectedPopularFilters((prev) =>
+      prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter]
+    );
+  };
+
+  const toggleDraftPopularFilter = (filter: string) => {
+    setDraftPopularFilters((prev) =>
+      prev.includes(filter) ? prev.filter((f) => f !== filter) : [...prev, filter]
+    );
   };
 
   const toggleDraftStar = (stars: number) => {
@@ -273,6 +313,7 @@ function HotelsPageContent() {
     if (selectedPropertyTypes.length > 0) count += selectedPropertyTypes.length;
     if (selectedFacilities.length > 0) count += selectedFacilities.length;
     if (selectedHolidayTypes.length > 0) count += selectedHolidayTypes.length;
+    if (selectedPopularFilters.length > 0) count += selectedPopularFilters.length;
     if (destination !== "all" && destination) count += 1;
     return count;
   }, [
@@ -283,6 +324,7 @@ function HotelsPageContent() {
     selectedPropertyTypes,
     selectedFacilities,
     selectedHolidayTypes,
+    selectedPopularFilters,
     destination,
   ]);
 
@@ -459,6 +501,17 @@ function HotelsPageContent() {
     return list;
   }, [activeDestinations]);
 
+  const filteredLocationOptions = useMemo(() => {
+    if (!locationSearchQuery.trim()) return destinationOptions;
+    const q = locationSearchQuery.toLowerCase();
+    return destinationOptions.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(q) ||
+        (opt.subtitle && opt.subtitle.toLowerCase().includes(q)) ||
+        (opt.searchTerms && opt.searchTerms.some((t) => t.toLowerCase().includes(q)))
+    );
+  }, [destinationOptions, locationSearchQuery]);
+
   // Execute Hotel Search & Availability API (Hotels Only)
   useEffect(() => {
     let isCancelled = false;
@@ -553,10 +606,12 @@ function HotelsPageContent() {
     setSelectedPropertyTypes([]);
     setSelectedFacilities([]);
     setSelectedHolidayTypes([]);
+    setSelectedPopularFilters([]);
     setKeyword("");
     setDestination("all");
     setCheckIn("");
     setCheckOut("");
+    resetDraftFilters();
   };
 
   // Filter & Sort hotels
@@ -601,26 +656,46 @@ function HotelsPageContent() {
       if (selectedPropertyTypes.length > 0) {
         const combined = `${h.hotelName} ${h.description || ""}`.toLowerCase();
         const matchesType = selectedPropertyTypes.some((type) => {
-          if (type === "Resort") return combined.includes("resort") || combined.includes("palace");
-          if (type === "Aparthotel")
+          const t = type.toLowerCase();
+          if (t === "resort") return combined.includes("resort") || combined.includes("palace");
+          if (t.includes("apartment") || t === "aparthotel" || t.includes("service"))
             return (
               combined.includes("aparthotel") ||
               combined.includes("apartment") ||
               combined.includes("suites") ||
               combined.includes("suite")
             );
-          if (type === "Villa")
+          if (t === "homestay")
+            return combined.includes("homestay") || combined.includes("guest") || combined.includes("house");
+          if (t === "villa")
             return combined.includes("villa") || combined.includes("chalet") || combined.includes("bungalow");
-          if (type === "Hotel") {
+          if (t === "hotel") {
             return (
               combined.includes("hotel") ||
               combined.includes("boutique") ||
-              (!combined.includes("villa") && !combined.includes("aparthotel"))
+              (!combined.includes("villa") && !combined.includes("apartment"))
             );
           }
           return false;
         });
         if (!matchesType) return false;
+      }
+
+      // 4b. Popular Filters (Couple Friendly, Pay At Hotel, Leisure, Free Cancellation, etc.)
+      if (selectedPopularFilters.length > 0) {
+        const popCombined = `${(h.facilities || []).join(" ")} ${h.description || ""} ${h.hotelName}`.toLowerCase();
+        const matchesAllPop = selectedPopularFilters.every((pf) => {
+          if (pf === "Couple Friendly") return popCombined.includes("couple") || popCombined.includes("romantic") || popCombined.includes("adult");
+          if (pf === "Pay At Hotel") return true;
+          if (pf === "Leisure") return popCombined.includes("leisure") || popCombined.includes("resort") || popCombined.includes("pool") || popCombined.includes("spa");
+          if (pf === "Free Cancellation") return h.availableRates?.some(r => !r.cancellationPolicy?.toLowerCase().includes("non-refundable"));
+          if (pf === "Breakfast Included") return h.availableRates?.some(r => r.boardBasis?.toLowerCase().includes("breakfast") || r.boardBasis?.toLowerCase().includes("all inclusive"));
+          if (pf === "Swimming Pool") return popCombined.includes("pool");
+          if (pf === "Beachfront") return popCombined.includes("beach") || popCombined.includes("sea") || popCombined.includes("coastal");
+          if (pf === "Family Friendly") return popCombined.includes("family") || popCombined.includes("kid") || popCombined.includes("children");
+          return false;
+        });
+        if (!matchesAllPop) return false;
       }
 
       // 5. Facilities (Multi-select)
@@ -759,6 +834,7 @@ function HotelsPageContent() {
     selectedPropertyTypes,
     selectedFacilities,
     selectedHolidayTypes,
+    selectedPopularFilters,
     keyword,
     sortBy,
     nights,
@@ -782,15 +858,32 @@ function HotelsPageContent() {
       if (draftPropertyTypes.length > 0) {
         const combined = `${h.hotelName} ${h.description || ""}`.toLowerCase();
         const matchesType = draftPropertyTypes.some((type) => {
-          if (type === "Resort") return combined.includes("resort") || combined.includes("palace");
-          if (type === "Aparthotel")
+          const t = type.toLowerCase();
+          if (t === "resort") return combined.includes("resort") || combined.includes("palace");
+          if (t.includes("apartment") || t === "aparthotel" || t.includes("service"))
             return combined.includes("apartment") || combined.includes("aparthotel") || combined.includes("suite");
-          if (type === "Villa")
-            return combined.includes("villa") || combined.includes("bungalow");
-          if (type === "Hotel") return !combined.includes("apartment") && !combined.includes("villa");
+          if (t === "homestay")
+            return combined.includes("homestay") || combined.includes("guest") || combined.includes("house");
+          if (t === "villa") return combined.includes("villa") || combined.includes("bungalow");
+          if (t === "hotel") return !combined.includes("apartment") && !combined.includes("villa");
           return false;
         });
         if (!matchesType) return false;
+      }
+      if (draftPopularFilters.length > 0) {
+        const popCombined = `${(h.facilities || []).join(" ")} ${h.description || ""} ${h.hotelName}`.toLowerCase();
+        const matchesAllPop = draftPopularFilters.every((pf) => {
+          if (pf === "Couple Friendly") return popCombined.includes("couple") || popCombined.includes("romantic") || popCombined.includes("adult");
+          if (pf === "Pay At Hotel") return true;
+          if (pf === "Leisure") return popCombined.includes("leisure") || popCombined.includes("resort") || popCombined.includes("pool") || popCombined.includes("spa");
+          if (pf === "Free Cancellation") return h.availableRates?.some(r => !r.cancellationPolicy?.toLowerCase().includes("non-refundable"));
+          if (pf === "Breakfast Included") return h.availableRates?.some(r => r.boardBasis?.toLowerCase().includes("breakfast") || r.boardBasis?.toLowerCase().includes("all inclusive"));
+          if (pf === "Swimming Pool") return popCombined.includes("pool");
+          if (pf === "Beachfront") return popCombined.includes("beach") || popCombined.includes("sea") || popCombined.includes("coastal");
+          if (pf === "Family Friendly") return popCombined.includes("family") || popCombined.includes("kid") || popCombined.includes("children");
+          return false;
+        });
+        if (!matchesAllPop) return false;
       }
       if (draftFacilities.length > 0) {
         const facs = (h.facilities || []).map((f) => f.toLowerCase());
@@ -822,6 +915,7 @@ function HotelsPageContent() {
     draftMaxPrice,
     draftBoards,
     draftPropertyTypes,
+    draftPopularFilters,
     draftFacilities,
     draftHolidayTypes,
     nights,
@@ -1114,50 +1208,59 @@ function HotelsPageContent() {
 
         {/* MOBILE STICKY FILTER PILLS BAR (Image 1: Reset, Location, Sort By, Filters) */}
         <div className="lg:hidden sticky top-0 sm:top-14 z-30 bg-white/95 backdrop-blur-md -mx-4 px-4 py-2.5 border-b border-gray-200 shadow-2xs mt-4">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
-            {/* RESET BUTTON (Red pill, Image 1) */}
+          <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-0.5">
+            {/* RESET BUTTON (Pink/Red pill, Image 1) */}
             <button
               type="button"
               onClick={handleClearAll}
-              className="shrink-0 px-4 py-1.5 rounded-xl font-bold text-xs sm:text-sm bg-[#FEE2E2] text-[#991B1B] border border-[#FCA5A5]/60 hover:bg-[#FECACA] transition-colors cursor-pointer"
+              className="shrink-0 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm bg-[#ffdada] text-[#7d121e] border border-rose-200/70 hover:bg-[#ffc5c8] transition-colors cursor-pointer"
             >
               Reset
             </button>
 
-            {/* LOCATION PILL (Image 1) */}
+            {/* LOCATION PILL (White pill with light blue border, Image 1) */}
             <button
               type="button"
-              onClick={() => setMobileSheetOpen("location")}
-              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
+              onClick={() => {
+                setLocationSearchQuery("");
+                setMobileSheetOpen("location");
+              }}
+              className={`shrink-0 px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
                 destination && destination !== "all"
-                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
-                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
+                  ? "border-blue-400 bg-blue-50/50 text-[#1D1248] font-bold"
+                  : "border-blue-200 bg-white text-gray-900 hover:border-blue-300"
               }`}
             >
-              <span>{destination && destination !== "all" ? (destination.charAt(0).toUpperCase() + destination.slice(1)) : "Location"}</span>
+              <span>Location</span>
+              {destination && destination !== "all" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block ml-1.5 align-middle" />
+              )}
             </button>
 
-            {/* SORT BY PILL (Image 1 - Restored for Mobile) */}
+            {/* SORT BY PILL (White pill with light blue border, Image 1 - Restored for Mobile) */}
             <button
               type="button"
               onClick={() => setMobileSheetOpen("sort")}
-              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
+              className={`shrink-0 px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm border transition-all cursor-pointer ${
                 sortBy !== "recommended"
-                  ? "border-[#1D1248] bg-[#1D1248]/5 text-[#1D1248] font-bold"
-                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
+                  ? "border-blue-400 bg-blue-50/50 text-[#1D1248] font-bold"
+                  : "border-blue-200 bg-white text-gray-900 hover:border-blue-300"
               }`}
             >
               <span>Sort By</span>
+              {sortBy !== "recommended" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block ml-1.5 align-middle" />
+              )}
             </button>
 
-            {/* FILTERS PILL (Image 1) */}
+            {/* FILTERS PILL (White pill with light blue border, Image 1) */}
             <button
               type="button"
               onClick={openMobileFilters}
-              className={`shrink-0 px-4 py-1.5 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`shrink-0 px-4 py-2 rounded-xl font-semibold text-xs sm:text-sm border transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeFiltersCount > 0
                   ? "border-[#F7941D] bg-amber-50 text-[#1D1248] font-bold"
-                  : "border-blue-200 bg-white text-gray-800 hover:border-blue-300"
+                  : "border-blue-200 bg-white text-gray-900 hover:border-blue-300"
               }`}
             >
               <span>Filters</span>
@@ -1569,9 +1672,32 @@ function HotelsPageContent() {
                         <h3 className="text-xl sm:text-2xl font-extrabold text-[#1D1248] group-hover:text-[#F7941D] transition-colors">
                           {hotel.hotelName}
                         </h3>
-                        <p className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 font-medium">
-                          <FaMapMarkerAlt className="text-[#F7941D]" /> {hotel.address}
-                        </p>
+                        <div className="flex items-center gap-2 flex-wrap mt-1">
+                          <p className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                            <FaMapMarkerAlt className="text-[#F7941D]" /> {hotel.address}
+                          </p>
+                          {hotel.geolocation && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200/80 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+                              <FaMapMarkerAlt className="text-blue-600 text-[9px]" /> Map
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Live Board Basis & Cancellation Badges */}
+                        {(hotel.availableRates?.[0]?.boardBasis || hotel.availableRates?.[0]?.cancellationPolicy) && (
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                            {hotel.availableRates?.[0]?.boardBasis && (
+                              <span className="rounded-lg bg-amber-50 border border-amber-200 px-2 py-0.5 text-[11px] font-bold text-[#1D1248] flex items-center gap-1">
+                                🍽️ {hotel.availableRates[0].boardBasis}
+                              </span>
+                            )}
+                            {hotel.availableRates?.[0]?.cancellationPolicy && (
+                              <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+                                ✓ {hotel.availableRates[0].cancellationPolicy}
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         <p className="mt-3 text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
                           {hotel.description}
@@ -1650,26 +1776,26 @@ function HotelsPageContent() {
             {/* Bottom Sheet Card */}
             <div
               className={`relative z-10 w-full ${
-                mobileSheetOpen === "location" ? "h-[82vh] min-h-[560px]" : "max-h-[88vh]"
-              } bg-white rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-250`}
+                mobileSheetOpen === "location" ? "h-[90vh]" : "max-h-[90vh]"
+              } bg-white rounded-t-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-250 overflow-hidden`}
             >
               {/* Drag Handle Bar */}
-              <div className="pt-2.5 pb-1 flex justify-center cursor-pointer" onClick={() => setMobileSheetOpen(null)}>
-                <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+              <div className="pt-3 pb-1.5 flex justify-center cursor-pointer" onClick={() => setMobileSheetOpen(null)}>
+                <div className="w-12 h-1 bg-gray-300 rounded-full" />
               </div>
 
               {/* SHEET HEADER */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setMobileSheetOpen(null)}
-                    className="p-1.5 -ml-1.5 text-gray-700 hover:text-gray-900 rounded-full hover:bg-gray-100 cursor-pointer"
+                    className="p-1 -ml-1 text-gray-800 hover:text-black rounded-full hover:bg-gray-100 cursor-pointer"
                     aria-label="Back"
                   >
                     <FaArrowLeft className="text-base" />
                   </button>
-                  <h3 className="text-base sm:text-lg font-black text-gray-900 capitalize">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-950 capitalize">
                     {mobileSheetOpen === "filters"
                       ? "Filters"
                       : mobileSheetOpen === "sort"
@@ -1677,55 +1803,47 @@ function HotelsPageContent() {
                       : "Location"}
                   </h3>
                 </div>
-
-                <div className="flex items-center gap-2">
+                {mobileSheetOpen === "location" && destination && destination !== "all" && (
                   <button
                     type="button"
-                    onClick={mobileSheetOpen === "filters" ? resetDraftFilters : handleClearAll}
-                    className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer px-2 py-1"
+                    onClick={() => {
+                      setDestination("all");
+                      setMobileSheetOpen(null);
+                    }}
+                    className="text-xs font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
                   >
-                    Reset
+                    Clear
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setMobileSheetOpen(null)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 cursor-pointer"
-                    aria-label="Close"
-                  >
-                    <FaTimes className="text-sm" />
-                  </button>
-                </div>
+                )}
               </div>
 
               {/* SHEET BODY (Scrollable) */}
               <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
                 {mobileSheetOpen === "filters" && (
                   <>
-                    {/* 1. PROPERTY TYPE (Draft Chips) */}
+                    {/* 1. PROPERTY TYPE (Image 2: Property Type with See All and Pills) */}
                     <div>
                       <div className="flex items-center justify-between mb-2.5">
-                        <h4 className="text-sm font-bold text-gray-900">Property Type</h4>
-                        {draftPropertyTypes.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setDraftPropertyTypes([])}
-                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
+                        <h4 className="text-sm font-semibold text-gray-900">Property Type</h4>
+                        <button
+                          type="button"
+                          onClick={() => setShowAllPropertyTypes(!showAllPropertyTypes)}
+                          className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                        >
+                          {showAllPropertyTypes ? "Show Less" : "See All"}
+                        </button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {PROPERTY_TYPE_OPTIONS.map((type) => {
+                        {(showAllPropertyTypes ? PROPERTY_TYPE_OPTIONS : PROPERTY_TYPE_OPTIONS.slice(0, 3)).map((type) => {
                           const isSelected = draftPropertyTypes.includes(type);
                           return (
                             <button
                               key={type}
                               type="button"
                               onClick={() => toggleDraftPropertyType(type)}
-                              className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                              className={`px-4 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer ${
                                 isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  ? "bg-[#1652A2] text-white border-[#1652A2] shadow-xs"
                                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                               }`}
                             >
@@ -1736,93 +1854,44 @@ function HotelsPageContent() {
                       </div>
                     </div>
 
-                    <div className="border-b border-gray-150" />
+                    <div className="border-b border-gray-200" />
 
-                    {/* 2. STAR RATING (Draft Chips) */}
+                    {/* 2. POPULAR FILTER (Image 2: Popular Filter with Pills) */}
                     <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h4 className="text-sm font-bold text-gray-900">Hotel Rating</h4>
-                        {draftStars.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setDraftStars([])}
-                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2.5">Popular Filter</h4>
                       <div className="flex flex-wrap gap-2">
-                        {STAR_OPTIONS.map((stars) => {
-                          const isSelected = draftStars.includes(stars);
+                        {POPULAR_FILTER_OPTIONS.map((filter) => {
+                          const isSelected = draftPopularFilters.includes(filter);
                           return (
                             <button
-                              key={stars}
+                              key={filter}
                               type="button"
-                              onClick={() => toggleDraftStar(stars)}
-                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
+                              onClick={() => toggleDraftPopularFilter(filter)}
+                              className={`px-4 py-2 rounded-full text-xs font-medium border transition-all cursor-pointer ${
                                 isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  ? "bg-[#1652A2] text-white border-[#1652A2] shadow-xs"
                                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                               }`}
                             >
-                              <span>{stars}</span>
-                              <FaStar className="text-amber-400 text-xs" />
+                              {filter}
                             </button>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="border-b border-gray-150" />
+                    <div className="border-b border-gray-200" />
 
-                    {/* 3. BOARD BASIS (Draft Chips) */}
+                    {/* 3. PRICE FILTER (Image 2: Price Filter Dual/Range Slider) */}
                     <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h4 className="text-sm font-bold text-gray-900">Board Basis</h4>
-                        {draftBoards.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setDraftBoards([])}
-                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {BOARD_OPTIONS.map((board) => {
-                          const isSelected = draftBoards.includes(board);
-                          return (
-                            <button
-                              key={board}
-                              type="button"
-                              onClick={() => toggleDraftBoard(board)}
-                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                                isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
-                                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                              }`}
-                            >
-                              {board}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="border-b border-gray-150" />
-
-                    {/* 4. PRICE FILTER (Draft Dual Slider) */}
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 mb-1">Price Filter</h4>
-                      <p className="text-xs font-bold text-[#F7941D] mb-3">
-                        £{draftMinPrice} - {draftMaxPrice >= 500 ? "£500+" : `£${draftMaxPrice}`} per night
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">Price Filter</h4>
+                      <p className="text-sm font-bold text-gray-900 mb-3">
+                        £ {draftMinPrice} - {draftMaxPrice >= 500 ? "£ 500+" : `£ ${draftMaxPrice}`}
                       </p>
                       <div className="relative pt-2 pb-2 px-1">
                         <div className="relative w-full h-1.5 bg-gray-200 rounded-full">
                           <div
-                            className="absolute h-1.5 bg-[#F7941D] rounded-full"
+                            className="absolute h-1.5 bg-[#1652A2] rounded-full"
                             style={{
                               left: `${((draftMinPrice - 50) / 450) * 100}%`,
                               right: `${100 - ((draftMaxPrice - 50) / 450) * 100}%`,
@@ -1858,88 +1927,67 @@ function HotelsPageContent() {
                           aria-label="Maximum price per night"
                         />
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-[#F7941D] bg-white pointer-events-none shadow-xs"
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-white bg-[#1652A2] pointer-events-none shadow-md"
                           style={{ left: `calc(${((draftMinPrice - 50) / 450) * 100}% + 4px)` }}
                         />
                         <div
-                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#F7941D] border-2 border-[#F7941D] pointer-events-none shadow-xs"
+                          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-white bg-[#1652A2] pointer-events-none shadow-md"
                           style={{ left: `calc(${((draftMaxPrice - 50) / 450) * 100}% + 4px)` }}
                         />
                       </div>
-                      <div className="flex justify-between items-center text-xs font-semibold text-gray-500 mt-2">
+                      <div className="flex justify-between items-center text-xs font-semibold text-gray-400 mt-2">
                         <span>£50</span>
                         <span>£500+</span>
                       </div>
                     </div>
 
-                    <div className="border-b border-gray-150" />
+                    <div className="border-b border-gray-200" />
 
-                    {/* 5. POPULAR FACILITIES (Draft Chips) */}
+                    {/* 4. HOTEL RATING (Draft Chips) */}
                     <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h4 className="text-sm font-bold text-gray-900">Popular Facilities</h4>
-                        {draftFacilities.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setDraftFacilities([])}
-                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2.5">Hotel Rating</h4>
                       <div className="flex flex-wrap gap-2">
-                        {FACILITY_OPTIONS.map((facility) => {
-                          const isSelected = draftFacilities.includes(facility);
+                        {STAR_OPTIONS.map((stars) => {
+                          const isSelected = draftStars.includes(stars);
                           return (
                             <button
-                              key={facility}
+                              key={stars}
                               type="button"
-                              onClick={() => toggleDraftFacility(facility)}
-                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                              onClick={() => toggleDraftStar(stars)}
+                              className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer ${
                                 isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  ? "bg-[#1652A2] text-white border-[#1652A2] shadow-xs"
                                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                               }`}
                             >
-                              {facility}
+                              <span>{stars}</span>
+                              <FaStar className="text-amber-400 text-xs" />
                             </button>
                           );
                         })}
                       </div>
                     </div>
 
-                    <div className="border-b border-gray-150" />
+                    <div className="border-b border-gray-200" />
 
-                    {/* 6. HOLIDAY TYPE (Draft Chips) */}
+                    {/* 5. BOARD BASIS (Draft Chips) */}
                     <div>
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h4 className="text-sm font-bold text-gray-900">Holiday Type</h4>
-                        {draftHolidayTypes.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setDraftHolidayTypes([])}
-                            className="text-xs text-[#F7941D] font-semibold cursor-pointer"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-2.5">Board Basis</h4>
                       <div className="flex flex-wrap gap-2">
-                        {HOLIDAY_TYPE_OPTIONS.map((ht) => {
-                          const isSelected = draftHolidayTypes.includes(ht);
+                        {BOARD_OPTIONS.map((board) => {
+                          const isSelected = draftBoards.includes(board);
                           return (
                             <button
-                              key={ht}
+                              key={board}
                               type="button"
-                              onClick={() => toggleDraftHolidayType(ht)}
+                              onClick={() => toggleDraftBoard(board)}
                               className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
                                 isSelected
-                                  ? "bg-[#1D1248] text-white border-[#1D1248] shadow-xs"
+                                  ? "bg-[#1652A2] text-white border-[#1652A2] shadow-xs"
                                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                               }`}
                             >
-                              {ht}
+                              {board}
                             </button>
                           );
                         })}
@@ -1963,7 +2011,7 @@ function HotelsPageContent() {
                           }}
                           className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
                             isSelected
-                              ? "border-[#F7941D] bg-amber-50/60 text-[#1D1248]"
+                              ? "border-[#1652A2] bg-blue-50/70 text-[#071a55] font-bold"
                               : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
                           }`}
                         >
@@ -1971,44 +2019,79 @@ function HotelsPageContent() {
                             <div className="font-bold text-sm">{opt.label}</div>
                             {opt.subtitle && <div className="text-xs text-gray-400 mt-0.5">{opt.subtitle}</div>}
                           </div>
-                          {isSelected && <FaCheck className="text-[#F7941D] text-sm shrink-0" />}
+                          {isSelected && <FaCheck className="text-[#1652A2] text-sm shrink-0" />}
                         </button>
                       );
                     })}
                   </div>
                 )}
 
-                {/* LOCATION SHEET CONTENT (Increased height with pb-64 for dropdown visibility) */}
+                {/* LOCATION SHEET CONTENT (Height increased to 90vh with search and full scrollable list) */}
                 {mobileSheetOpen === "location" && (
-                  <div className="space-y-4 pb-64">
-                    <div>
-                      <label className="text-xs font-bold text-gray-700 block mb-2">Search Destination</label>
-                      <SearchableSelect
-                        options={destinationOptions}
-                        value={destination}
-                        onChange={(val) => {
-                          setDestination(val);
-                          setMobileSheetOpen(null);
-                        }}
+                  <div className="space-y-3 pb-8">
+                    <div className="relative">
+                      <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                      <input
+                        type="text"
                         placeholder="Search country or city..."
-                        triggerClassName="bg-gray-50 border-gray-300 py-3"
+                        value={locationSearchQuery}
+                        onChange={(e) => setLocationSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:border-[#1652A2] focus:bg-white transition-all font-medium"
                       />
+                    </div>
+
+                    <div className="space-y-1.5 mt-2">
+                      {filteredLocationOptions.map((opt) => {
+                        const isSelected = destination === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setDestination(opt.value);
+                              setMobileSheetOpen(null);
+                            }}
+                            className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-[#1652A2] bg-blue-50/70 text-[#071a55] font-bold"
+                                : "border-gray-100 bg-white hover:bg-gray-50 text-gray-800"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                  isSelected ? "bg-[#1652A2] text-white" : "bg-gray-100 text-gray-500"
+                                }`}
+                              >
+                                <FaMapMarkerAlt className="text-xs" />
+                              </div>
+                              <div>
+                                <div className="font-bold text-sm text-gray-900">{opt.label}</div>
+                                {opt.subtitle && (
+                                  <div className="text-xs text-gray-500 mt-0.5">{opt.subtitle}</div>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && <FaCheck className="text-[#1652A2] text-sm shrink-0" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* SHEET FOOTER: SUBMIT BUTTON (Only applied on click, mobile section only) */}
+              {/* SHEET FOOTER: PINNED FULL-WIDTH SUBMIT BUTTON (Image 2: Edge-to-edge SUBMIT button) */}
               {mobileSheetOpen === "filters" && (
-                <div className="p-4 border-t border-gray-200 bg-white">
+                <div className="w-full bg-[#1652A2] hover:bg-[#124285] transition-colors shrink-0">
                   <button
                     type="button"
                     onClick={applyMobileFilters}
-                    className="w-full py-3.5 px-6 rounded-xl bg-[#1D4ED8] hover:bg-[#1E40AF] active:scale-[0.99] text-white font-extrabold text-sm uppercase tracking-wider shadow-md cursor-pointer transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 text-white font-black text-sm uppercase tracking-wider cursor-pointer flex items-center justify-center gap-2"
                   >
-                    SUBMIT
+                    <span>SUBMIT</span>
                     {draftFilteredHotelsCount > 0 && (
-                      <span className="text-xs font-medium opacity-90 normal-case">
+                      <span className="text-xs font-normal opacity-90 normal-case">
                         ({draftFilteredHotelsCount} {draftFilteredHotelsCount === 1 ? "Property" : "Properties"})
                       </span>
                     )}
