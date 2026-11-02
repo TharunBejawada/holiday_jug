@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import HotelLandingClient from "./HotelLandingClient";
 import { SANDBOX_HOTELS_DATABASE, getKnownHotel } from "@/lib/grn-client";
 
@@ -33,10 +32,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function HotelLandingPage({ params, searchParams }: PageProps) {
-  // Restricted: Hotel details landing page UI functionality is temporarily disabled as requested
-  redirect("/hotels");
-
-  /* Future re-enablement:
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
@@ -54,6 +49,5 @@ export default async function HotelLandingPage({ params, searchParams }: PagePro
       />
     </Suspense>
   );
-  */
 }
 

@@ -1526,105 +1526,114 @@ function HotelsPageContent() {
                 </button>
               </div>
             ) : (
-              filteredHotels.map((hotel) => (
-                <div
-                  key={hotel.hotelCode}
-                  className="group flex flex-col md:flex-row overflow-hidden rounded-3xl bg-white border border-gray-100/90 shadow-md hover:shadow-xl transition-all duration-300"
-                >
-                  {/* HOTEL IMAGE */}
-                  <div className="relative w-full md:w-[38%] h-56 md:h-auto overflow-hidden shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={hotel.mainImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"}
-                      alt={hotel.hotelName}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-xs px-2.5 py-1 text-xs font-bold text-amber-300">
-                      {Array.from({ length: hotel.starRating }).map((_, i) => (
-                        <FaStar key={i} />
-                      ))}
-                    </div>
-                  </div>
+              filteredHotels.map((hotel) => {
+                const detailsUrl = `/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(destination || hotel.city || "")}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(rooms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`;
 
-                  {/* DETAILS & PRICING */}
-                  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#1D1248]">
-                        {hotel.hotelName}
-                      </h3>
-                      <p className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 font-medium">
-                        <FaMapMarkerAlt className="text-[#F7941D]" /> {hotel.address}
-                      </p>
-
-                      <p className="mt-3 text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                        {hotel.description}
-                      </p>
-
-                      {/* FACILITIES */}
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {hotel.facilities.slice(0, 4).map((f, i) => (
-                          <span
-                            key={i}
-                            className="rounded-lg bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
-                          >
-                            {f}
-                          </span>
+                return (
+                  <div
+                    key={hotel.hotelCode}
+                    onClick={() => router.push(detailsUrl)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(detailsUrl);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View details for ${hotel.hotelName}`}
+                    className="group flex flex-col md:flex-row overflow-hidden rounded-3xl bg-white border border-gray-100/90 shadow-md hover:shadow-xl hover:border-[#1D1248]/30 transition-all duration-300 cursor-pointer focus:outline-hidden focus:ring-2 focus:ring-[#F7941D]/50"
+                  >
+                    {/* HOTEL IMAGE */}
+                    <div className="relative w-full md:w-[38%] h-56 md:h-auto overflow-hidden shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={hotel.mainImage || "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80"}
+                        alt={hotel.hotelName}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80";
+                        }}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-xs px-2.5 py-1 text-xs font-bold text-amber-300">
+                        {Array.from({ length: hotel.starRating }).map((_, i) => (
+                          <FaStar key={i} />
                         ))}
                       </div>
                     </div>
 
-                    {/* BOTTOM ROW: PRICE CHECK & ACTIONS */}
-                    <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+                    {/* DETAILS & PRICING */}
+                    <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
                       <div>
-                        <div className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 mb-1">
-                          <FaClock className="text-gray-400" />
-                          <span>Price checked at {priceCheckedAt || "12:00"} UK</span>
-                        </div>
-                        <div className="text-xs text-gray-600 font-medium">
-                          <span>Local taxes included: </span>
-                          <strong className="text-gray-800">
-                            £{hotel.leadPricing.localTax.toFixed(2)}
-                          </strong>
+                        <h3 className="text-xl sm:text-2xl font-extrabold text-[#1D1248] group-hover:text-[#F7941D] transition-colors">
+                          {hotel.hotelName}
+                        </h3>
+                        <p className="flex items-center gap-1.5 text-xs text-gray-500 mt-1 font-medium">
+                          <FaMapMarkerAlt className="text-[#F7941D]" /> {hotel.address}
+                        </p>
+
+                        <p className="mt-3 text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                          {hotel.description}
+                        </p>
+
+                        {/* FACILITIES */}
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {hotel.facilities.slice(0, 4).map((f, i) => (
+                            <span
+                              key={i}
+                              className="rounded-lg bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-700"
+                            >
+                              {f}
+                            </span>
+                          ))}
                         </div>
                       </div>
 
-                      <div className="text-left sm:text-right w-full sm:w-auto flex flex-col items-start sm:items-end">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-xs text-gray-400 font-medium">From</span>
-                          <span className="text-2xl sm:text-3xl font-black text-[#F7941D]">
-                            £{hotel.leadPricing.totalPrice.toFixed(2)}
-                          </span>
+                      {/* BOTTOM ROW: PRICE CHECK & ACTIONS */}
+                      <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 mb-1">
+                            <FaClock className="text-gray-400" />
+                            <span>Price checked at {priceCheckedAt || "12:00"} UK</span>
+                          </div>
+                          <div className="text-xs text-gray-600 font-medium">
+                            <span>Local taxes included: </span>
+                            <strong className="text-gray-800">
+                              £{hotel.leadPricing.localTax.toFixed(2)}
+                            </strong>
+                          </div>
                         </div>
-                        <span className="text-[11px] text-gray-500 font-medium">
-                          £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person ({nights} night{nights > 1 ? "s" : ""}, {rooms.length} {rooms.length === 1 ? "room" : "rooms"})
-                        </span>
 
-                        <div className="mt-3 flex items-center gap-2">
-                          {/* CALL TO BOOK BUTTON */}
-                          <a
-                            href="tel:03301658879"
-                            className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
-                          >
-                            <FaPhoneAlt className="text-[10px]" /> Call to Book
-                          </a>
-                          {/* VIEW DETAILS BUTTON (Temporarily disabled as requested)
-                          <Link
-                            href={`/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(destination || hotel.city || "")}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(rooms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`}
-                            className="rounded-xl border border-[#1D1248] text-[#1D1248] hover:bg-[#1D1248] hover:text-white px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap inline-flex items-center justify-center text-center"
-                          >
-                            View Details
-                          </Link>
-                          */}
+                        <div className="text-left sm:text-right w-full sm:w-auto flex flex-col items-start sm:items-end">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-xs text-gray-400 font-medium">From</span>
+                            <span className="text-2xl sm:text-3xl font-black text-[#F7941D]">
+                              £{hotel.leadPricing.totalPrice.toFixed(2)}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-gray-500 font-medium">
+                            £{hotel.leadPricing.pricePerPerson.toFixed(2)} per person ({nights} night{nights > 1 ? "s" : ""}, {rooms.length} {rooms.length === 1 ? "room" : "rooms"})
+                          </span>
+
+                          <div className="mt-3 flex items-center gap-2">
+                            {/* CALL TO BOOK BUTTON */}
+                            <a
+                              href="tel:03301658879"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
+                            >
+                              <FaPhoneAlt className="text-[10px]" /> Call to Book
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
