@@ -18,6 +18,7 @@ import {
   FiChevronRight,
   FiHeadphones,
   FiDatabase,
+  FiMail,
 } from "react-icons/fi";
 
 const NAV_ITEMS = [
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/admin/master-data", label: "Master Data", icon: FiDatabase },
   { href: "/admin/hotels", label: "Hotels & Inventory", icon: FiHome },
   { href: "/admin/bookings", label: "Quotes & Bookings", icon: FiCalendar },
+  { href: "/admin/inquiries", label: "Messages & Inquiries", icon: FiMail },
   { href: "/admin/destinations", label: "Destinations", icon: FiMapPin },
   { href: "/admin/packages", label: "Packages", icon: FiPackage },
   { href: "/admin/assets", label: "Assets", icon: FiImage },

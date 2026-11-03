@@ -110,15 +110,7 @@ export function TopDestinationsSection({ country }: { country: CountryDetails })
                                 </p>
                             </div>
 
-                            {/* Price Button Badge */}
-                            <div className="pt-2">
-                                <button
-                                    type="button"
-                                    className="w-full bg-[#F7941D] hover:bg-[#e08316] text-white font-bold text-xs sm:text-sm py-2 px-3 rounded-full shadow-2xs transition-colors cursor-default"
-                                >
-                                    From £{dest.priceFrom} pp
-                                </button>
-                            </div>
+
                         </div>
                     ))}
                 </div>

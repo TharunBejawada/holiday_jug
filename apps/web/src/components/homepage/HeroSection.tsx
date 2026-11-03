@@ -29,16 +29,15 @@ interface AdminDestinationItem {
   slug: string;
   name: string;
   region: string;
-  priceFrom?: number | null;
 }
 
 const DEFAULT_ADMIN_DESTINATIONS: AdminDestinationItem[] = [
-  { slug: "turkey", name: "Turkey", region: "Europe", priceFrom: 95 },
-  { slug: "greece", name: "Greece", region: "Europe", priceFrom: 285 },
-  { slug: "dubai", name: "Dubai", region: "Middle East", priceFrom: 548 },
-  { slug: "spain", name: "Spain", region: "Europe", priceFrom: 325 },
-  { slug: "antalya", name: "Antalya", region: "Mediterranean", priceFrom: 878 },
-  { slug: "portugal", name: "Portugal", region: "Europe", priceFrom: 450 },
+  { slug: "turkey", name: "Turkey", region: "Europe" },
+  { slug: "greece", name: "Greece", region: "Europe" },
+  { slug: "dubai", name: "Dubai", region: "Middle East" },
+  { slug: "spain", name: "Spain", region: "Europe" },
+  { slug: "antalya", name: "Antalya", region: "Mediterranean" },
+  { slug: "portugal", name: "Portugal", region: "Europe" },
 ];
 
 export function HeroSection() {
@@ -67,21 +66,24 @@ export function HeroSection() {
   const travellersContainerRef = useRef<HTMLDivElement>(null);
   const [popoverPlacement, setPopoverPlacement] = useState<"down" | "up">("down");
 
-  // Dynamic placement for Travellers & Rooms popover to avoid going under sticky navbar
+  // Dynamic placement for Travellers & Rooms popover based on scrolling and viewport boundaries
   useEffect(() => {
     if (!showTravellersPopover) return;
 
     const calculatePlacement = () => {
       if (!travellersContainerRef.current) return;
       const rect = travellersContainerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
       const navbarHeight = 85; // sticky header is ~80px
       const popoverHeight = 360;
+      const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top - navbarHeight;
 
-      if (spaceAbove < popoverHeight) {
-        setPopoverPlacement("down");
-      } else {
+      // If space below is not enough AND (enough space above OR more space above than below) -> place UP
+      if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
         setPopoverPlacement("up");
+      } else {
+        setPopoverPlacement("down");
       }
     };
 
@@ -123,7 +125,6 @@ export function HeroSection() {
               slug: item.slug,
               name: item.name,
               region: item.region || "Worldwide",
-              priceFrom: item.priceFrom,
             }))
           );
         }
@@ -237,17 +238,13 @@ export function HeroSection() {
     // 3. Admin-published destinations
     adminDestinations.forEach((d) => {
       const match = list.find((existing) => existing.value.toLowerCase() === d.slug.toLowerCase());
-      if (match) {
-        if (d.priceFrom) {
-          match.subtitle = `From £${d.priceFrom} pp • ${match.subtitle}`;
-        }
-      } else {
+      if (!match) {
         list.push({
           value: d.slug,
           label: `${d.name} (${d.region})`,
-          subtitle: d.priceFrom ? `From £${d.priceFrom} pp • ${d.region}` : d.region,
-          tags: [d.name, d.slug, d.region],
-          searchTerms: [d.name, d.slug, d.region],
+          subtitle: d.region || "Worldwide",
+          tags: [d.name, d.slug, d.region || ""].filter(Boolean),
+          searchTerms: [d.name, d.slug, d.region || ""].filter(Boolean),
         });
       }
     });
@@ -514,7 +511,19 @@ export function HeroSection() {
                   <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Travellers &amp; Rooms <span className="text-red-500">*</span></label>
                   <button
                     type="button"
-                    onClick={() => setShowTravellersPopover(!showTravellersPopover)}
+                    onClick={() => {
+                      if (!showTravellersPopover && travellersContainerRef.current) {
+                        const rect = travellersContainerRef.current.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const spaceAbove = rect.top - 85;
+                        if (spaceBelow < 360 && (spaceAbove >= 360 || spaceAbove > spaceBelow)) {
+                          setPopoverPlacement("up");
+                        } else {
+                          setPopoverPlacement("down");
+                        }
+                      }
+                      setShowTravellersPopover(!showTravellersPopover);
+                    }}
                     className="w-full text-left rounded-xl bg-gray-50/90 px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm text-gray-800 border border-gray-200 focus:border-[#F7941D] focus:bg-white focus:outline-none transition-all font-semibold flex items-center justify-between cursor-pointer"
                   >
                     <span className="truncate">{travellersSummary}</span>
@@ -525,8 +534,10 @@ export function HeroSection() {
                   {showTravellersPopover && (
                     <div
                       className={`absolute right-0 ${
-                        popoverPlacement === "down" ? "top-full mt-2" : "bottom-full mb-2"
-                      } w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95`}
+                        popoverPlacement === "down"
+                          ? "top-full mt-2 slide-in-from-top-2"
+                          : "bottom-full mb-2 slide-in-from-bottom-2"
+                      } w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in duration-150 max-h-[min(480px,calc(100vh-100px))] overflow-y-auto`}
                     >
                       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                         <span className="font-bold text-sm sm:text-base">Rooms &amp; Guests</span>

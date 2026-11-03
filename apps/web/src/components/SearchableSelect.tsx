@@ -64,12 +64,43 @@ export function SearchableSelect({
   renderOption,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [placement, setPlacement] = useState<"down" | "up">("down");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const instanceId = useId();
+
+  // Dynamic placement based on scroll and screen boundaries
+  const updatePlacement = () => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const navbarHeight = 85;
+    const dropdownHeight = 280;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top - navbarHeight;
+
+    if (spaceBelow < dropdownHeight && (spaceAbove >= dropdownHeight || spaceAbove > spaceBelow)) {
+      setPlacement("up");
+    } else {
+      setPlacement("down");
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    updatePlacement();
+    window.addEventListener("scroll", updatePlacement, { passive: true });
+    window.addEventListener("resize", updatePlacement, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", updatePlacement);
+      window.removeEventListener("resize", updatePlacement);
+    };
+  }, [isOpen]);
 
   // Find the currently selected option
   const selectedOption = useMemo(() => {
@@ -465,8 +496,12 @@ export function SearchableSelect({
         <div
           className={`absolute ${
             align === "right" ? "right-0" : "left-0"
-          } top-full mt-1.5 z-50 w-full min-w-[240px] sm:min-w-[280px] rounded-2xl bg-white shadow-2xl border border-gray-100 p-2 animate-in fade-in slide-in-from-top-2 duration-150 ${menuClassName}`}
-          style={{ maxHeight: "calc(100vh - 200px)" }}
+          } ${
+            placement === "up"
+              ? "bottom-full mb-1.5 slide-in-from-bottom-2"
+              : "top-full mt-1.5 slide-in-from-top-2"
+          } z-50 w-full min-w-[240px] sm:min-w-[280px] rounded-2xl bg-white shadow-2xl border border-gray-100 p-2 animate-in fade-in duration-150 ${menuClassName}`}
+          style={{ maxHeight: "calc(100vh - 120px)" }}
         >
           {/* OPTIONS LIST */}
           <ul

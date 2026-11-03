@@ -12,9 +12,17 @@ import {
   FiHeadphones,
   FiImage,
   FiDatabase,
+  FiMail,
 } from "react-icons/fi";
 
 const QUICK_MODULES = [
+  {
+    href: "/admin/inquiries",
+    label: "Customer Inquiries",
+    description: "Review and respond to messages submitted through the website contact form.",
+    icon: FiMail,
+    color: "text-rose-600 bg-rose-50 border-rose-100",
+  },
   {
     href: "/admin/master-data",
     label: "Master Data Catalog",

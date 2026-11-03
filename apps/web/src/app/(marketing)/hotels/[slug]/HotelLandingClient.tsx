@@ -19,6 +19,7 @@ import {
   FaCheck,
   FaCopy,
   FaArrowRight,
+  FaArrowLeft,
   FaShieldAlt,
   FaTimes,
   FaImages,
@@ -492,6 +493,30 @@ export default function HotelLandingClient({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Back URLs preserving active search filters
+  const backToHotelsUrl = useMemo(() => {
+    const p = new URLSearchParams();
+    if (destination && destination !== "all") p.set("destination", destination);
+    if (checkIn) p.set("checkIn", checkIn);
+    if (checkOut) p.set("checkOut", checkOut);
+    if (totalAdults) p.set("adults", String(totalAdults));
+    if (roomsConfig && roomsConfig.length > 0) p.set("rooms", JSON.stringify(roomsConfig));
+    if (searchId) p.set("searchId", searchId);
+    const q = p.toString();
+    return q ? `/hotels?${q}` : "/hotels";
+  }, [destination, checkIn, checkOut, totalAdults, roomsConfig, searchId]);
+
+  const backToCityUrl = useMemo(() => {
+    const p = new URLSearchParams();
+    p.set("destination", hotel.city.toLowerCase());
+    if (checkIn) p.set("checkIn", checkIn);
+    if (checkOut) p.set("checkOut", checkOut);
+    if (totalAdults) p.set("adults", String(totalAdults));
+    if (roomsConfig && roomsConfig.length > 0) p.set("rooms", JSON.stringify(roomsConfig));
+    if (searchId) p.set("searchId", searchId);
+    return `/hotels?${p.toString()}`;
+  }, [hotel.city, checkIn, checkOut, totalAdults, roomsConfig, searchId]);
+
   // Extras state
   const [extras, setExtras] = useState<ExtraItem[]>([
     {
@@ -803,14 +828,29 @@ export default function HotelLandingClient({
 
         {/* Hero Content Container */}
         <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-20 sm:pb-22 lg:pb-20">
-          {/* Top-Left: Breadcrumb directly inside hero */}
-          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-white/90 font-medium mb-2.5 drop-shadow-sm">
-            <Link href="/hotels" className="hover:text-amber-300 transition-colors">
+          {/* Top-Left: Breadcrumb directly inside hero with Back button */}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-white/90 font-medium mb-2.5 drop-shadow-sm flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.history.length > 1) {
+                  router.back();
+                } else {
+                  router.push(backToHotelsUrl);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-semibold backdrop-blur-xs transition-all cursor-pointer mr-1"
+              title="Return to hotels search results"
+            >
+              <FaArrowLeft className="text-[10px]" />
+              <span>Back</span>
+            </button>
+            <Link href={backToHotelsUrl} className="hover:text-amber-300 transition-colors">
               Hotels
             </Link>
             <span className="text-white/60 text-xs">&gt;</span>
             <Link
-              href={`/hotels?destination=${encodeURIComponent(hotel.city.toLowerCase())}`}
+              href={backToCityUrl}
               className="hover:text-amber-300 transition-colors"
             >
               {hotel.city}
@@ -1002,17 +1042,12 @@ export default function HotelLandingClient({
                       alt="More photos"
                       className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
                     />
-                    {/* Translucent Blue Overlay with dynamic photo count */}
+                    {/* Translucent Blue Overlay with "More Photos" text matching reference image */}
                     <div className="absolute inset-0 bg-[#2573a7]/85 group-hover:bg-[#1f6390]/90 transition-colors flex flex-col items-center justify-center text-center p-1 text-white">
-                      {/* Mobile count (remaining after 2 thumbnails) */}
-                      <span className="sm:hidden text-base font-bold leading-none drop-shadow-sm">
-                        {allImages.length > 2 ? `+${allImages.length - 2}` : "More"}
+                      <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight drop-shadow-sm">
+                        More
                       </span>
-                      {/* Desktop count (remaining after 4 thumbnails) */}
-                      <span className="hidden sm:inline text-lg sm:text-2xl md:text-3xl font-bold leading-none drop-shadow-sm">
-                        {allImages.length > 4 ? `+${allImages.length - 4}` : "More"}
-                      </span>
-                      <span className="text-[10px] sm:text-xs md:text-sm font-medium mt-0.5 sm:mt-1 drop-shadow-sm">
+                      <span className="text-xs sm:text-sm font-semibold tracking-wide mt-0.5 drop-shadow-sm">
                         Photos
                       </span>
                     </div>

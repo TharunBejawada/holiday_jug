@@ -25,6 +25,7 @@ import {
   FaSortAmountDown,
   FaUtensils,
   FaCalendarAlt,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { DatePicker } from "@/components/DatePicker";
@@ -136,6 +137,97 @@ const HOLIDAY_TYPE_OPTIONS = [
   "All Inclusive",
 ];
 
+const SEARCH_STORAGE_KEY = "holidayjug_hotel_search_cache_v1";
+
+interface SavedSearchState {
+  destination: string;
+  checkIn: string;
+  checkOut: string;
+  rooms: RoomConfig[];
+  hotelCode?: string;
+  hotels: HotelResult[];
+  searchId: string;
+  priceCheckedAt: string;
+  selectedStars: number[];
+  minPrice: number;
+  maxPrice: number;
+  selectedBoards: string[];
+  selectedPropertyTypes: string[];
+  selectedFacilities: string[];
+  selectedHolidayTypes: string[];
+  selectedPopularFilters: string[];
+  sortBy: string;
+  keyword: string;
+  hasSearched?: boolean;
+  timestamp: number;
+}
+
+function getStoredSearchState(): SavedSearchState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && Date.now() - (parsed.timestamp || 0) < 1000 * 60 * 60 * 3) {
+      return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+function saveSearchState(state: Partial<SavedSearchState>) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getStoredSearchState() || ({} as any);
+    const updated: SavedSearchState = {
+      ...existing,
+      ...state,
+      timestamp: Date.now(),
+    };
+    sessionStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(updated));
+  } catch {}
+}
+
+function clearStoredSearchState() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+  } catch {}
+}
+
+function updateUrlParams(opts: {
+  destination?: string;
+  checkIn?: string;
+  checkOut?: string;
+  rooms?: RoomConfig[];
+  searchId?: string;
+  stars?: number[];
+  minPrice?: number;
+  maxPrice?: number;
+  boards?: string[];
+  sort?: string;
+}) {
+  if (typeof window === "undefined") return;
+  const p = new URLSearchParams();
+  if (opts.destination && opts.destination !== "all") p.set("destination", opts.destination);
+  if (opts.checkIn) p.set("checkIn", opts.checkIn);
+  if (opts.checkOut) p.set("checkOut", opts.checkOut);
+  if (opts.rooms && opts.rooms.length > 0) {
+    const totalA = opts.rooms.reduce((acc, r) => acc + r.adults, 0);
+    p.set("adults", String(totalA));
+    p.set("rooms", JSON.stringify(opts.rooms));
+  }
+  if (opts.searchId) p.set("searchId", opts.searchId);
+  if (opts.stars && opts.stars.length > 0) p.set("stars", opts.stars.join(","));
+  if (typeof opts.minPrice === "number" && opts.minPrice > 50) p.set("minPrice", String(opts.minPrice));
+  if (typeof opts.maxPrice === "number" && opts.maxPrice < 500) p.set("maxPrice", String(opts.maxPrice));
+  if (opts.boards && opts.boards.length > 0) p.set("boards", opts.boards.join(","));
+  if (opts.sort && opts.sort !== "recommended") p.set("sort", opts.sort);
+
+  const q = p.toString();
+  window.history.replaceState(null, "", q ? `/hotels?${q}` : "/hotels");
+}
+
 function HotelsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -143,6 +235,9 @@ function HotelsPageContent() {
   const initialDestination = destParam && destParam !== "all" ? destParam : "";
   const initialHotelCode = searchParams.get("hotelCode") || "";
   const initialRating = searchParams.get("rating") ? Number(searchParams.get("rating")) : null;
+  const initialStarsParam = searchParams.get("stars")
+    ? searchParams.get("stars")!.split(",").map(Number).filter(Boolean)
+    : [];
   const initialCheckIn = searchParams.get("checkIn") || "";
   const initialCheckOut = searchParams.get("checkOut") || "";
 
@@ -167,19 +262,40 @@ function HotelsPageContent() {
 
   // Filter States
   const [selectedStars, setSelectedStars] = useState<number[]>(
-    initialRating ? [initialRating] : []
+    initialStarsParam.length > 0 ? initialStarsParam : initialRating ? [initialRating] : []
   );
-  const [minPrice, setMinPrice] = useState<number>(50);
-  const [maxPrice, setMaxPrice] = useState<number>(500);
-  const [selectedBoards, setSelectedBoards] = useState<string[]>([]);
-  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
-  const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
-  const [selectedHolidayTypes, setSelectedHolidayTypes] = useState<string[]>([]);
-  const [selectedPopularFilters, setSelectedPopularFilters] = useState<string[]>([]);
+  const [minPrice, setMinPrice] = useState<number>(() => {
+    const p = searchParams.get("minPrice");
+    return p ? Number(p) : 50;
+  });
+  const [maxPrice, setMaxPrice] = useState<number>(() => {
+    const p = searchParams.get("maxPrice");
+    return p ? Number(p) : 500;
+  });
+  const [selectedBoards, setSelectedBoards] = useState<string[]>(() => {
+    const b = searchParams.get("boards");
+    return b ? b.split(",").filter(Boolean) : [];
+  });
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>(() => {
+    const pt = searchParams.get("propertyTypes");
+    return pt ? pt.split(",").filter(Boolean) : [];
+  });
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(() => {
+    const f = searchParams.get("facilities");
+    return f ? f.split(",").filter(Boolean) : [];
+  });
+  const [selectedHolidayTypes, setSelectedHolidayTypes] = useState<string[]>(() => {
+    const ht = searchParams.get("holidayTypes");
+    return ht ? ht.split(",").filter(Boolean) : [];
+  });
+  const [selectedPopularFilters, setSelectedPopularFilters] = useState<string[]>(() => {
+    const pf = searchParams.get("popularFilters");
+    return pf ? pf.split(",").filter(Boolean) : [];
+  });
   const [showAllPropertyTypes, setShowAllPropertyTypes] = useState<boolean>(false);
   const [locationSearchQuery, setLocationSearchQuery] = useState<string>("");
-  const [keyword, setKeyword] = useState<string>("");
-  const [sortBy, setSortBy] = useState<string>("recommended");
+  const [keyword, setKeyword] = useState<string>(() => searchParams.get("keyword") || "");
+  const [sortBy, setSortBy] = useState<string>(() => searchParams.get("sort") || "recommended");
 
   // Travellers & Rooms state
   const [rooms, setRooms] = useState<RoomConfig[]>(defaultRooms);
@@ -189,21 +305,28 @@ function HotelsPageContent() {
   const resultsRef = useRef<HTMLDivElement>(null);
   const [searchVersion, setSearchVersion] = useState(0);
 
-  // Dynamic placement for Travellers & Rooms popover to avoid hiding under sticky navbar
+  // Cache & Mount Tracking
+  const isInitialMount = useRef(true);
+  const hasRestoredFromCache = useRef(false);
+
+  // Dynamic placement for Travellers & Rooms popover based on scrolling and viewport boundaries
   useEffect(() => {
     if (!showTravellersPopover) return;
 
     const calculatePlacement = () => {
       if (!travellersRef.current) return;
       const rect = travellersRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
       const navbarHeight = 85;
       const popoverHeight = 360;
+      const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top - navbarHeight;
 
-      if (spaceAbove < popoverHeight) {
-        setPopoverPlacement("down");
-      } else {
+      // If space below is not enough AND (enough space above OR more space above than below) -> place UP
+      if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
         setPopoverPlacement("up");
+      } else {
+        setPopoverPlacement("down");
       }
     };
 
@@ -216,13 +339,107 @@ function HotelsPageContent() {
     };
   }, [showTravellersPopover]);
 
+  // On Mount: Check session storage to hold filters & data when returning from hotel details
+  useEffect(() => {
+    if (!isInitialMount.current) return;
+    isInitialMount.current = false;
+
+    const stored = getStoredSearchState();
+    if (!stored) return;
+
+    // Condition 1: URL has dates (e.g. from browser back or breadcrumb with params)
+    if (initialCheckIn && initialCheckOut) {
+      const datesMatch = stored.checkIn === initialCheckIn && stored.checkOut === initialCheckOut;
+      const destMatch =
+        !initialDestination ||
+        !stored.destination ||
+        stored.destination.toLowerCase() === initialDestination.toLowerCase();
+
+      if (datesMatch && destMatch && Array.isArray(stored.hotels) && stored.hotels.length > 0) {
+        hasRestoredFromCache.current = true;
+        setHotels(stored.hotels);
+        setSearchId(stored.searchId || "");
+        setPriceCheckedAt(stored.priceCheckedAt || "");
+        setHasSearched(true);
+        setLoading(false);
+        setSearchTrigger({
+          destination: stored.destination || initialDestination || "",
+          checkIn: stored.checkIn,
+          checkOut: stored.checkOut,
+          rooms: stored.rooms || defaultRooms,
+          hotelCode: stored.hotelCode || initialHotelCode || undefined,
+        });
+        if (stored.selectedStars && selectedStars.length === 0) setSelectedStars(stored.selectedStars);
+        if (typeof stored.minPrice === "number") setMinPrice(stored.minPrice);
+        if (typeof stored.maxPrice === "number") setMaxPrice(stored.maxPrice);
+        if (stored.selectedBoards && selectedBoards.length === 0) setSelectedBoards(stored.selectedBoards);
+        if (stored.selectedPropertyTypes && selectedPropertyTypes.length === 0) setSelectedPropertyTypes(stored.selectedPropertyTypes);
+        if (stored.selectedFacilities && selectedFacilities.length === 0) setSelectedFacilities(stored.selectedFacilities);
+        if (stored.selectedHolidayTypes && selectedHolidayTypes.length === 0) setSelectedHolidayTypes(stored.selectedHolidayTypes);
+        if (stored.selectedPopularFilters && selectedPopularFilters.length === 0) setSelectedPopularFilters(stored.selectedPopularFilters);
+        if (stored.sortBy) setSortBy(stored.sortBy);
+        if (stored.keyword) setKeyword(stored.keyword);
+        return;
+      }
+    }
+
+    // Condition 2: URL has NO checkIn / checkOut (e.g. user clicked browser back or "Hotels" nav)
+    // but user previously had an active search in this session!
+    if (!initialCheckIn && !initialCheckOut && stored.checkIn && stored.checkOut && Array.isArray(stored.hotels) && stored.hotels.length > 0) {
+      hasRestoredFromCache.current = true;
+      setDestination(stored.destination || "");
+      setCheckIn(stored.checkIn);
+      setCheckOut(stored.checkOut);
+      setRooms(stored.rooms || defaultRooms);
+      setHotels(stored.hotels);
+      setSearchId(stored.searchId || "");
+      setPriceCheckedAt(stored.priceCheckedAt || "");
+      setHasSearched(true);
+      setLoading(false);
+      setSearchTrigger({
+        destination: stored.destination || "",
+        checkIn: stored.checkIn,
+        checkOut: stored.checkOut,
+        rooms: stored.rooms || defaultRooms,
+        hotelCode: stored.hotelCode || undefined,
+      });
+      if (stored.selectedStars) setSelectedStars(stored.selectedStars);
+      if (typeof stored.minPrice === "number") setMinPrice(stored.minPrice);
+      if (typeof stored.maxPrice === "number") setMaxPrice(stored.maxPrice);
+      if (stored.selectedBoards) setSelectedBoards(stored.selectedBoards);
+      if (stored.selectedPropertyTypes) setSelectedPropertyTypes(stored.selectedPropertyTypes);
+      if (stored.selectedFacilities) setSelectedFacilities(stored.selectedFacilities);
+      if (stored.selectedHolidayTypes) setSelectedHolidayTypes(stored.selectedHolidayTypes);
+      if (stored.selectedPopularFilters) setSelectedPopularFilters(stored.selectedPopularFilters);
+      if (stored.sortBy) setSortBy(stored.sortBy);
+      if (stored.keyword) setKeyword(stored.keyword);
+
+      // Sync URL to match restored search state
+      updateUrlParams({
+        destination: stored.destination,
+        checkIn: stored.checkIn,
+        checkOut: stored.checkOut,
+        rooms: stored.rooms,
+        searchId: stored.searchId,
+        stars: stored.selectedStars,
+        minPrice: stored.minPrice,
+        maxPrice: stored.maxPrice,
+        boards: stored.selectedBoards,
+        sort: stored.sortBy,
+      });
+    }
+  }, []);
+
   // Sync state if searchParams change via client navigation
   useEffect(() => {
-    setDestination(initialDestination || "");
-    setCheckIn(initialCheckIn || "");
-    setCheckOut(initialCheckOut || "");
+    if (isInitialMount.current || hasRestoredFromCache.current) {
+      return;
+    }
 
     if (initialCheckIn && initialCheckOut) {
+      setDestination(initialDestination || "");
+      setCheckIn(initialCheckIn || "");
+      setCheckOut(initialCheckOut || "");
       setHasSearched(true);
       setLoading(true);
       setSearchTrigger({
@@ -232,11 +449,8 @@ function HotelsPageContent() {
         rooms: defaultRooms,
         hotelCode: initialHotelCode || undefined,
       });
-    } else {
-      setHasSearched(false);
-      setLoading(false);
-      setHotels([]);
-      setSearchTrigger(null);
+    } else if (initialDestination) {
+      setDestination(initialDestination);
     }
   }, [initialDestination, initialCheckIn, initialCheckOut, initialHotelCode]);
 
@@ -275,6 +489,31 @@ function HotelsPageContent() {
     setSelectedHolidayTypes(draftHolidayTypes);
     setSelectedPopularFilters(draftPopularFilters);
     setMobileSheetOpen(null);
+
+    saveSearchState({
+      selectedStars: draftStars,
+      minPrice: draftMinPrice,
+      maxPrice: draftMaxPrice,
+      selectedBoards: draftBoards,
+      selectedPropertyTypes: draftPropertyTypes,
+      selectedFacilities: draftFacilities,
+      selectedHolidayTypes: draftHolidayTypes,
+      selectedPopularFilters: draftPopularFilters,
+    });
+
+    updateUrlParams({
+      destination: searchTrigger?.destination || destination,
+      checkIn: searchTrigger?.checkIn || checkIn,
+      checkOut: searchTrigger?.checkOut || checkOut,
+      rooms: searchTrigger?.rooms || rooms,
+      searchId,
+      stars: draftStars,
+      minPrice: draftMinPrice,
+      maxPrice: draftMaxPrice,
+      boards: draftBoards,
+      sort: sortBy,
+    });
+
     scrollToResults();
   };
 
@@ -404,6 +643,8 @@ function HotelsPageContent() {
     setHasSearched(true);
     setLoading(true);
     setShowTravellersPopover(false);
+    hasRestoredFromCache.current = false;
+
     setSearchTrigger({
       destination,
       checkIn,
@@ -411,6 +652,38 @@ function HotelsPageContent() {
       rooms,
       hotelCode: initialHotelCode || undefined,
     });
+
+    updateUrlParams({
+      destination,
+      checkIn,
+      checkOut,
+      rooms,
+      stars: selectedStars,
+      minPrice,
+      maxPrice,
+      boards: selectedBoards,
+      sort: sortBy,
+    });
+
+    saveSearchState({
+      destination,
+      checkIn,
+      checkOut,
+      rooms,
+      hotelCode: initialHotelCode || undefined,
+      selectedStars,
+      minPrice,
+      maxPrice,
+      selectedBoards,
+      selectedPropertyTypes,
+      selectedFacilities,
+      selectedHolidayTypes,
+      selectedPopularFilters,
+      sortBy,
+      keyword,
+      hasSearched: true,
+    });
+
     scrollToResults();
   };
 
@@ -633,6 +906,11 @@ function HotelsPageContent() {
       return;
     }
 
+    if (hasRestoredFromCache.current) {
+      hasRestoredFromCache.current = false;
+      return;
+    }
+
     let isCancelled = false;
 
     async function loadHotels() {
@@ -659,6 +937,41 @@ function HotelsPageContent() {
           setHotels(list);
           setSearchId(data.searchId || "");
           setPriceCheckedAt(data.priceCheckedAt || "");
+
+          saveSearchState({
+            destination: searchTrigger!.destination,
+            checkIn: searchTrigger!.checkIn,
+            checkOut: searchTrigger!.checkOut,
+            rooms: searchTrigger!.rooms,
+            hotelCode: searchTrigger!.hotelCode,
+            hotels: list,
+            searchId: data.searchId || "",
+            priceCheckedAt: data.priceCheckedAt || "",
+            selectedStars,
+            minPrice,
+            maxPrice,
+            selectedBoards,
+            selectedPropertyTypes,
+            selectedFacilities,
+            selectedHolidayTypes,
+            selectedPopularFilters,
+            sortBy,
+            keyword,
+            hasSearched: true,
+          });
+
+          updateUrlParams({
+            destination: searchTrigger!.destination,
+            checkIn: searchTrigger!.checkIn,
+            checkOut: searchTrigger!.checkOut,
+            rooms: searchTrigger!.rooms,
+            searchId: data.searchId || "",
+            stars: selectedStars,
+            minPrice,
+            maxPrice,
+            boards: selectedBoards,
+            sort: sortBy,
+          });
         } else if (!isCancelled) {
           setHotels([]);
         }
@@ -678,6 +991,36 @@ function HotelsPageContent() {
       isCancelled = true;
     };
   }, [searchTrigger]);
+
+  // Keep search cache in sync when user toggles sidebar filters
+  useEffect(() => {
+    if (!hasSearched || hotels.length === 0) return;
+    saveSearchState({
+      selectedStars,
+      minPrice,
+      maxPrice,
+      selectedBoards,
+      selectedPropertyTypes,
+      selectedFacilities,
+      selectedHolidayTypes,
+      selectedPopularFilters,
+      sortBy,
+      keyword,
+    });
+  }, [
+    selectedStars,
+    minPrice,
+    maxPrice,
+    selectedBoards,
+    selectedPropertyTypes,
+    selectedFacilities,
+    selectedHolidayTypes,
+    selectedPopularFilters,
+    sortBy,
+    keyword,
+    hasSearched,
+    hotels.length,
+  ]);
 
   const copySearchId = () => {
     if (!searchId) return;
@@ -718,6 +1061,7 @@ function HotelsPageContent() {
   };
 
   const handleClearAll = () => {
+    clearStoredSearchState();
     setSelectedStars([]);
     setMinPrice(50);
     setMaxPrice(500);
@@ -727,10 +1071,17 @@ function HotelsPageContent() {
     setSelectedHolidayTypes([]);
     setSelectedPopularFilters([]);
     setKeyword("");
-    setDestination("all");
+    setDestination("");
     setCheckIn("");
     setCheckOut("");
+    setHasSearched(false);
+    setLoading(false);
+    setHotels([]);
+    setSearchTrigger(null);
     resetDraftFilters();
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", "/hotels");
+    }
   };
 
   // Filter & Sort hotels
@@ -1157,7 +1508,19 @@ function HotelsPageContent() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => setShowTravellersPopover(!showTravellersPopover)}
+                  onClick={() => {
+                    if (!showTravellersPopover && travellersRef.current) {
+                      const rect = travellersRef.current.getBoundingClientRect();
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const spaceAbove = rect.top - 85;
+                      if (spaceBelow < 360 && (spaceAbove >= 360 || spaceAbove > spaceBelow)) {
+                        setPopoverPlacement("up");
+                      } else {
+                        setPopoverPlacement("down");
+                      }
+                    }
+                    setShowTravellersPopover(!showTravellersPopover);
+                  }}
                   className="w-full text-left rounded-xl bg-gray-50 border border-gray-200 px-3.5 py-3 text-xs sm:text-sm text-gray-800 focus:border-[#F7941D] focus:bg-white focus:outline-none transition-all font-semibold flex items-center justify-between cursor-pointer"
                 >
                   <span className="truncate">{travellersSummary}</span>
@@ -1172,8 +1535,10 @@ function HotelsPageContent() {
                 {showTravellersPopover && (
                   <div
                     className={`absolute right-0 ${
-                      popoverPlacement === "down" ? "top-full mt-2" : "bottom-full mb-2"
-                    } w-80 sm:w-96 rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in zoom-in-95`}
+                      popoverPlacement === "down"
+                        ? "top-full mt-2 slide-in-from-top-2"
+                        : "bottom-full mb-2 slide-in-from-bottom-2"
+                    } w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-gray-200 z-50 text-[#1D1248] animate-in fade-in duration-150 max-h-[min(480px,calc(100vh-100px))] overflow-y-auto`}
                   >
                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                       <div>
@@ -1820,14 +2185,53 @@ function HotelsPageContent() {
                 const activeRms = searchTrigger?.rooms ?? rooms;
                 const detailsUrl = `/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(activeDest || hotel.city || "")}&checkIn=${activeIn}&checkOut=${activeOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(activeRms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`;
 
+                const handleNavigateToHotel = (url: string) => {
+                  saveSearchState({
+                    destination: searchTrigger?.destination || destination,
+                    checkIn: searchTrigger?.checkIn || checkIn,
+                    checkOut: searchTrigger?.checkOut || checkOut,
+                    rooms: searchTrigger?.rooms || rooms,
+                    hotelCode: searchTrigger?.hotelCode || initialHotelCode || undefined,
+                    hotels,
+                    searchId,
+                    priceCheckedAt,
+                    selectedStars,
+                    minPrice,
+                    maxPrice,
+                    selectedBoards,
+                    selectedPropertyTypes,
+                    selectedFacilities,
+                    selectedHolidayTypes,
+                    selectedPopularFilters,
+                    sortBy,
+                    keyword,
+                    hasSearched: true,
+                  });
+                  updateUrlParams({
+                    destination: searchTrigger?.destination || destination,
+                    checkIn: searchTrigger?.checkIn || checkIn,
+                    checkOut: searchTrigger?.checkOut || checkOut,
+                    rooms: searchTrigger?.rooms || rooms,
+                    searchId,
+                    stars: selectedStars,
+                    minPrice,
+                    maxPrice,
+                    boards: selectedBoards,
+                    sort: sortBy,
+                  });
+                  if (typeof window !== "undefined") {
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }
+                };
+
                 return (
                   <div
                     key={hotel.hotelCode}
-                    onClick={() => router.push(detailsUrl)}
+                    onClick={() => handleNavigateToHotel(detailsUrl)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        router.push(detailsUrl);
+                        handleNavigateToHotel(detailsUrl);
                       }
                     }}
                     role="button"
@@ -1933,6 +2337,19 @@ function HotelsPageContent() {
                           </span>
 
                           <div className="mt-3 flex items-center gap-2">
+                            {/* VIEW DETAILS (NEW TAB) */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNavigateToHotel(detailsUrl);
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl bg-[#1D1248] hover:bg-[#2e1d6d] active:scale-95 px-4 py-2 text-xs font-bold text-white shadow-md transition-all cursor-pointer whitespace-nowrap"
+                            >
+                              <span>View Hotel</span>
+                              <FaExternalLinkAlt className="text-[10px]" />
+                            </button>
+
                             {/* CALL TO BOOK BUTTON */}
                             <a
                               href="tel:03301658879"

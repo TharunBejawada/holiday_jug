@@ -282,16 +282,22 @@ enum BoardType {
 }
 
 model Hotel {
-  id            String   @id @default(cuid())
-  name          String
-  starRating    Int      @default(3)
-  description   String?
-  address       String?
-  latitude      Float?
-  longitude     Float?
-  amenities     String[] @default([])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  slug               String?  @unique
+  name               String
+  starRating         Int      @default(3)
+  description        String?
+  address            String?
+  latitude           Float?
+  longitude          Float?
+  amenities          String[] @default([])
+  featuredOnOverview Boolean  @default(false)
+  galleryImageUrls   String[] @default([])
+  isPublished        Boolean  @default(true)
+  reviewCount        Int      @default(0)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   packages Package[]
 
@@ -509,4 +515,28 @@ model HotelMaster {
   @@index([name])
   @@index([starCategory])
   @@map("hotel_master")
+}
+
+enum ContactStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+}
+
+model ContactSubmission {
+  id         String        @id @default(cuid())
+  fullName   String
+  email      String
+  phone      String?
+  bookingRef String?
+  subject    String
+  message    String        @db.Text
+  status     ContactStatus @default(NEW)
+  adminNotes String?       @db.Text
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("contact_submissions")
 }

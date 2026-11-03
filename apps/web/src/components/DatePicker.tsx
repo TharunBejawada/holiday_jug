@@ -29,7 +29,52 @@ export function DatePicker({
     required = false,
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [placement, setPlacement] = useState<"down" | "up">("down");
+    const [align, setAlign] = useState<"left" | "right">("left");
     const containerRef = useRef<HTMLDivElement>(null);
+
+    // Calculate dynamic placement based on scroll position and viewport boundaries
+    const updatePosition = () => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const navbarHeight = 85;
+        const popoverHeight = 350;
+        const popoverWidth = 320;
+
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top - navbarHeight;
+
+        // If not enough room below AND (enough room above OR more room above than below) -> flip UP
+        if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
+            setPlacement("up");
+        } else {
+            setPlacement("down");
+        }
+
+        // Horizontal overflow protection
+        const spaceRight = viewportWidth - rect.left;
+        if (spaceRight < popoverWidth && rect.right >= popoverWidth) {
+            setAlign("right");
+        } else {
+            setAlign("left");
+        }
+    };
+
+    // Recompute placement on scroll & resize whenever the calendar is open
+    useEffect(() => {
+        if (!isOpen) return;
+
+        updatePosition();
+        window.addEventListener("scroll", updatePosition, { passive: true });
+        window.addEventListener("resize", updatePosition, { passive: true });
+
+        return () => {
+            window.removeEventListener("scroll", updatePosition);
+            window.removeEventListener("resize", updatePosition);
+        };
+    }, [isOpen]);
 
     // Parse initial selected date or default to current month view
     const selectedDate = value ? new Date(value) : null;
@@ -112,7 +157,12 @@ export function DatePicker({
             {/* TRIGGER BUTTON */}
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    if (!isOpen) {
+                        updatePosition();
+                    }
+                    setIsOpen(!isOpen);
+                }}
                 className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 sm:py-3 text-xs sm:text-sm border transition-all font-semibold cursor-pointer ${
                     error
                         ? "border-red-400 bg-red-50/30 text-gray-800 hover:border-red-500 ring-1 ring-red-300"
@@ -150,7 +200,15 @@ export function DatePicker({
 
             {/* CALENDAR POPOVER */}
             {isOpen && (
-                <div className="absolute left-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-2xl bg-white p-4 shadow-2xl border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                <div
+                    className={`absolute z-50 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-4 shadow-2xl border border-gray-100 animate-in fade-in duration-150 max-h-[min(400px,calc(100vh-100px))] overflow-y-auto ${
+                        placement === "up"
+                            ? "bottom-full mb-2 slide-in-from-bottom-2"
+                            : "top-full mt-2 slide-in-from-top-2"
+                    } ${
+                        align === "right" ? "right-0" : "left-0"
+                    }`}
+                >
                     {/* HEADER: MONTH & YEAR NAV */}
                     <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                         <button
