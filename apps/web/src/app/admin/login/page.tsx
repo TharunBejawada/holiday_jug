@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +14,7 @@ const FLY_DURATION_MS = 200;
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +24,13 @@ export default function AdminLoginPage() {
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
   const [flyOrigin, setFlyOrigin] = useState<{ x: number; y: number } | null>(null);
+
+  // If already authenticated as an active ADMIN, forward to the dashboard
+  useEffect(() => {
+    if (status === "authenticated" && (session?.user as { role?: string } | undefined)?.role === "ADMIN") {
+      router.replace("/admin");
+    }
+  }, [session, status, router]);
 
   useEffect(() => {
     // 1. Prefetch admin bundle and pre-warm DB/NextAuth while user enters credentials

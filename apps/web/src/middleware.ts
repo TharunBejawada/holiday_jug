@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 import { isRateLimited } from "@/lib/rate-limit";
 
 export async function middleware(request: NextRequest) {
@@ -35,33 +34,10 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // 3. Admin Route Protection:
-  // Admin dashboard (/admin/*) requires an authenticated ADMIN session.
-  // Web application routes remain fully usable across other tabs.
-  if (pathname.startsWith("/admin")) {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-
-    const isAdmin = token?.role === "ADMIN";
-
-    if (!isAdmin) {
-      // Guard all /admin routes except /admin/login
-      if (pathname !== "/admin/login") {
-        const loginUrl = new URL("/admin/login", request.url);
-        loginUrl.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(loginUrl);
-      }
-    } else {
-      // If already logged in as admin and visiting /admin/login, send to /admin dashboard
-      if (pathname === "/admin/login") {
-        return NextResponse.redirect(new URL("/admin", request.url));
-      }
-    }
-  }
-
-  // 4. Web application pages (/, /hotels, /packages, etc.) pass through freely
+  // 3. Web application & admin pages: security headers
+  // Admin route authentication is authoritatively handled by AdminDashboardLayout
+  // (apps/web/src/app/admin/(dashboard)/layout.tsx) via server-side session checks
+  // backed by runtime SSM parameter loading.
   const response = NextResponse.next();
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
