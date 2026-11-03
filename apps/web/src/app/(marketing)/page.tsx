@@ -22,9 +22,6 @@ export default function HomePage() {
       {/* Top Destinations */}
       <TopDestinationsSection />
 
-      {/* Section 3 H1 & H2: Removed old Deals section; Replaced with one "Hot Deals" scrolling carousel banner */}
-      <HotDealsBanner />
-
       {/* Inline Call For Hidden Prices Banner (G2) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <CallForHiddenPricesBanner variant="inline" />

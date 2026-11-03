@@ -170,27 +170,28 @@ export function Header() {
                 {DESTINATIONS_NAV_DATA.map((group, idx) => {
                   const isActive = activeCountryIndex === idx;
                   return (
-                    <button
+                    <div
                       key={group.country}
-                      type="button"
                       onMouseEnter={() => setActiveCountryIndex(idx)}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setActiveCountryIndex(idx);
-                      }}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all text-left cursor-pointer ${
+                      className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm transition-all ${
                         isActive
                           ? "bg-amber-50 text-[#F7941D] font-bold shadow-xs"
                           : "text-slate-700 hover:text-[#1D1248] hover:bg-white/80 font-semibold"
                       }`}
                     >
-                      <span>{group.country}</span>
+                      <Link
+                        href={`/hotels?destination=${encodeURIComponent(group.slug)}`}
+                        onClick={() => setDestinationsMenuOpen(false)}
+                        className="flex-1 text-left hover:text-[#F7941D]"
+                      >
+                        {group.country}
+                      </Link>
                       <FaChevronRight
-                        className={`text-xs transition-colors ${
+                        className={`text-xs transition-colors shrink-0 ${
                           isActive ? "text-[#F7941D]" : "text-slate-400"
                         }`}
                       />
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -199,14 +200,14 @@ export function Header() {
               <div className="flex-1 p-8">
                 <div className="grid grid-cols-3 gap-x-12 gap-y-4">
                   {activeCountry.destinations.map((dest) => (
-                    <button
+                    <Link
                       key={dest.slug}
-                      type="button"
-                      onClick={(e) => e.preventDefault()}
-                      className="text-left text-sm font-medium text-slate-800 hover:text-[#F7941D] transition-colors py-1 cursor-pointer truncate"
+                      href={`/hotels?destination=${encodeURIComponent(dest.slug)}`}
+                      onClick={() => setDestinationsMenuOpen(false)}
+                      className="text-left text-sm font-medium text-slate-800 hover:text-[#F7941D] transition-colors py-1 cursor-pointer truncate block"
                     >
                       {dest.name}
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -255,15 +256,28 @@ export function Header() {
                           </button>
                           {isCountryExpanded && (
                             <div className="grid grid-cols-2 gap-1.5 pt-1.5 pl-2">
+                              <Link
+                                href={`/hotels?destination=${encodeURIComponent(group.slug)}`}
+                                onClick={() => {
+                                  setMobileMenuOpen(false);
+                                  setMobileDestinationsOpen(false);
+                                }}
+                                className="col-span-2 text-left text-[11px] font-bold text-[#F7941D] hover:underline py-0.5 truncate cursor-pointer block"
+                              >
+                                → All {group.country} Hotels
+                              </Link>
                               {group.destinations.map((d) => (
-                                <button
+                                <Link
                                   key={d.slug}
-                                  type="button"
-                                  onClick={(e) => e.preventDefault()}
-                                  className="text-left text-[11px] font-medium text-slate-600 hover:text-[#F7941D] py-0.5 truncate cursor-pointer"
+                                  href={`/hotels?destination=${encodeURIComponent(d.slug)}`}
+                                  onClick={() => {
+                                    setMobileMenuOpen(false);
+                                    setMobileDestinationsOpen(false);
+                                  }}
+                                  className="text-left text-[11px] font-medium text-slate-600 hover:text-[#F7941D] py-0.5 truncate cursor-pointer block"
                                 >
                                   • {d.name}
-                                </button>
+                                </Link>
                               ))}
                             </div>
                           )}
@@ -314,7 +328,7 @@ export function Header() {
               {/* Social Media Links */}
               <div className="pt-2 border-t border-gray-100 flex items-center gap-2.5">
                 <a
-                  href="https://www.facebook.com/HOLIDAYJUG/"
+                  href="https://www.facebook.com/HolidayJugUK"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="HolidayJug Facebook Page"

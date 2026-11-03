@@ -34,7 +34,7 @@ export function Footer() {
             {/* SOCIAL ICONS (Redirection to official HolidayJug social media handles) */}
             <div className="flex items-center gap-2.5 pt-2">
               <a
-                href="https://www.facebook.com/HOLIDAYJUG/"
+                href="https://www.facebook.com/HolidayJugUK"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="HolidayJug Facebook Page"
@@ -72,44 +72,10 @@ export function Footer() {
             </div>
           </div>
 
-          {/* COLUMN 2: HOLIDAYS */}
-          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
+          {/* COLUMN 2: DESTINATIONS */}
+          <div className="sm:col-span-1 md:col-span-2 lg:col-span-3">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
-              HOLIDAYS
-            </h4>
-            <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
-              <li>
-                <Link href="/holidays?type=beach" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                  <span className="text-[#F7941D]">•</span> Beach Holidays
-                </Link>
-              </li>
-              <li>
-                <Link href="/holidays?type=all-inclusive" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                  <span className="text-[#F7941D]">•</span> All-Inclusive Holidays
-                </Link>
-              </li>
-              <li>
-                <Link href="/holidays?type=family" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                  <span className="text-[#F7941D]">•</span> Family Holidays
-                </Link>
-              </li>
-              <li>
-                <Link href="/holidays?type=luxury" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                  <span className="text-[#F7941D]">•</span> Luxury Holidays
-                </Link>
-              </li>
-              <li>
-                <Link href="/holidays?type=honeymoon" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
-                  <span className="text-[#F7941D]">•</span> Honeymoon Holidays
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* COLUMN 3: HOTELS */}
-          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
-            <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
-              HOTELS
+              DESTINATIONS
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm font-normal text-white/90">
               <li>
@@ -137,11 +103,16 @@ export function Footer() {
                   <span className="text-[#F7941D]">•</span> Majorca Holiday Hotels
                 </Link>
               </li>
+              <li>
+                <Link href="/hotels?destination=cyprus" className="hover:text-[#F7941D] transition-colors flex items-center gap-2">
+                  <span className="text-[#F7941D]">•</span> Cyprus Island Stays
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* COLUMN 4: COMPANY & LEGAL (G6) */}
-          <div className="sm:col-span-1 md:col-span-2 lg:col-span-2">
+          {/* COLUMN 3: COMPANY & LEGAL (G6) */}
+          <div className="sm:col-span-1 md:col-span-2 lg:col-span-3">
             <h4 className="text-sm sm:text-base font-bold text-[#F7941D] uppercase tracking-wider mb-4">
               COMPANY
             </h4>
@@ -198,13 +169,15 @@ export function Footer() {
                 <span className="tracking-tight">0330 165 8879</span>
               </a>
               <p className="text-[11px] sm:text-xs text-white/70">
-                UK Freephone • Mon – Sun 08:00 – 22:00
+                UK Freephone • Mon – Sun 9AM to 9PM
               </p>
             </div>
 
             <div className="mt-4 pt-1 space-y-1 text-xs text-white/80">
-              <p className="font-semibold text-white">Registered UK Office:</p>
-              <p className="leading-relaxed">128 City Road, London, EC1V 2NX, United Kingdom</p>
+              <p className="text-white font-bold">HolidayJug LTD.</p>
+              <p className="text-white/70 text-[11px]">Company number 17492828</p>
+              <p className="font-semibold text-white pt-1">Registered office address:</p>
+              <p className="leading-relaxed text-white/80">128 City Road, London, United Kingdom, EC1V 2NX</p>
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@
  */
 
 import { WORLDWIDE_AIRPORTS, type DepartureAirport } from "./airports-data";
+import { DESTINATIONS_NAV_DATA } from "./destinations-nav-data";
 export { WORLDWIDE_AIRPORTS, type DepartureAirport };
 
 export const DEPARTURE_AIRPORTS: DepartureAirport[] = WORLDWIDE_AIRPORTS;
@@ -559,23 +560,105 @@ export function getActiveSearchDestinations(): DestinationMasterItem[] {
   return DESTINATIONS_MASTER.filter((d) => d.hasMappedHotels);
 }
 
+function normalizeSearchTerm(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/[-_]/g, " ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const COUNTRY_PRIMARY_MAPPING: Record<string, { dest: string; country: string }> = {
+  "united-arab-emirates": { dest: "Dubai", country: "United Arab Emirates" },
+  "uae": { dest: "Dubai", country: "United Arab Emirates" },
+  "canary-islands": { dest: "Tenerife", country: "Canary Islands" },
+  "spain": { dest: "Majorca", country: "Spain" },
+  "turkey": { dest: "Antalya", country: "Turkey" },
+  "greece": { dest: "Santorini", country: "Greece" },
+  "portugal": { dest: "Algarve", country: "Portugal" },
+  "cyprus": { dest: "Ayia Napa", country: "Cyprus" },
+  "egypt": { dest: "Hurghada", country: "Egypt" },
+};
+
 /**
  * Finds a destination by slug, name or alias.
  */
 export function findDestination(term: string): DestinationMasterItem | null {
   if (!term) return null;
-  const clean = term.trim().toLowerCase();
+  const raw = term.trim().toLowerCase();
+  const norm = normalizeSearchTerm(term);
+  if (!norm) return null;
 
-  return (
-    DESTINATIONS_MASTER.find(
+  // 1. Direct country slug check
+  const countryKey = raw.replace(/\s+/g, "-");
+  if (COUNTRY_PRIMARY_MAPPING[raw] || COUNTRY_PRIMARY_MAPPING[countryKey]) {
+    const target = COUNTRY_PRIMARY_MAPPING[raw] || COUNTRY_PRIMARY_MAPPING[countryKey];
+    const countryItem = DESTINATIONS_MASTER.find(
       (d) =>
-        d.slug.toLowerCase() === clean ||
-        d.destination.toLowerCase() === clean ||
-        d.country.toLowerCase() === clean ||
-        d.aliases.some((alias) => {
-          const a = alias.toLowerCase();
-          return a === clean || clean.includes(a) || a.includes(clean);
-        })
-    ) || null
+        normalizeSearchTerm(d.country) === normalizeSearchTerm(target.country) &&
+        normalizeSearchTerm(d.destination) === normalizeSearchTerm(target.dest)
+    );
+    if (countryItem) return countryItem;
+  }
+
+  // 2. Exact slug match
+  let match = DESTINATIONS_MASTER.find(
+    (d) => d.slug.toLowerCase() === raw || normalizeSearchTerm(d.slug) === norm
   );
+  if (match) return match;
+
+  // 3. Exact destination or country match
+  match = DESTINATIONS_MASTER.find(
+    (d) =>
+      normalizeSearchTerm(d.destination) === norm ||
+      normalizeSearchTerm(d.country) === norm ||
+      normalizeSearchTerm(d.displayGroup) === norm
+  );
+  if (match) return match;
+
+  // 4. Exact alias match
+  match = DESTINATIONS_MASTER.find((d) =>
+    d.aliases.some((alias) => normalizeSearchTerm(alias) === norm)
+  );
+  if (match) return match;
+
+  // 5. Match from DESTINATIONS_NAV_DATA
+  for (const group of DESTINATIONS_NAV_DATA) {
+    if (normalizeSearchTerm(group.country) === norm || group.slug.toLowerCase() === raw) {
+      const primary = DESTINATIONS_MASTER.find(
+        (d) => normalizeSearchTerm(d.country) === normalizeSearchTerm(group.country)
+      );
+      if (primary) return primary;
+    }
+    for (const dest of group.destinations) {
+      if (
+        dest.slug.toLowerCase() === raw ||
+        normalizeSearchTerm(dest.name) === norm ||
+        (dest.aliases && dest.aliases.some((a) => normalizeSearchTerm(a) === norm)) ||
+        (dest.iata && dest.iata.some((i) => i.toLowerCase() === raw))
+      ) {
+        const m = DESTINATIONS_MASTER.find(
+          (d) =>
+            normalizeSearchTerm(d.destination) === normalizeSearchTerm(dest.name) ||
+            d.slug.toLowerCase() === dest.slug.toLowerCase()
+        );
+        if (m) return m;
+
+        const countryMaster = DESTINATIONS_MASTER.find(
+          (d) => normalizeSearchTerm(d.country) === normalizeSearchTerm(group.country)
+        );
+        if (countryMaster) {
+          return {
+            ...countryMaster,
+            slug: dest.slug,
+            destination: dest.name,
+            aliases: dest.aliases || [dest.name],
+          };
+        }
+      }
+    }
+  }
+
+  return null;
 }

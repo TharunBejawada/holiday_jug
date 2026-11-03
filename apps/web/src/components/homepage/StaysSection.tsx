@@ -312,11 +312,6 @@ export function StaysSection() {
                 <span className="absolute top-3 left-3 rounded-lg bg-black/60 backdrop-blur-xs px-2.5 py-0.5 text-[10px] font-bold text-white">
                   {stay.tag}
                 </span>
-
-                {/* Price per night */}
-                <span className="absolute bottom-3 right-3 rounded-lg bg-[#1D1248]/90 backdrop-blur-xs px-2.5 py-1 text-xs font-bold text-white">
-                  from £{stay.pricePerNightGbp}/night
-                </span>
               </div>
               <div className="p-4 flex flex-col justify-between flex-1">
                 <div>

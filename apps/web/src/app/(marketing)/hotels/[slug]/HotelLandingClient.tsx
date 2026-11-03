@@ -745,6 +745,23 @@ export default function HotelLandingClient({
   // Remaining images count for the 5th block
   const remainingCount = Math.max(0, allImages.length - 4);
 
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 40) {
+      handlePrevImage();
+    } else if (diff < -40) {
+      handleNextImage();
+    }
+    setTouchStartX(null);
+  };
+
   const handlePrevImage = () => {
     setActiveImageIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
   };
@@ -785,7 +802,7 @@ export default function HotelLandingClient({
         </div>
 
         {/* Hero Content Container */}
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-16 sm:pb-20">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-20 sm:pb-22 lg:pb-20">
           {/* Top-Left: Breadcrumb directly inside hero */}
           <div className="flex items-center gap-1.5 text-xs sm:text-sm text-white/90 font-medium mb-2.5 drop-shadow-sm">
             <Link href="/hotels" className="hover:text-amber-300 transition-colors">
@@ -838,55 +855,170 @@ export default function HotelLandingClient({
         {/* OVERLAPPING GALLERY THUMBNAIL CARD: Exactly 50% inside hero and 50% outside hero */}
         <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="translate-y-1/2 inline-flex p-1.5 sm:p-2 bg-white rounded-lg shadow-xl border border-gray-100 max-w-full pointer-events-auto">
-              <div className="flex items-center gap-2 sm:gap-2.5">
-                {/* 4 Image Thumbnails */}
-                {displayThumbnails.map((img, idx) => (
+            <div className="translate-y-1/2 w-full max-w-md sm:max-w-none sm:w-auto inline-flex p-1.5 sm:p-2 bg-white rounded-xl shadow-xl border border-gray-100 max-w-full pointer-events-auto overflow-hidden">
+              {allImages.length <= 1 ? (
+                /* 1 IMAGE ONLY */
+                <div className="flex items-center gap-2 sm:gap-2.5 w-full">
                   <button
-                    key={idx}
                     type="button"
                     onClick={() => {
-                      setActiveImageIndex(idx);
+                      setActiveImageIndex(0);
                       setGalleryModalOpen(true);
                     }}
-                    className="relative w-20 sm:w-28 md:w-36 lg:w-40 h-16 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer shrink-0 focus:outline-none"
+                    className="relative w-full sm:w-48 h-20 sm:h-24 md:h-28 rounded-lg overflow-hidden group cursor-pointer focus:outline-none"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={img}
-                      alt={`${hotel.name} thumbnail ${idx + 1}`}
+                      src={allImages[0]}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <span className="absolute bottom-2 right-2 rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] text-white font-medium flex items-center gap-1">
+                      <FaImages className="text-[9px]" /> 1 Photo
+                    </span>
+                  </button>
+                </div>
+              ) : allImages.length === 2 ? (
+                /* 2 IMAGES: SIDE-BY-SIDE WITHOUT DUPLICATES */
+                <div className="flex items-center gap-2 sm:gap-2.5 w-full">
+                  {allImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setActiveImageIndex(idx);
+                        setGalleryModalOpen(true);
+                      }}
+                      className="relative flex-1 min-w-0 sm:flex-none sm:w-36 md:w-44 lg:w-48 h-20 sm:h-24 md:h-28 rounded-lg overflow-hidden group cursor-pointer focus:outline-none"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img}
+                        alt={`${hotel.name} thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                      {idx === 1 && (
+                        <span className="absolute bottom-2 right-2 rounded-md bg-black/60 backdrop-blur-xs px-2 py-0.5 text-[10px] text-white font-medium flex items-center gap-1">
+                          <FaImages className="text-[9px]" /> 2 Photos
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                /* 3+ IMAGES: RESPONSIVE STRIP (3 items on mobile, 5 on desktop) */
+                <div className="flex items-center gap-2 sm:gap-2.5 w-full">
+                  {/* Thumbnail 1 (Always Visible) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveImageIndex(0);
+                      setGalleryModalOpen(true);
+                    }}
+                    className="relative flex-1 min-w-0 sm:flex-none sm:w-28 md:w-36 lg:w-40 h-20 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer focus:outline-none"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={allImages[0]}
+                      alt={`${hotel.name} thumbnail 1`}
                       className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                   </button>
-                ))}
 
-                {/* 5th Block: Photo with Blue Overlay + "12+ Photos" */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveImageIndex(4 < allImages.length ? 4 : 0);
-                    setGalleryModalOpen(true);
-                  }}
-                  className="relative w-20 sm:w-28 md:w-36 lg:w-40 h-16 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer shrink-0 focus:outline-none"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={allImages[4] || allImages[0]}
-                    alt="More photos"
-                    className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
-                  />
-                  {/* Translucent Blue Overlay with 12+ Photos matching screenshot */}
-                  <div className="absolute inset-0 bg-[#2573a7]/80 group-hover:bg-[#1f6390]/85 transition-colors flex flex-col items-center justify-center text-center p-1 text-white">
-                    <span className="text-lg sm:text-2xl md:text-3xl font-bold leading-none drop-shadow-sm">
-                      {remainingCount > 0 ? `${remainingCount}+` : "More"}
-                    </span>
-                    <span className="text-[11px] sm:text-xs md:text-sm font-medium mt-0.5 sm:mt-1 drop-shadow-sm">
-                      Photos
-                    </span>
-                  </div>
-                </button>
-              </div>
+                  {/* Thumbnail 2 (Always Visible) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveImageIndex(1);
+                      setGalleryModalOpen(true);
+                    }}
+                    className="relative flex-1 min-w-0 sm:flex-none sm:w-28 md:w-36 lg:w-40 h-20 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer focus:outline-none"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={allImages[1]}
+                      alt={`${hotel.name} thumbnail 2`}
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                  </button>
+
+                  {/* Thumbnail 3 (Hidden on mobile, Visible on sm+ desktop) */}
+                  {allImages[2] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveImageIndex(2);
+                        setGalleryModalOpen(true);
+                      }}
+                      className="relative hidden sm:block sm:w-28 md:w-36 lg:w-40 h-20 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer shrink-0 focus:outline-none"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={allImages[2]}
+                        alt={`${hotel.name} thumbnail 3`}
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                    </button>
+                  )}
+
+                  {/* Thumbnail 4 (Hidden on mobile, Visible on sm+ desktop if >= 4 images) */}
+                  {allImages[3] && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveImageIndex(3);
+                        setGalleryModalOpen(true);
+                      }}
+                      className="relative hidden sm:block sm:w-28 md:w-36 lg:w-40 h-20 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer shrink-0 focus:outline-none"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={allImages[3]}
+                        alt={`${hotel.name} thumbnail 4`}
+                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                    </button>
+                  )}
+
+                  {/* "More Photos" Tile: 3rd tile on mobile, 5th tile on desktop */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Open modal at 3rd photo on mobile, or 5th on desktop
+                      const targetIdx = allImages.length > 4 ? 4 : allImages.length > 2 ? 2 : 0;
+                      setActiveImageIndex(targetIdx);
+                      setGalleryModalOpen(true);
+                    }}
+                    className="relative flex-1 min-w-0 sm:flex-none sm:w-28 md:w-36 lg:w-40 h-20 sm:h-22 md:h-26 lg:h-28 rounded-lg overflow-hidden group cursor-pointer focus:outline-none"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={allImages[4] || allImages[2] || allImages[0]}
+                      alt="More photos"
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                    />
+                    {/* Translucent Blue Overlay with dynamic photo count */}
+                    <div className="absolute inset-0 bg-[#2573a7]/85 group-hover:bg-[#1f6390]/90 transition-colors flex flex-col items-center justify-center text-center p-1 text-white">
+                      {/* Mobile count (remaining after 2 thumbnails) */}
+                      <span className="sm:hidden text-base font-bold leading-none drop-shadow-sm">
+                        {allImages.length > 2 ? `+${allImages.length - 2}` : "More"}
+                      </span>
+                      {/* Desktop count (remaining after 4 thumbnails) */}
+                      <span className="hidden sm:inline text-lg sm:text-2xl md:text-3xl font-bold leading-none drop-shadow-sm">
+                        {allImages.length > 4 ? `+${allImages.length - 4}` : "More"}
+                      </span>
+                      <span className="text-[10px] sm:text-xs md:text-sm font-medium mt-0.5 sm:mt-1 drop-shadow-sm">
+                        Photos
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1952,59 +2084,67 @@ export default function HotelLandingClient({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4"
+          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-5 select-none"
         >
-          <div className="w-full max-w-5xl flex items-center justify-between pb-3 text-white">
-            <span className="text-sm font-semibold">
+          {/* Header Bar */}
+          <div className="w-full max-w-5xl flex items-center justify-between pb-2 text-white">
+            <span className="text-xs sm:text-sm font-semibold truncate mr-2 max-w-[75vw]">
               {hotel.name} — Photo {activeImageIndex + 1} of {allImages.length}
             </span>
             <button
               type="button"
               onClick={() => setGalleryModalOpen(false)}
-              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer shrink-0"
+              aria-label="Close gallery"
             >
-              <FaTimes className="text-base" />
+              <FaTimes className="text-sm sm:text-base" />
             </button>
           </div>
 
-          <div className="relative w-full max-w-5xl h-[60vh] sm:h-[70vh] rounded-2xl overflow-hidden bg-black flex items-center justify-center">
+          {/* Main Photo with Touch Swipe Support */}
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="relative w-full max-w-5xl flex-1 min-h-0 sm:min-h-[58vh] sm:max-h-[70vh] rounded-2xl overflow-hidden bg-black flex items-center justify-center my-1 sm:my-2"
+          >
             {/* Prev arrow */}
             <button
               type="button"
               onClick={handlePrevImage}
-              className="absolute left-3 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors border border-white/20"
+              className="absolute left-2 sm:left-4 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors border border-white/20 active:scale-95"
               title="Previous photo"
             >
-              <FaChevronLeft className="text-sm" />
+              <FaChevronLeft className="text-xs sm:text-sm" />
             </button>
 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={allImages[activeImageIndex]}
               alt={`Gallery photo ${activeImageIndex + 1}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain pointer-events-none"
             />
 
             {/* Next arrow */}
             <button
               type="button"
               onClick={handleNextImage}
-              className="absolute right-3 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors border border-white/20"
+              className="absolute right-2 sm:right-4 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center cursor-pointer transition-colors border border-white/20 active:scale-95"
               title="Next photo"
             >
-              <FaChevronRight className="text-sm" />
+              <FaChevronRight className="text-xs sm:text-sm" />
             </button>
           </div>
 
           {/* Thumbnails strip in modal */}
-          <div className="max-w-5xl w-full flex items-center gap-2 overflow-x-auto overflow-y-hidden py-3 mt-2 scrollbar-thin-dark">
+          <div className="max-w-5xl w-full flex items-center gap-1.5 sm:gap-2 overflow-x-auto overflow-y-hidden py-1.5 sm:py-2.5 scrollbar-thin-dark shrink-0">
             {allImages.map((img, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setActiveImageIndex(i)}
-                className={`relative h-16 w-24 rounded-lg overflow-hidden shrink-0 border-2 cursor-pointer transition-all ${activeImageIndex === i ? "border-amber-400 scale-105" : "border-transparent opacity-60 hover:opacity-100"
-                  }`}
+                className={`relative h-12 w-16 sm:h-16 sm:w-24 rounded-lg overflow-hidden shrink-0 border-2 cursor-pointer transition-all ${
+                  activeImageIndex === i ? "border-amber-400 scale-105" : "border-transparent opacity-60 hover:opacity-100"
+                }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img} alt="" className="w-full h-full object-cover" />

@@ -163,7 +163,7 @@ function HotelsPageContent() {
   // Default dates removed: displays placeholder until user selects
   const [checkIn, setCheckIn] = useState(initialCheckIn);
   const [checkOut, setCheckOut] = useState(initialCheckOut);
-  const [dateErrors, setDateErrors] = useState<{ checkIn?: string; checkOut?: string }>({});
+  const [heroErrors, setHeroErrors] = useState<{ destination?: string; checkIn?: string; checkOut?: string }>({});
 
   // Filter States
   const [selectedStars, setSelectedStars] = useState<number[]>(
@@ -218,22 +218,27 @@ function HotelsPageContent() {
 
   // Sync state if searchParams change via client navigation
   useEffect(() => {
-    if (initialDestination) {
-      setDestination(initialDestination);
-    }
-  }, [initialDestination]);
+    setDestination(initialDestination || "");
+    setCheckIn(initialCheckIn || "");
+    setCheckOut(initialCheckOut || "");
 
-  useEffect(() => {
-    if (initialCheckIn !== undefined) {
-      setCheckIn(initialCheckIn);
+    if (initialCheckIn && initialCheckOut) {
+      setHasSearched(true);
+      setLoading(true);
+      setSearchTrigger({
+        destination: initialDestination || "",
+        checkIn: initialCheckIn,
+        checkOut: initialCheckOut,
+        rooms: defaultRooms,
+        hotelCode: initialHotelCode || undefined,
+      });
+    } else {
+      setHasSearched(false);
+      setLoading(false);
+      setHotels([]);
+      setSearchTrigger(null);
     }
-  }, [initialCheckIn]);
-
-  useEffect(() => {
-    if (initialCheckOut !== undefined) {
-      setCheckOut(initialCheckOut);
-    }
-  }, [initialCheckOut]);
+  }, [initialDestination, initialCheckIn, initialCheckOut, initialHotelCode]);
 
   // Mobile Bottom Sheet Filter / Sort / Location Drawer State
   const [mobileSheetOpen, setMobileSheetOpen] = useState<"filters" | "sort" | "location" | null>(null);
@@ -376,8 +381,11 @@ function HotelsPageContent() {
   };
 
   const handleUpdate = () => {
-    // Check-in and check-out are strictly mandatory
-    const errors: { checkIn?: string; checkOut?: string } = {};
+    // All filters are strictly mandatory
+    const errors: { destination?: string; checkIn?: string; checkOut?: string } = {};
+    if (!destination || destination === "all") {
+      errors.destination = "Destination is required";
+    }
     if (!checkIn) {
       errors.checkIn = "Check-in date is required";
     }
@@ -388,15 +396,21 @@ function HotelsPageContent() {
     }
 
     if (Object.keys(errors).length > 0) {
-      setDateErrors(errors);
+      setHeroErrors(errors);
       return;
     }
 
-    setDateErrors({});
+    setHeroErrors({});
     setHasSearched(true);
     setLoading(true);
     setShowTravellersPopover(false);
-    setSearchVersion((v) => v + 1);
+    setSearchTrigger({
+      destination,
+      checkIn,
+      checkOut,
+      rooms,
+      hotelCode: initialHotelCode || undefined,
+    });
     scrollToResults();
   };
 
@@ -486,6 +500,24 @@ function HotelsPageContent() {
 
   // API State
   const hasInitialDates = Boolean(initialCheckIn && initialCheckOut);
+  const [searchTrigger, setSearchTrigger] = useState<{
+    destination: string;
+    checkIn: string;
+    checkOut: string;
+    rooms: RoomConfig[];
+    hotelCode?: string;
+  } | null>(() => {
+    if (hasInitialDates) {
+      return {
+        destination: initialDestination,
+        checkIn: initialCheckIn,
+        checkOut: initialCheckOut,
+        rooms: defaultRooms,
+        hotelCode: initialHotelCode || undefined,
+      };
+    }
+    return null;
+  });
   const [hasSearched, setHasSearched] = useState(hasInitialDates);
   const [loading, setLoading] = useState(hasInitialDates);
   const [hotels, setHotels] = useState<HotelResult[]>([]);
@@ -594,30 +626,30 @@ function HotelsPageContent() {
     );
   }, [destinationOptions, locationSearchQuery]);
 
-  // Execute Hotel Search & Availability API (Hotels Only)
+  // Execute Hotel Search & Availability API ONLY when searchTrigger changes (explicit Search click or initial load with dates)
   useEffect(() => {
-    let isCancelled = false;
-
-    // Do not load hotels immediately if mandatory fields are missing
-    if (!checkIn || !checkOut) {
+    if (!searchTrigger || !searchTrigger.checkIn || !searchTrigger.checkOut) {
       setLoading(false);
       return;
     }
 
+    let isCancelled = false;
+
     async function loadHotels() {
       setLoading(true);
       try {
+        const guests = searchTrigger!.rooms.reduce((acc, r) => acc + r.adults, 0);
         const res = await fetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "hotels",
-            destination,
-            hotelCode: initialHotelCode || undefined,
-            checkIn: checkIn || undefined,
-            checkOut: checkOut || undefined,
-            adults: totalAdults,
-            rooms,
+            destination: searchTrigger!.destination || undefined,
+            hotelCode: searchTrigger!.hotelCode || undefined,
+            checkIn: searchTrigger!.checkIn,
+            checkOut: searchTrigger!.checkOut,
+            adults: guests,
+            rooms: searchTrigger!.rooms,
           }),
         });
 
@@ -645,7 +677,7 @@ function HotelsPageContent() {
     return () => {
       isCancelled = true;
     };
-  }, [destination, checkIn, checkOut, initialHotelCode, searchVersion]);
+  }, [searchTrigger]);
 
   const copySearchId = () => {
     if (!searchId) return;
@@ -1008,10 +1040,11 @@ function HotelsPageContent() {
     nights,
   ]);
 
-  const isOverview = destination === "all" || !destination;
+  const activeDestVal = searchTrigger ? searchTrigger.destination : destination;
+  const isOverview = !activeDestVal || activeDestVal === "all";
   const currentDestinationName = isOverview
     ? "Featured Worldwide Stays"
-    : destinationOptions.find((d) => d.value === destination)?.label || destination;
+    : destinationOptions.find((d) => d.value.toLowerCase() === activeDestVal.toLowerCase())?.label || activeDestVal;
 
   return (
     <div className="min-h-screen bg-gray-50/70 pb-20">
@@ -1054,13 +1087,20 @@ function HotelsPageContent() {
               {/* DESTINATION SELECTOR */}
               <div className="lg:col-span-3 flex flex-col gap-1.5">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248] flex items-center gap-1.5">
-                  <FaMapMarkerAlt className="text-[#F7941D]" /> Destination / Region
+                  <FaMapMarkerAlt className="text-[#F7941D]" /> Destination / Region <span className="text-red-500">*</span>
                 </label>
                 <SearchableSelect
                   options={destinationOptions}
                   value={destination}
-                  onChange={(val) => setDestination(val)}
+                  onChange={(val) => {
+                    setDestination(val);
+                    if (heroErrors.destination) {
+                      setHeroErrors((prev) => ({ ...prev, destination: undefined }));
+                    }
+                  }}
                   openOnKeywordOnly={true}
+                  error={heroErrors.destination}
+                  required={true}
                   icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
                   trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs sm:text-sm" />}
                   placeholder="Search destination or country..."
@@ -1077,15 +1117,15 @@ function HotelsPageContent() {
                   value={checkIn}
                   onChange={(val) => {
                     setCheckIn(val);
-                    if (dateErrors.checkIn) {
-                      setDateErrors((prev) => ({ ...prev, checkIn: undefined }));
+                    if (heroErrors.checkIn) {
+                      setHeroErrors((prev) => ({ ...prev, checkIn: undefined }));
                     }
                     if (val && checkOut && val >= checkOut) {
                       setCheckOut("");
                     }
                   }}
                   placeholder="Select check-in"
-                  error={dateErrors.checkIn}
+                  error={heroErrors.checkIn}
                   required={true}
                 />
               </div>
@@ -1099,13 +1139,13 @@ function HotelsPageContent() {
                   value={checkOut}
                   onChange={(val) => {
                     setCheckOut(val);
-                    if (dateErrors.checkOut) {
-                      setDateErrors((prev) => ({ ...prev, checkOut: undefined }));
+                    if (heroErrors.checkOut) {
+                      setHeroErrors((prev) => ({ ...prev, checkOut: undefined }));
                     }
                   }}
                   placeholder="Select check-out"
                   minDate={checkIn || undefined}
-                  error={dateErrors.checkOut}
+                  error={heroErrors.checkOut}
                   required={true}
                 />
               </div>
@@ -1113,7 +1153,7 @@ function HotelsPageContent() {
               {/* TRAVELLERS & ROOMS */}
               <div ref={travellersRef} className="lg:col-span-3 flex flex-col gap-1.5 relative">
                 <label className="text-xs sm:text-sm font-bold text-[#1D1248] flex items-center gap-1.5">
-                  <FaUserFriends className="text-[#F7941D]" /> Travellers &amp; Rooms
+                  <FaUserFriends className="text-[#F7941D]" /> Travellers &amp; Rooms <span className="text-red-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -1736,16 +1776,16 @@ function HotelsPageContent() {
                   </div>
                 ))}
               </div>
-            ) : (!checkIn || !checkOut || !hasSearched) ? (
+            ) : (!destination || destination === "all" || !checkIn || !checkOut || !hasSearched) ? (
               <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center">
                 <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/60 flex items-center justify-center text-[#F7941D] mb-4">
-                  <FaCalendarAlt className="text-2xl" />
+                  <FaMapMarkerAlt className="text-2xl" />
                 </div>
                 <h3 className="text-xl font-extrabold text-[#1D1248]">
-                  Select Travel Dates to View Hotels
+                  Select Destination &amp; Travel Dates to View Hotels
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500 mt-2 max-w-md leading-relaxed">
-                  Check-in and Check-out dates are mandatory to check live availability and confirmed hotel rates. Please enter your destination and dates above, then click <span className="font-bold text-[#F7941D]">Search</span>.
+                  Destination, Check-in, and Check-out dates are mandatory to check live availability and confirmed hotel rates. Please enter your destination and dates above, then click <span className="font-bold text-[#F7941D]">Search</span>.
                 </p>
                 <button
                   type="button"
@@ -1754,7 +1794,7 @@ function HotelsPageContent() {
                   }}
                   className="mt-6 px-6 py-2.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <FaSearch className="text-xs" /> Enter Dates &amp; Search
+                  <FaSearch className="text-xs" /> Enter Filters &amp; Search
                 </button>
               </div>
             ) : filteredHotels.length === 0 ? (
@@ -1774,7 +1814,11 @@ function HotelsPageContent() {
               </div>
             ) : (
               filteredHotels.map((hotel) => {
-                const detailsUrl = `/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(destination || hotel.city || "")}&checkIn=${checkIn}&checkOut=${checkOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(rooms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`;
+                const activeDest = searchTrigger?.destination ?? destination;
+                const activeIn = searchTrigger?.checkIn ?? checkIn;
+                const activeOut = searchTrigger?.checkOut ?? checkOut;
+                const activeRms = searchTrigger?.rooms ?? rooms;
+                const detailsUrl = `/hotels/${encodeURIComponent(hotel.hotelCode)}?destination=${encodeURIComponent(activeDest || hotel.city || "")}&checkIn=${activeIn}&checkOut=${activeOut}&adults=${totalAdults}&rooms=${encodeURIComponent(JSON.stringify(activeRms))}${searchId ? `&searchId=${encodeURIComponent(searchId)}` : ""}`;
 
                 return (
                   <div

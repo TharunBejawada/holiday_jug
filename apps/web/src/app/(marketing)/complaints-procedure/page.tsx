@@ -215,18 +215,22 @@ export default function ComplaintsProcedurePage() {
 
                         <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-2 text-xs sm:text-sm text-slate-700">
                             <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                                Support Phone Lines
+                                UK Support &amp; Office
+                            </p>
+                            <p>
+                                <strong>UK Sales &amp; Enquiries:</strong>{" "}
+                                <a href="tel:+443301658879" className="font-bold text-[#071746] hover:text-[#F7941D]">+44 330 165 8879</a> (0330 165 8879)
                             </p>
                             <p>
                                 <strong>UK Support:</strong>{" "}
                                 <a href="tel:+443300249639" className="font-bold text-[#071746] hover:text-[#F7941D]">+44 330 024 9639</a>
                             </p>
                             <p>
-                                <strong>India Support:</strong>{" "}
-                                <a href="tel:+918977396433" className="font-bold text-[#071746] hover:text-[#F7941D]">+91 89773 96433</a>
+                                <strong>Operating Hours:</strong> Mon – Sun 9AM to 9PM
                             </p>
-                            <p className="text-xs text-slate-500 pt-1 border-t border-slate-200">
-                                <strong>Registered Office:</strong> 128 City Road, London, United Kingdom, EC1V 2NX
+                            <p className="text-xs text-slate-500 pt-2 border-t border-slate-200">
+                                <strong>HolidayJug LTD.</strong> (Company number 17492828)<br />
+                                <strong>Registered office address:</strong> 128 City Road, London, United Kingdom, EC1V 2NX
                             </p>
                         </div>
                     </div>

@@ -47,65 +47,6 @@ export function HomeBottomSections() {
 
     return (
         <div className="space-y-6 sm:space-y-10">
-            {/* SECTION 7: PROMOTIONAL BANNERS */}
-            <section className="bg-white py-6 sm:py-10">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                        {promoBanners.map((banner) => (
-                            <Link
-                                key={banner.id}
-                                href={banner.href}
-                                className="group relative flex flex-row items-stretch rounded-[22px] sm:rounded-[28px] bg-[#071746] overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[210px] sm:min-h-[230px] lg:min-h-[250px]"
-                            >
-                                {/* LEFT TEXT CONTENT */}
-                                <div className="flex flex-col justify-center px-5 sm:px-8 lg:px-8 py-5 sm:py-7 z-20 w-[45%] shrink-0 text-left">
-                                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white  leading-snug mb-1.5 sm:mb-2">
-                                        {banner.title}
-                                    </h3>
-                                    <p className="text-xs sm:text-sm lg:text-[15px] font-normal text-white/90 leading-relaxed mb-4 sm:mb-6 max-w-xs">
-                                        {banner.subtitle}
-                                    </p>
-                                    <div className="mt-auto">
-                                        <span className="inline-flex items-center justify-center rounded-lg sm:rounded-xl px-5 sm:px-7 py-2 sm:py-2.5 text-xs sm:text-sm lg:text-base font-semibold text-[#071746] bg-white border border-transparent shadow-sm group-hover:bg-[#F7941D] group-hover:text-white group-hover:border-[#F7941D] transition-all duration-300">
-                                            {banner.buttonText}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* RIGHT IMAGE WITH YELLOW ARC CURVE OVERLAY */}
-                                <div className="relative w-[55%] h-auto min-h-[210px] overflow-hidden shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        src={banner.image}
-                                        alt={banner.title}
-                                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-                                    />
-
-                                    {/* SVG CURVE MASK & YELLOW ARC OUTLINE */}
-                                    <svg
-                                        className="absolute inset-0 w-full h-full pointer-events-none z-10"
-                                        viewBox="0 0 100 100"
-                                        preserveAspectRatio="none"
-                                    >
-                                        <path
-                                            d="M 0,0 L 54,0 C 4,25 4,75 54,100 L 0,100 Z"
-                                            fill="#071746"
-                                        />
-                                        <path
-                                            d="M 54,0 C 4,25 4,75 54,100"
-                                            fill="none"
-                                            stroke="#F7941D"
-                                            strokeWidth="8"
-                                            vectorEffect="non-scaling-stroke"
-                                        />
-                                    </svg>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             {/* SECTION 8 & 9: WHY CHOOSE HOLIDAY JUG & READY TO FIND CTA */}
             <section className="bg-white py-6 sm:py-10">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">

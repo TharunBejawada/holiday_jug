@@ -75,22 +75,34 @@ async function handleSearch(payload: SearchPayload) {
     destinationName = "Featured Worldwide";
     countryName = "Top Destinations";
     destinationSlug = "all";
-    grnCityIdToSearch = "122419"; // Live Antalya & Turkish Riviera hotels from GRN
+    grnCityIdToSearch = "121449"; // Live Dubai & UAE hotels from GRN
     hotelCodesToSearch = [
-      "rixos-downtown-antalya",
       "1848131",
-      "TR-ANT-01",
-      "1847658",
       "1847631",
+      "1847658",
+      "ES-TEN-01",
+      "GR-SAN-01",
+      "ES-MAJ-01",
     ];
   } else {
-    const destinationItem =
-      findDestination(destinationInput) || findDestination("antalya") || findDestination("dubai")!;
-    destinationName = destinationItem.destination;
-    countryName = destinationItem.country;
-    destinationSlug = destinationItem.slug;
-    hotelCodesToSearch = destinationItem.featuredHotelCodes;
-    grnCityIdToSearch = destinationItem.grnCityId;
+    const destinationItem = findDestination(destinationInput);
+    if (destinationItem) {
+      destinationName = destinationItem.destination;
+      countryName = destinationItem.country;
+      destinationSlug = destinationItem.slug;
+      hotelCodesToSearch = destinationItem.featuredHotelCodes;
+      grnCityIdToSearch = destinationItem.grnCityId;
+    } else {
+      // User specified a destination that could not be found.
+      // NEVER silently fall back to Antalya or Turkey!
+      return NextResponse.json({
+        success: true,
+        hotels: [],
+        searchId: generateSearchId(),
+        priceCheckedAt: formatUkTime(new Date()),
+        message: `No hotels found matching "${payload.destination}". Please try another destination.`,
+      });
+    }
   }
 
   // Hotel search only: No flight fare added

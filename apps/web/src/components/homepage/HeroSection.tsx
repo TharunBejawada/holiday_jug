@@ -52,7 +52,12 @@ export function HeroSection() {
 
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [dateErrors, setDateErrors] = useState<{ checkIn?: string; checkOut?: string }>({});
+  const [formErrors, setFormErrors] = useState<{
+    departureAirport?: string;
+    destination?: string;
+    checkIn?: string;
+    checkOut?: string;
+  }>({});
 
   // Comprehensive Travellers & Rooms popover state (D3)
   const [rooms, setRooms] = useState<RoomConfig[]>([
@@ -284,11 +289,26 @@ export function HeroSection() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check-in and check-out are strictly mandatory
-    const errors: { checkIn?: string; checkOut?: string } = {};
+    // All filters are strictly mandatory
+    const errors: {
+      departureAirport?: string;
+      destination?: string;
+      checkIn?: string;
+      checkOut?: string;
+    } = {};
+
+    if (activeTab === "holidays" && !departureAirport) {
+      errors.departureAirport = "Departure airport is required";
+    }
+
+    if (!destination) {
+      errors.destination = "Destination is required";
+    }
+
     if (!checkIn) {
       errors.checkIn = "Check-in date is required";
     }
+
     if (!checkOut) {
       errors.checkOut = "Check-out date is required";
     } else if (checkIn && checkOut <= checkIn) {
@@ -296,12 +316,12 @@ export function HeroSection() {
     }
 
     if (Object.keys(errors).length > 0) {
-      setDateErrors(errors);
+      setFormErrors(errors);
       setIsNavigating(false);
       return;
     }
 
-    setDateErrors({});
+    setFormErrors({});
     setIsNavigating(true);
 
     // Navigate to hotels overview page for both Holidays and Hotels
@@ -395,12 +415,21 @@ export function HeroSection() {
                 {/* 1. DEPARTURE AIRPORT (D3 & Appendix A.4) */}
                 {activeTab === "holidays" && (
                   <div className="lg:col-span-2 flex flex-col gap-1 sm:gap-1.5">
-                    <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Departing From</label>
+                    <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                      Departing From <span className="text-red-500">*</span>
+                    </label>
                     <SearchableSelect
                       options={airportOptions}
                       value={departureAirport}
-                      onChange={(val) => setDepartureAirport(val)}
+                      onChange={(val) => {
+                        setDepartureAirport(val);
+                        if (formErrors.departureAirport) {
+                          setFormErrors((prev) => ({ ...prev, departureAirport: undefined }));
+                        }
+                      }}
                       openOnKeywordOnly={true}
+                      error={formErrors.departureAirport}
+                      required={true}
                       icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
                       trailingIcon={<FaPlaneDeparture className="text-gray-400 text-xs sm:text-sm" />}
                       placeholder="Search airport or city..."
@@ -411,16 +440,23 @@ export function HeroSection() {
 
                 {/* 2. WHERE TO? (Destinations from Admin Dashboard & Core Navigation) */}
                 <div className={`${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-4"} flex flex-col gap-1 sm:gap-1.5`}>
-                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Where to?</label>
+                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">
+                    Where to? <span className="text-red-500">*</span>
+                  </label>
                   <SearchableSelect
                     options={destinationOptions}
                     value={destination}
                     onChange={(val) => {
                       setDestination(val);
+                      if (formErrors.destination) {
+                        setFormErrors((prev) => ({ ...prev, destination: undefined }));
+                      }
                       const match = destinationOptions.find((d) => d.value === val);
                       if (match) setDestinationQuery(match.label);
                     }}
                     openOnKeywordOnly={true}
+                    error={formErrors.destination}
+                    required={true}
                     icon={<FaSearch className="text-gray-400 text-xs sm:text-sm" />}
                     trailingIcon={<FaMapMarkerAlt className="text-gray-400 text-xs sm:text-sm" />}
                     placeholder="Search destination or country..."
@@ -437,15 +473,15 @@ export function HeroSection() {
                     value={checkIn}
                     onChange={(val) => {
                       setCheckIn(val);
-                      if (dateErrors.checkIn) {
-                        setDateErrors((prev) => ({ ...prev, checkIn: undefined }));
+                      if (formErrors.checkIn) {
+                        setFormErrors((prev) => ({ ...prev, checkIn: undefined }));
                       }
                       if (checkOut && val && checkOut <= val) {
                         setCheckOut("");
                       }
                     }}
                     placeholder="Select date"
-                    error={dateErrors.checkIn}
+                    error={formErrors.checkIn}
                     required={true}
                   />
                 </div>
@@ -459,13 +495,13 @@ export function HeroSection() {
                     value={checkOut}
                     onChange={(val) => {
                       setCheckOut(val);
-                      if (dateErrors.checkOut) {
-                        setDateErrors((prev) => ({ ...prev, checkOut: undefined }));
+                      if (formErrors.checkOut) {
+                        setFormErrors((prev) => ({ ...prev, checkOut: undefined }));
                       }
                     }}
                     placeholder="Select date"
                     minDate={checkIn}
-                    error={dateErrors.checkOut}
+                    error={formErrors.checkOut}
                     required={true}
                   />
                 </div>
@@ -475,7 +511,7 @@ export function HeroSection() {
                   ref={travellersContainerRef}
                   className={`relative ${activeTab === "holidays" ? "lg:col-span-3" : "lg:col-span-2"} flex flex-col gap-1 sm:gap-1.5`}
                 >
-                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Travellers &amp; Rooms</label>
+                  <label className="text-xs sm:text-sm font-bold text-[#1D1248]">Travellers &amp; Rooms <span className="text-red-500">*</span></label>
                   <button
                     type="button"
                     onClick={() => setShowTravellersPopover(!showTravellersPopover)}
