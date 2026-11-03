@@ -112,7 +112,7 @@ const POPULAR_FILTER_OPTIONS = [
   "Couple Friendly",
   "Pay At Hotel",
   "Leisure",
-  "Free Cancellation",
+  "Refundable",
   "Breakfast Included",
   "Swimming Pool",
   "Beachfront",
@@ -1172,7 +1172,7 @@ function HotelsPageContent() {
           if (pf === "Couple Friendly") return popCombined.includes("couple") || popCombined.includes("romantic") || popCombined.includes("adult");
           if (pf === "Pay At Hotel") return true;
           if (pf === "Leisure") return popCombined.includes("leisure") || popCombined.includes("resort") || popCombined.includes("pool") || popCombined.includes("spa");
-          if (pf === "Free Cancellation") return h.availableRates?.some(r => !r.cancellationPolicy?.toLowerCase().includes("non-refundable"));
+          if (pf === "Refundable" || pf === "Free Cancellation") return h.availableRates?.some(r => !r.isNonRefundable && !r.cancellationPolicy?.toLowerCase().includes("non"));
           if (pf === "Breakfast Included") return h.availableRates?.some(r => r.boardBasis?.toLowerCase().includes("breakfast") || r.boardBasis?.toLowerCase().includes("all inclusive"));
           if (pf === "Swimming Pool") return popCombined.includes("pool");
           if (pf === "Beachfront") return popCombined.includes("beach") || popCombined.includes("sea") || popCombined.includes("coastal");
@@ -1360,7 +1360,7 @@ function HotelsPageContent() {
           if (pf === "Couple Friendly") return popCombined.includes("couple") || popCombined.includes("romantic") || popCombined.includes("adult");
           if (pf === "Pay At Hotel") return true;
           if (pf === "Leisure") return popCombined.includes("leisure") || popCombined.includes("resort") || popCombined.includes("pool") || popCombined.includes("spa");
-          if (pf === "Free Cancellation") return h.availableRates?.some(r => !r.cancellationPolicy?.toLowerCase().includes("non-refundable"));
+          if (pf === "Refundable" || pf === "Free Cancellation") return h.availableRates?.some(r => !r.isNonRefundable && !r.cancellationPolicy?.toLowerCase().includes("non"));
           if (pf === "Breakfast Included") return h.availableRates?.some(r => r.boardBasis?.toLowerCase().includes("breakfast") || r.boardBasis?.toLowerCase().includes("all inclusive"));
           if (pf === "Swimming Pool") return popCombined.includes("pool");
           if (pf === "Beachfront") return popCombined.includes("beach") || popCombined.includes("sea") || popCombined.includes("coastal");
@@ -2304,7 +2304,7 @@ function HotelsPageContent() {
                           )}
                         </div>
 
-                        {/* Live Board Basis & Cancellation Badges */}
+                        {/* Live Board Basis & Refund Status Badges */}
                         {(hotel.availableRates?.[0]?.boardBasis || hotel.availableRates?.[0]?.cancellationPolicy) && (
                           <div className="mt-2 flex flex-wrap items-center gap-1.5">
                             {hotel.availableRates?.[0]?.boardBasis && (
@@ -2313,10 +2313,22 @@ function HotelsPageContent() {
                                 <span>{hotel.availableRates[0].boardBasis}</span>
                               </span>
                             )}
-                            {hotel.availableRates?.[0]?.cancellationPolicy && (
-                              <span className="rounded-lg bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 flex items-center gap-1.5">
-                                <FaShieldAlt className="text-[10px] text-emerald-600 shrink-0" />
-                                <span>{hotel.availableRates[0].cancellationPolicy}</span>
+                            {hotel.availableRates?.[0] && (
+                              <span
+                                className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold flex items-center gap-1.5 ${
+                                  hotel.availableRates[0].isNonRefundable ||
+                                  hotel.availableRates[0].cancellationPolicy?.toLowerCase().includes("non")
+                                    ? "bg-rose-50 border border-rose-200 text-rose-700"
+                                    : "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                                }`}
+                              >
+                                <FaShieldAlt className="text-[10px] shrink-0" />
+                                <span>
+                                  {hotel.availableRates[0].isNonRefundable ||
+                                  hotel.availableRates[0].cancellationPolicy?.toLowerCase().includes("non")
+                                    ? "Non-Refundable"
+                                    : "Refundable"}
+                                </span>
                               </span>
                             )}
                           </div>

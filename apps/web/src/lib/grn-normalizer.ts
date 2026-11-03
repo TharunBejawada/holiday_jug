@@ -298,14 +298,16 @@ export function normalizeInclusions(raw: any): string[] {
 
 /**
  * Normalizes cancellation policy with user-friendly formatting.
+ * Business rule: Hide cancellation timeframes (e.g. "Free cancellation up to 48 hours")
+ * and show standard "Refundable" vs "Non-Refundable" terms.
  */
 export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): NormalizedCancellation {
   let isNonRefundable = false;
   let cancelByDate: string | undefined = undefined;
-  let formattedPolicy = fallbackPolicy || "Free cancellation up to 48 hours before check-in";
+  let formattedPolicy = "Refundable";
 
   if (!raw) {
-    return { isNonRefundable, cancelByDate, formattedPolicy };
+    return { isNonRefundable, cancelByDate, formattedPolicy: "Refundable" };
   }
 
   // String policy
@@ -313,9 +315,9 @@ export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): 
     const clean = cleanHtmlText(raw);
     if (clean.toLowerCase().includes("non-refundable") || clean.toLowerCase().includes("non refundable")) {
       isNonRefundable = true;
-      formattedPolicy = "Non-refundable promotional rate";
+      formattedPolicy = "Non-Refundable";
     } else {
-      formattedPolicy = clean;
+      formattedPolicy = "Refundable";
     }
     return { isNonRefundable, cancelByDate, formattedPolicy };
   }
@@ -324,32 +326,16 @@ export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): 
   if (typeof raw === "object") {
     if (raw.non_refundable === true || raw.is_non_refundable === true) {
       isNonRefundable = true;
-      formattedPolicy = "Non-refundable promotional rate";
+      formattedPolicy = "Non-Refundable";
       return { isNonRefundable, cancelByDate, formattedPolicy };
     }
 
     const cancelDate = raw.cancel_by_date || raw.cancelByDate || raw.details?.[0]?.from;
     if (typeof cancelDate === "string" && cancelDate.trim() !== "") {
       cancelByDate = cancelDate;
-      try {
-        const parsed = new Date(cancelDate);
-        if (!isNaN(parsed.getTime())) {
-          const formatted = parsed.toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          });
-          formattedPolicy = `Free cancellation until ${formatted}`;
-          return { isNonRefundable: false, cancelByDate, formattedPolicy };
-        }
-      } catch {
-        // Fall back to text if date parsing fails
-      }
     }
 
-    if (raw.details && Array.isArray(raw.details) && raw.details.length > 0) {
-      formattedPolicy = "Flexible cancellation available";
-    }
+    formattedPolicy = isNonRefundable ? "Non-Refundable" : "Refundable";
   }
 
   return { isNonRefundable, cancelByDate, formattedPolicy };
