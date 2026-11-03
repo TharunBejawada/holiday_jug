@@ -109,7 +109,11 @@ export function SearchableSelect({
 
   // Find the currently selected option
   const selectedOption = useMemo(() => {
-    return options.find((opt) => opt.value === value);
+    return options.find(
+      (opt) =>
+        opt.value === value ||
+        (typeof value === "string" && opt.value.toLowerCase() === value.toLowerCase())
+    );
   }, [options, value]);
 
   const displayLabel = selectedOption ? selectedOption.label : value ? value : "";

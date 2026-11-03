@@ -387,9 +387,9 @@ function HotelsPageContent() {
       }
     }
 
-    // Condition 2: URL has NO checkIn / checkOut (e.g. user clicked browser back or "Hotels" nav)
+    // Condition 2: URL has NO destination and NO checkIn / checkOut (e.g. user clicked browser back from hotel details or "Hotels Only" nav)
     // but user previously had an active search in this session!
-    if (!initialCheckIn && !initialCheckOut && stored.checkIn && stored.checkOut && Array.isArray(stored.hotels) && stored.hotels.length > 0) {
+    if (!initialDestination && !initialCheckIn && !initialCheckOut && stored.checkIn && stored.checkOut && Array.isArray(stored.hotels) && stored.hotels.length > 0) {
       hasRestoredFromCache.current = true;
       setDestination(stored.destination || "");
       setCheckIn(stored.checkIn);
@@ -436,11 +436,12 @@ function HotelsPageContent() {
 
   // Sync state if searchParams change via client navigation
   useEffect(() => {
-    if (isInitialMount.current || hasRestoredFromCache.current) {
+    if (isInitialMount.current) {
       return;
     }
 
     if (initialCheckIn && initialCheckOut) {
+      hasRestoredFromCache.current = false;
       setDestination(initialDestination || "");
       setCheckIn(initialCheckIn || "");
       setCheckOut(initialCheckOut || "");
@@ -454,7 +455,16 @@ function HotelsPageContent() {
         hotelCode: initialHotelCode || undefined,
       });
     } else if (initialDestination) {
+      // User clicked a destination from navbar menu or changed destination query param
+      hasRestoredFromCache.current = false;
       setDestination(initialDestination);
+      setCheckIn("");
+      setCheckOut("");
+      setHotels([]);
+      setHasSearched(false);
+      setSearchTrigger(null);
+      setLoading(false);
+      setHeroErrors({});
     }
   }, [initialDestination, initialCheckIn, initialCheckOut, initialHotelCode]);
 
@@ -2156,10 +2166,20 @@ function HotelsPageContent() {
                   <FaMapMarkerAlt className="text-2xl" />
                 </div>
                 <h3 className="text-xl font-extrabold text-[#1D1248]">
-                  Select Destination &amp; Travel Dates to View Hotels
+                  {destination && destination !== "all"
+                    ? "Select Travel Dates to View Hotels"
+                    : "Select Destination & Travel Dates to View Hotels"}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-500 mt-2 max-w-md leading-relaxed">
-                  Destination, Check-in, and Check-out dates are mandatory to check live availability and confirmed hotel rates. Please enter your destination and dates above, then click <span className="font-bold text-[#F7941D]">Search</span>.
+                  {destination && destination !== "all" ? (
+                    <>
+                      You have selected <span className="font-bold text-[#1D1248] capitalize">{destination.replace(/-/g, " ")}</span>. Please select your Check-in and Check-out dates above, then click <span className="font-bold text-[#F7941D]">Search</span> to view available hotels.
+                    </>
+                  ) : (
+                    <>
+                      Destination, Check-in, and Check-out dates are mandatory to check live availability and confirmed hotel rates. Please enter your destination and dates above, then click <span className="font-bold text-[#F7941D]">Search</span>.
+                    </>
+                  )}
                 </p>
                 <button
                   type="button"
@@ -2168,7 +2188,7 @@ function HotelsPageContent() {
                   }}
                   className="mt-6 px-6 py-2.5 rounded-xl bg-[#F7941D] hover:bg-[#e08316] text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer"
                 >
-                  <FaSearch className="text-xs" /> Enter Filters &amp; Search
+                  <FaSearch className="text-xs" /> {destination && destination !== "all" ? "Select Dates & Search" : "Enter Filters & Search"}
                 </button>
               </div>
             ) : filteredHotels.length === 0 ? (
