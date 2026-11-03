@@ -304,20 +304,27 @@ export function normalizeInclusions(raw: any): string[] {
 export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): NormalizedCancellation {
   let isNonRefundable = false;
   let cancelByDate: string | undefined = undefined;
-  let formattedPolicy = "Refundable";
+  let formattedPolicy = fallbackPolicy || "";
 
   if (!raw) {
-    return { isNonRefundable, cancelByDate, formattedPolicy: "Refundable" };
+    return { isNonRefundable, cancelByDate, formattedPolicy };
   }
 
   // String policy
   if (typeof raw === "string") {
     const clean = cleanHtmlText(raw);
-    if (clean.toLowerCase().includes("non-refundable") || clean.toLowerCase().includes("non refundable")) {
+    if (!clean) {
+      return { isNonRefundable, cancelByDate, formattedPolicy };
+    }
+    const lower = clean.toLowerCase();
+    if (lower.includes("non-refundable") || lower.includes("non refundable") || lower.includes("nonrefundable")) {
       isNonRefundable = true;
       formattedPolicy = "Non-Refundable";
-    } else {
+    } else if (lower.includes("refundable") || lower.includes("free cancel") || lower.includes("cancellation") || lower.includes("cancel")) {
+      isNonRefundable = false;
       formattedPolicy = "Refundable";
+    } else {
+      formattedPolicy = fallbackPolicy || "";
     }
     return { isNonRefundable, cancelByDate, formattedPolicy };
   }
@@ -330,12 +337,22 @@ export function normalizeCancellationPolicy(raw: any, fallbackPolicy?: string): 
       return { isNonRefundable, cancelByDate, formattedPolicy };
     }
 
+    if (raw.non_refundable === false || raw.is_non_refundable === false) {
+      isNonRefundable = false;
+      formattedPolicy = "Refundable";
+    }
+
     const cancelDate = raw.cancel_by_date || raw.cancelByDate || raw.details?.[0]?.from;
     if (typeof cancelDate === "string" && cancelDate.trim() !== "") {
       cancelByDate = cancelDate;
+      formattedPolicy = "Refundable";
+    } else if (Array.isArray(raw.details) && raw.details.length > 0) {
+      formattedPolicy = "Refundable";
     }
 
-    formattedPolicy = isNonRefundable ? "Non-Refundable" : "Refundable";
+    if (!formattedPolicy && fallbackPolicy) {
+      formattedPolicy = fallbackPolicy;
+    }
   }
 
   return { isNonRefundable, cancelByDate, formattedPolicy };

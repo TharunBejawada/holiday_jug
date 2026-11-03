@@ -560,28 +560,34 @@ export default function HotelLandingClient({
   // Rooms Data (Incorporates Live Search Rates when available)
   const rooms = useMemo(() => {
     if (liveRates && liveRates.length > 0) {
-      return liveRates.map((rate, idx) => ({
-        id: rate.rateKey || `live-rate-${idx}`,
-        name: rate.roomType || "Standard Room",
-        capacity: `Up to ${adults} guests`,
-        pricePp: Math.round(rate.customerPricing?.pricePerPerson || 599),
-        totalPrice: Math.round(rate.customerPricing?.totalPrice || 599 * adults),
-        boardBasis: rate.boardBasis || "All Inclusive",
-        boardingDetails: rate.boardingDetails || [rate.boardBasis || "All Inclusive"],
-        otherInclusions: rate.otherInclusions || ["Free High-speed Wi-Fi", "Air Conditioning"],
-        cancellationPolicy: rate.isNonRefundable ? "Non-Refundable" : "Refundable",
-        cancelByDate: rate.cancelByDate,
-        isNonRefundable: rate.isNonRefundable ?? false,
-        rateComments: rate.rateComments,
-        features: [
-          rate.isNonRefundable ? "Non-Refundable" : "Refundable",
-          rate.isNonRefundable ? "Non-Refundable" : "Flexible booking",
-          ...(rate.otherInclusions && rate.otherInclusions.length > 0
-            ? rate.otherInclusions.slice(0, 2)
-            : ["Free High-speed Wi-Fi", "Air Conditioning"]),
-        ],
-        image: hotel.galleryImages[idx % hotel.galleryImages.length] || hotel.mainImage,
-      }));
+      return liveRates.map((rate, idx) => {
+        const hasPolicy = Boolean(rate.cancellationPolicy && rate.cancellationPolicy.trim() !== "");
+        const refundStatus = hasPolicy
+          ? (rate.isNonRefundable || rate.cancellationPolicy.toLowerCase().includes("non") ? "Non-Refundable" : "Refundable")
+          : "";
+
+        return {
+          id: rate.rateKey || `live-rate-${idx}`,
+          name: rate.roomType || "Standard Room",
+          capacity: `Up to ${adults} guests`,
+          pricePp: Math.round(rate.customerPricing?.pricePerPerson || 599),
+          totalPrice: Math.round(rate.customerPricing?.totalPrice || 599 * adults),
+          boardBasis: rate.boardBasis || "All Inclusive",
+          boardingDetails: rate.boardingDetails || [rate.boardBasis || "All Inclusive"],
+          otherInclusions: rate.otherInclusions || ["Free High-speed Wi-Fi", "Air Conditioning"],
+          cancellationPolicy: refundStatus,
+          cancelByDate: rate.cancelByDate,
+          isNonRefundable: rate.isNonRefundable ?? false,
+          rateComments: rate.rateComments,
+          features: [
+            ...(refundStatus ? [refundStatus] : []),
+            ...(rate.otherInclusions && rate.otherInclusions.length > 0
+              ? rate.otherInclusions.slice(0, 2)
+              : ["Free High-speed Wi-Fi", "Air Conditioning"]),
+          ],
+          image: hotel.galleryImages[idx % hotel.galleryImages.length] || hotel.mainImage,
+        };
+      });
     }
 
     const basePp = 549;
@@ -595,7 +601,7 @@ export default function HotelLandingClient({
         boardBasis: "Room Only",
         boardingDetails: ["Room Only"],
         otherInclusions: ["Free High-speed Wi-Fi", "Walk-in Rain Shower", "Air Conditioning"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -611,7 +617,7 @@ export default function HotelLandingClient({
         boardBasis: "Bed & Breakfast",
         boardingDetails: ["Bed & Breakfast"],
         otherInclusions: ["Breakfast Buffet", "Balcony with Garden View", "Free High-speed Wi-Fi"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -627,7 +633,7 @@ export default function HotelLandingClient({
         boardBasis: "Half Board",
         boardingDetails: ["Half Board (Breakfast & Dinner)"],
         otherInclusions: ["Breakfast & Dinner", "Panoramic Sea View", "Espresso Coffee Machine"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -643,7 +649,7 @@ export default function HotelLandingClient({
         boardBasis: "All Inclusive",
         boardingDetails: ["All Inclusive"],
         otherInclusions: ["All Meals & Unlimited Drinks", "Oceanfront Balcony", "Beach Towel Service"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -659,7 +665,7 @@ export default function HotelLandingClient({
         boardBasis: "All Inclusive",
         boardingDetails: ["All Inclusive Plus"],
         otherInclusions: ["All Meals & Selected Premium Spirits", "Direct Mediterranean View", "Jacuzzi Bath"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -675,7 +681,7 @@ export default function HotelLandingClient({
         boardBasis: "All Inclusive",
         boardingDetails: ["All Inclusive Family"],
         otherInclusions: ["2 Connecting Bedrooms", "Kids Club Access Included", "All Meals & Snacks"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -691,9 +697,9 @@ export default function HotelLandingClient({
         boardBasis: "All Inclusive",
         boardingDetails: ["Ultra All Inclusive"],
         otherInclusions: ["Private Rooftop Terrace & Daybeds", "Butler Service", "A La Carte Dining"],
-        cancellationPolicy: "Non-Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
-        isNonRefundable: true,
+        isNonRefundable: false,
         rateComments: null,
         features: ["Private 40m² rooftop sun terrace", "Dedicated concierge service", "Priority reservations for all a la carte restaurants", "Complimentary airport limousine transfer"],
         image: hotel.galleryImages[1] || hotel.mainImage,
@@ -707,7 +713,7 @@ export default function HotelLandingClient({
         boardBasis: "Ultra All Inclusive",
         boardingDetails: ["Ultra All Inclusive VIP"],
         otherInclusions: ["Private Infinity Pool & Cabana", "Private Chef on Request", "24hr Butler Service"],
-        cancellationPolicy: "Refundable",
+        cancellationPolicy: "",
         cancelByDate: null,
         isNonRefundable: false,
         rateComments: null,
@@ -1730,18 +1736,24 @@ export default function HotelLandingClient({
                       </div>
 
                       {/* Refund Status Badge */}
-                      <div>
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            room.isNonRefundable
-                              ? "bg-rose-50 text-rose-700 border border-rose-200"
-                              : "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                          }`}
-                        >
-                          <FaShieldAlt className="text-[9px] shrink-0" />
-                          <span>{room.isNonRefundable ? "Non-Refundable" : "Refundable"}</span>
-                        </span>
-                      </div>
+                      {room.cancellationPolicy && (
+                        <div>
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                              room.isNonRefundable || room.cancellationPolicy.toLowerCase().includes("non")
+                                ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            }`}
+                          >
+                            <FaShieldAlt className="text-[9px] shrink-0" />
+                            <span>
+                              {room.isNonRefundable || room.cancellationPolicy.toLowerCase().includes("non")
+                                ? "Non-Refundable"
+                                : "Refundable"}
+                            </span>
+                          </span>
+                        </div>
+                      )}
 
                       {/* Other Inclusions Chips */}
                       {room.otherInclusions && room.otherInclusions.length > 0 && (
@@ -2001,7 +2013,14 @@ export default function HotelLandingClient({
                 <FaShieldAlt className="text-emerald-600" /> Refund &amp; Booking Conditions
               </h3>
               <div className="space-y-2 text-xs text-slate-600 leading-relaxed">
-                <p><strong>Refund Policy:</strong> {rooms[selectedRoomIndex]?.isNonRefundable ? "Non-Refundable promotional rate." : "Refundable booking subject to supplier terms and conditions."}</p>
+                {rooms[selectedRoomIndex]?.cancellationPolicy && (
+                  <p>
+                    <strong>Refund Policy:</strong>{" "}
+                    {rooms[selectedRoomIndex].isNonRefundable || rooms[selectedRoomIndex].cancellationPolicy?.toLowerCase().includes("non")
+                      ? "Non-Refundable promotional rate."
+                      : "Refundable booking subject to supplier terms and conditions."}
+                  </p>
+                )}
                 <p><strong>Board Basis:</strong> {rooms[selectedRoomIndex]?.boardBasis || "Room Only"}. Meals and beverages outside the stated plan may incur extra hotel charges.</p>
                 <p><strong>Telephone Booking Protection:</strong> Quote Search ID <span className="font-mono font-bold text-[#071a55]">{searchId}</span> when calling <strong>0330 165 8879</strong>.</p>
               </div>

@@ -588,17 +588,19 @@ function SearchResultsContent() {
                       {rate.boardBasis}
                     </span>
                     <h4 className="font-bold text-sm sm:text-base text-[#1D1248]">{rate.roomType}</h4>
-                    <p
-                      className={`text-xs font-semibold mt-0.5 ${
-                        rate.isNonRefundable || rate.cancellationPolicy?.toLowerCase().includes("non")
-                          ? "text-rose-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {rate.isNonRefundable || rate.cancellationPolicy?.toLowerCase().includes("non")
-                        ? "Non-Refundable"
-                        : "Refundable"}
-                    </p>
+                    {rate.cancellationPolicy && (
+                      <p
+                        className={`text-xs font-semibold mt-0.5 ${
+                          rate.isNonRefundable || rate.cancellationPolicy.toLowerCase().includes("non")
+                            ? "text-rose-600"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {rate.isNonRefundable || rate.cancellationPolicy.toLowerCase().includes("non")
+                          ? "Non-Refundable"
+                          : "Refundable"}
+                      </p>
+                    )}
                     <p className="text-[11px] text-gray-500 mt-1">
                       Taxes: £{rate.customerPricing.localTax.toFixed(2)} included
                     </p>

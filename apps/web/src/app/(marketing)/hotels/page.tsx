@@ -2313,11 +2313,11 @@ function HotelsPageContent() {
                                 <span>{hotel.availableRates[0].boardBasis}</span>
                               </span>
                             )}
-                            {hotel.availableRates?.[0] && (
+                            {hotel.availableRates?.[0]?.cancellationPolicy && (
                               <span
                                 className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold flex items-center gap-1.5 ${
                                   hotel.availableRates[0].isNonRefundable ||
-                                  hotel.availableRates[0].cancellationPolicy?.toLowerCase().includes("non")
+                                  hotel.availableRates[0].cancellationPolicy.toLowerCase().includes("non")
                                     ? "bg-rose-50 border border-rose-200 text-rose-700"
                                     : "bg-emerald-50 border border-emerald-200 text-emerald-800"
                                 }`}
@@ -2325,7 +2325,7 @@ function HotelsPageContent() {
                                 <FaShieldAlt className="text-[10px] shrink-0" />
                                 <span>
                                   {hotel.availableRates[0].isNonRefundable ||
-                                  hotel.availableRates[0].cancellationPolicy?.toLowerCase().includes("non")
+                                  hotel.availableRates[0].cancellationPolicy.toLowerCase().includes("non")
                                     ? "Non-Refundable"
                                     : "Refundable"}
                                 </span>
