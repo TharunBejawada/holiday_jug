@@ -3,16 +3,22 @@ import { PrismaClient } from "@prisma/client";
 declare global {
   // eslint-disable-next-line no-var
   var __prisma: PrismaClient | undefined;
+  // eslint-disable-next-line no-var
+  var __prismaDatabaseUrl: string | undefined;
 }
 
 function getPrismaClient(): PrismaClient {
+  const currentDbUrl = process.env.DATABASE_URL;
+
   if (global.__prisma) {
+    const isUrlChanged = currentDbUrl && global.__prismaDatabaseUrl !== currentDbUrl;
     const fields = (global.__prisma as any)?._runtimeDataModel?.models?.Country?.fields;
     const hasWhyVisitImg = Array.isArray(fields) && fields.some((f: any) => f.name === "whyVisitImageUrl");
-    if (hasWhyVisitImg) {
+
+    if (hasWhyVisitImg && !isUrlChanged) {
       return global.__prisma;
     }
-    // Outdated global client in memory — recreate with latest schema
+    // Outdated global client in memory or DB URL updated — recreate with latest client
     try {
       (global.__prisma as any).$disconnect();
     } catch {
@@ -24,6 +30,7 @@ function getPrismaClient(): PrismaClient {
   try {
     const client = new PrismaClient();
     global.__prisma = client;
+    global.__prismaDatabaseUrl = currentDbUrl;
     return client;
   } catch {
     return new Proxy({} as PrismaClient, {

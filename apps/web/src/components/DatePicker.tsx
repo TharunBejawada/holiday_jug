@@ -31,6 +31,7 @@ export function DatePicker({
     const [isOpen, setIsOpen] = useState(false);
     const [placement, setPlacement] = useState<"down" | "up">("down");
     const [align, setAlign] = useState<"left" | "right">("left");
+    const [maxPopoverHeight, setMaxPopoverHeight] = useState<number | undefined>(undefined);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Calculate dynamic placement based on scroll position and viewport boundaries
@@ -40,17 +41,21 @@ export function DatePicker({
         const viewportHeight = window.innerHeight;
         const viewportWidth = window.innerWidth;
         const navbarHeight = 85;
-        const popoverHeight = 350;
+        const popoverHeight = 390;
         const popoverWidth = 320;
 
         const spaceBelow = viewportHeight - rect.bottom;
         const spaceAbove = rect.top - navbarHeight;
 
         // If not enough room below AND (enough room above OR more room above than below) -> flip UP
-        if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
+        const shouldFlipUp = spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow);
+
+        if (shouldFlipUp) {
             setPlacement("up");
+            setMaxPopoverHeight(Math.max(180, Math.floor(spaceAbove - 12)));
         } else {
             setPlacement("down");
+            setMaxPopoverHeight(Math.max(180, Math.floor(spaceBelow - 12)));
         }
 
         // Horizontal overflow protection
@@ -67,11 +72,11 @@ export function DatePicker({
         if (!isOpen) return;
 
         updatePosition();
-        window.addEventListener("scroll", updatePosition, { passive: true });
+        window.addEventListener("scroll", updatePosition, { capture: true, passive: true });
         window.addEventListener("resize", updatePosition, { passive: true });
 
         return () => {
-            window.removeEventListener("scroll", updatePosition);
+            window.removeEventListener("scroll", updatePosition, { capture: true });
             window.removeEventListener("resize", updatePosition);
         };
     }, [isOpen]);
@@ -201,6 +206,7 @@ export function DatePicker({
             {/* CALENDAR POPOVER */}
             {isOpen && (
                 <div
+                    style={maxPopoverHeight ? { maxHeight: `${maxPopoverHeight}px` } : undefined}
                     className={`absolute z-50 w-72 sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-4 shadow-2xl border border-gray-100 animate-in fade-in duration-150 max-h-[min(400px,calc(100vh-100px))] overflow-y-auto ${
                         placement === "up"
                             ? "bottom-full mb-2 slide-in-from-bottom-2"

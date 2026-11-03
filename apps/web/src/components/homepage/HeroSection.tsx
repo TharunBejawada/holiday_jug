@@ -65,6 +65,7 @@ export function HeroSection() {
   const [showTravellersPopover, setShowTravellersPopover] = useState(false);
   const travellersContainerRef = useRef<HTMLDivElement>(null);
   const [popoverPlacement, setPopoverPlacement] = useState<"down" | "up">("down");
+  const [travellersMaxHeight, setTravellersMaxHeight] = useState<number | undefined>(undefined);
 
   // Dynamic placement for Travellers & Rooms popover based on scrolling and viewport boundaries
   useEffect(() => {
@@ -75,23 +76,26 @@ export function HeroSection() {
       const rect = travellersContainerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const navbarHeight = 85; // sticky header is ~80px
-      const popoverHeight = 360;
+      const popoverHeight = 440;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top - navbarHeight;
 
-      // If space below is not enough AND (enough space above OR more space above than below) -> place UP
-      if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
+      const shouldFlipUp = spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow);
+
+      if (shouldFlipUp) {
         setPopoverPlacement("up");
+        setTravellersMaxHeight(Math.max(220, Math.floor(spaceAbove - 12)));
       } else {
         setPopoverPlacement("down");
+        setTravellersMaxHeight(Math.max(220, Math.floor(spaceBelow - 12)));
       }
     };
 
     calculatePlacement();
-    window.addEventListener("scroll", calculatePlacement, { passive: true });
+    window.addEventListener("scroll", calculatePlacement, { capture: true, passive: true });
     window.addEventListener("resize", calculatePlacement, { passive: true });
     return () => {
-      window.removeEventListener("scroll", calculatePlacement);
+      window.removeEventListener("scroll", calculatePlacement, { capture: true });
       window.removeEventListener("resize", calculatePlacement);
     };
   }, [showTravellersPopover]);
@@ -514,12 +518,16 @@ export function HeroSection() {
                     onClick={() => {
                       if (!showTravellersPopover && travellersContainerRef.current) {
                         const rect = travellersContainerRef.current.getBoundingClientRect();
-                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const viewportHeight = window.innerHeight;
+                        const spaceBelow = viewportHeight - rect.bottom;
                         const spaceAbove = rect.top - 85;
-                        if (spaceBelow < 360 && (spaceAbove >= 360 || spaceAbove > spaceBelow)) {
+                        const popoverHeight = 440;
+                        if (spaceBelow < popoverHeight && (spaceAbove >= popoverHeight || spaceAbove > spaceBelow)) {
                           setPopoverPlacement("up");
+                          setTravellersMaxHeight(Math.max(220, Math.floor(spaceAbove - 12)));
                         } else {
                           setPopoverPlacement("down");
+                          setTravellersMaxHeight(Math.max(220, Math.floor(spaceBelow - 12)));
                         }
                       }
                       setShowTravellersPopover(!showTravellersPopover);
@@ -533,6 +541,7 @@ export function HeroSection() {
                   {/* ROOMS & GUESTS POPOVER MODAL */}
                   {showTravellersPopover && (
                     <div
+                      style={travellersMaxHeight ? { maxHeight: `${travellersMaxHeight}px` } : undefined}
                       className={`absolute right-0 ${
                         popoverPlacement === "down"
                           ? "top-full mt-2 slide-in-from-top-2"

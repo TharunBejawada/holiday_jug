@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@holiday-jug/db";
+import { prisma, ensureEnvLoaded } from "@holiday-jug/db";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 // the ~3,000ms cold TLS/TCP connection penalty to AWS London.
 export async function GET() {
   try {
+    await ensureEnvLoaded();
     await prisma.user.findFirst({
       select: { id: true },
     });

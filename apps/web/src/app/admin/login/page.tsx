@@ -2,18 +2,18 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiLock, FiMail, FiAlertCircle, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
 import { AdminLoginBackground } from "@/components/admin/AdminLoginBackground";
 
+export const dynamic = "force-dynamic";
+
 const REMEMBER_KEY = "holidayjug-admin-remember-email";
 const FLY_DURATION_MS = 200;
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const { data: session, status } = useSession();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [email, setEmail] = useState("");
@@ -25,16 +25,15 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [flyOrigin, setFlyOrigin] = useState<{ x: number; y: number } | null>(null);
 
-  // If already authenticated as an active ADMIN, forward to the dashboard
+  // If already authenticated as an active ADMIN and not currently submitting, forward to the dashboard
   useEffect(() => {
-    if (status === "authenticated" && (session?.user as { role?: string } | undefined)?.role === "ADMIN") {
-      router.replace("/admin");
+    if (!loading && status === "authenticated" && (session?.user as { role?: string } | undefined)?.role === "ADMIN") {
+      window.location.replace("/admin");
     }
-  }, [session, status, router]);
+  }, [session, status, loading]);
 
   useEffect(() => {
-    // 1. Prefetch admin bundle and pre-warm DB/NextAuth while user enters credentials
-    router.prefetch("/admin");
+    // Pre-warm DB/NextAuth while user enters credentials
     fetch("/api/auth/csrf").catch(() => {});
     fetch("/api/admin/prewarm").catch(() => {});
 
@@ -47,38 +46,66 @@ export default function AdminLoginPage() {
     } catch {
       // localStorage unavailable — not remembering is a fine fallback
     }
-  }, [router]);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const result = await signIn("credentials", { email, password, redirect: false });
-
-    if (!result || result.error) {
-      setError("Invalid email or password.");
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
-      setLoading(false);
-      return;
-    }
+    const cleanEmail = email.trim().toLowerCase();
 
     try {
-      if (remember) localStorage.setItem(REMEMBER_KEY, email);
-      else localStorage.removeItem(REMEMBER_KEY);
-    } catch {
-      // best-effort only
-    }
+      const result = await signIn("credentials", {
+        email: cleanEmail,
+        password,
+        redirect: false,
+      });
 
-    const rect = buttonRef.current?.getBoundingClientRect();
-    if (rect) {
-      setFlyOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-      setTimeout(() => {
-        window.location.href = "/admin";
-      }, FLY_DURATION_MS);
-    } else {
-      window.location.href = "/admin";
+      if (!result || result.error) {
+        setError("Invalid email or password.");
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
+        setLoading(false);
+        return;
+      }
+
+      // Check fresh session to verify the user has the ADMIN role
+      const res = await fetch("/api/auth/session");
+      const currentSession = res.ok ? await res.json() : null;
+      const role = currentSession?.user?.role;
+
+      if (role && role !== "ADMIN") {
+        setError("Access denied: Your account does not have administrator privileges.");
+        setShake(true);
+        setTimeout(() => setShake(false), 500);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (remember) {
+          localStorage.setItem(REMEMBER_KEY, cleanEmail);
+        } else {
+          localStorage.removeItem(REMEMBER_KEY);
+        }
+      } catch {
+        // best-effort
+      }
+
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setFlyOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        setTimeout(() => {
+          window.location.replace("/admin");
+        }, FLY_DURATION_MS);
+      } else {
+        window.location.replace("/admin");
+      }
+    } catch (err: any) {
+      console.error("[admin-login] Sign in error:", err);
+      setError("An unexpected error occurred during login. Please try again.");
+      setLoading(false);
     }
   }
 

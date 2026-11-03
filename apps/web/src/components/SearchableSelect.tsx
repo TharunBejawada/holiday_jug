@@ -65,6 +65,7 @@ export function SearchableSelect({
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [placement, setPlacement] = useState<"down" | "up">("down");
+  const [maxDropdownHeight, setMaxDropdownHeight] = useState<number | undefined>(undefined);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,14 +79,18 @@ export function SearchableSelect({
     const rect = containerRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const navbarHeight = 85;
-    const dropdownHeight = 280;
+    const dropdownHeight = 300;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top - navbarHeight;
 
-    if (spaceBelow < dropdownHeight && (spaceAbove >= dropdownHeight || spaceAbove > spaceBelow)) {
+    const shouldFlipUp = spaceBelow < dropdownHeight && (spaceAbove >= dropdownHeight || spaceAbove > spaceBelow);
+
+    if (shouldFlipUp) {
       setPlacement("up");
+      setMaxDropdownHeight(Math.max(160, Math.floor(spaceAbove - 12)));
     } else {
       setPlacement("down");
+      setMaxDropdownHeight(Math.max(160, Math.floor(spaceBelow - 12)));
     }
   };
 
@@ -93,11 +98,11 @@ export function SearchableSelect({
     if (!isOpen) return;
 
     updatePlacement();
-    window.addEventListener("scroll", updatePlacement, { passive: true });
+    window.addEventListener("scroll", updatePlacement, { capture: true, passive: true });
     window.addEventListener("resize", updatePlacement, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", updatePlacement);
+      window.removeEventListener("scroll", updatePlacement, { capture: true });
       window.removeEventListener("resize", updatePlacement);
     };
   }, [isOpen]);
@@ -501,7 +506,7 @@ export function SearchableSelect({
               ? "bottom-full mb-1.5 slide-in-from-bottom-2"
               : "top-full mt-1.5 slide-in-from-top-2"
           } z-50 w-full min-w-[240px] sm:min-w-[280px] rounded-2xl bg-white shadow-2xl border border-gray-100 p-2 animate-in fade-in duration-150 ${menuClassName}`}
-          style={{ maxHeight: "calc(100vh - 120px)" }}
+          style={{ maxHeight: maxDropdownHeight ? `${maxDropdownHeight}px` : "calc(100vh - 120px)" }}
         >
           {/* OPTIONS LIST */}
           <ul

@@ -31,6 +31,7 @@ import {
   FaWifi,
   FaChevronRight,
   FaChevronLeft,
+  FaChevronDown,
   FaCheckCircle,
   FaInfoCircle,
   FaPlus,
@@ -470,6 +471,7 @@ export default function HotelLandingClient({
   // Interactive States
   const [selectedAirport, setSelectedAirport] = useState<string>("LGW");
   const [selectedRoomIndex, setSelectedRoomIndex] = useState<number>(0);
+  const [showAllRooms, setShowAllRooms] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [galleryModalOpen, setGalleryModalOpen] = useState<boolean>(false);
   const [extrasModalOpen, setExtrasModalOpen] = useState<boolean>(false);
@@ -714,6 +716,24 @@ export default function HotelLandingClient({
       },
     ];
   }, [hotel, liveRates, adults]);
+
+  // Visible Rooms pagination (2 rows = 8 cards on desktop)
+  const INITIAL_ROOMS_COUNT = 8;
+  const visibleRooms = useMemo(() => {
+    return showAllRooms ? rooms : rooms.slice(0, INITIAL_ROOMS_COUNT);
+  }, [rooms, showAllRooms]);
+
+  const handleToggleRooms = () => {
+    if (showAllRooms) {
+      setShowAllRooms(false);
+      const roomsEl = document.getElementById("rooms");
+      if (roomsEl) {
+        roomsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      setShowAllRooms(true);
+    }
+  };
 
   // Pricing calculations
   const selectedRoom = rooms[selectedRoomIndex] || rooms[0];
@@ -1656,7 +1676,9 @@ export default function HotelLandingClient({
                 <FaBed className="text-[#F7941D]" /> Rooms &amp; Suites
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
-                Showing all {rooms.length} available room types &amp; rates for your stay ({nights} nights · {adults} {adults === 1 ? "Guest" : "Guests"})
+                {rooms.length > INITIAL_ROOMS_COUNT && !showAllRooms
+                  ? `Showing 8 of ${rooms.length} available room types & rates for your stay (${nights} nights · ${adults} ${adults === 1 ? "Guest" : "Guests"})`
+                  : `Showing all ${rooms.length} available room types & rates for your stay (${nights} nights · ${adults} ${adults === 1 ? "Guest" : "Guests"})`}
               </p>
             </div>
             <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-blue-50 text-[#071a55] border border-blue-200/80 shrink-0 w-fit">
@@ -1665,78 +1687,109 @@ export default function HotelLandingClient({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-            {rooms.map((room, idx) => (
-              <div
-                key={room.id}
-                onClick={() => setSelectedRoomIndex(idx)}
-                className="group bg-white hover:bg-[#f8fbff] border border-slate-200/90 hover:border-[#071a55]/40 rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-              >
-                <div>
-                  {/* Room Image - Common image for all rooms */}
-                  <div className="relative h-32 sm:h-36 rounded-xl overflow-hidden mb-3 bg-slate-100">
-                    <img
-                      src="/assets/HOTEL LANDING PAGE/room-img.jpg"
-                      alt={room.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-
-                  {/* Room Details Centered */}
-                  <div className="text-center space-y-2">
-                    <h3 className="font-semibold text-sm sm:text-base text-[#071a55] group-hover:text-blue-950 transition-colors leading-tight line-clamp-2">
-                      {room.name}
-                    </h3>
-
-                    {/* Boarding Badge */}
-                    <div className="pt-0.5">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                        <FaUtensils className="text-[10px] text-amber-700 shrink-0" />
-                        <span>{room.boardBasis}</span>
-                      </span>
+            {visibleRooms.map((room, idx) => {
+              const origIdx = rooms.findIndex((r) => r.id === room.id);
+              const isSelected = selectedRoomIndex === (origIdx >= 0 ? origIdx : idx);
+              return (
+                <div
+                  key={room.id}
+                  onClick={() => setSelectedRoomIndex(origIdx >= 0 ? origIdx : idx)}
+                  className={`group bg-white hover:bg-[#f8fbff] border ${
+                    isSelected
+                      ? "ring-2 ring-[#F7941D] border-[#F7941D] bg-amber-50/20"
+                      : "border-slate-200/90 hover:border-[#071a55]/40"
+                  } rounded-2xl p-3.5 flex flex-col justify-between shadow-2xs hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer`}
+                >
+                  <div>
+                    {/* Room Image - Common image for all rooms */}
+                    <div className="relative h-32 sm:h-36 rounded-xl overflow-hidden mb-3 bg-slate-100">
+                      <img
+                        src="/assets/HOTEL LANDING PAGE/room-img.jpg"
+                        alt={room.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {isSelected && (
+                        <span className="absolute top-2 right-2 bg-[#F7941D] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                          Selected
+                        </span>
+                      )}
                     </div>
 
-                    {/* Cancellation Badge */}
-                    <div>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                          room.isNonRefundable
-                            ? "bg-rose-50 text-rose-700 border border-rose-200"
-                            : "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                        }`}
-                      >
-                        <FaShieldAlt className="text-[9px] shrink-0" />
-                        <span>{room.cancellationPolicy}</span>
-                      </span>
-                    </div>
+                    {/* Room Details Centered */}
+                    <div className="text-center space-y-2">
+                      <h3 className="font-semibold text-sm sm:text-base text-[#071a55] group-hover:text-blue-950 transition-colors leading-tight line-clamp-2">
+                        {room.name}
+                      </h3>
 
-                    {/* Other Inclusions Chips */}
-                    {room.otherInclusions && room.otherInclusions.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-1 pt-0.5">
-                        {room.otherInclusions.slice(0, 2).map((inc: string, i: number) => (
-                          <span
-                            key={i}
-                            className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200"
-                          >
-                            <FaCheck className="text-[8px] text-emerald-600 shrink-0" />
-                            <span>{inc}</span>
-                          </span>
-                        ))}
+                      {/* Boarding Badge */}
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                          <FaUtensils className="text-[10px] text-amber-700 shrink-0" />
+                          <span>{room.boardBasis}</span>
+                        </span>
                       </div>
-                    )}
 
-                    <div className="pt-2.5 mt-2 border-t border-slate-100">
-                      <span className="font-bold text-sm sm:text-base text-[#071a55] block">
-                        From £{room.pricePp} pp
-                      </span>
-                      <span className="text-[10px] text-slate-400 block mt-0.5">
-                        {nights} nights • Total £{room.totalPrice}
-                      </span>
+                      {/* Cancellation Badge */}
+                      <div>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                            room.isNonRefundable
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                              : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          }`}
+                        >
+                          <FaShieldAlt className="text-[9px] shrink-0" />
+                          <span>{room.cancellationPolicy}</span>
+                        </span>
+                      </div>
+
+                      {/* Other Inclusions Chips */}
+                      {room.otherInclusions && room.otherInclusions.length > 0 && (
+                        <div className="flex flex-wrap justify-center gap-1 pt-0.5">
+                          {room.otherInclusions.slice(0, 2).map((inc: string, i: number) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200"
+                            >
+                              <FaCheck className="text-[8px] text-emerald-600 shrink-0" />
+                              <span>{inc}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-2.5 mt-2 border-t border-slate-100">
+                        <span className="font-bold text-sm sm:text-base text-[#071a55] block">
+                          From £{room.pricePp} pp
+                        </span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          {nights} nights • Total £{room.totalPrice}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {/* VIEW MORE / VIEW LESS TOGGLE (WHEN MORE THAN 2 ROWS) */}
+          {rooms.length > INITIAL_ROOMS_COUNT && (
+            <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={handleToggleRooms}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-[#071a55] bg-white px-7 py-3 text-sm font-bold text-[#071a55] hover:bg-[#071a55] hover:text-white transition-all shadow-xs hover:shadow-md cursor-pointer"
+              >
+                <span>{showAllRooms ? "View Less" : "View More"}</span>
+                <FaChevronDown
+                  className={`text-xs transition-transform duration-200 ${
+                    showAllRooms ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* SECTION: WHAT'S INCLUDED */}

@@ -17,6 +17,19 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "admin@holidayjug.com" },
+    update: {},
+    create: {
+      email: "admin@holidayjug.com",
+      name: "HolidayJug Admin",
+      role: "ADMIN",
+      status: "ACTIVE",
+      passwordHash: adminPasswordHash,
+      emailVerified: new Date(),
+    },
+  });
+
   const destination = await prisma.destination.upsert({
     where: { slug: "benidorm-spain" },
     update: {},

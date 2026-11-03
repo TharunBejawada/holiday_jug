@@ -3,6 +3,9 @@ import { getCurrentSession } from "@/lib/api-auth";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentSession();
   const role = (session?.user as { role?: string } | undefined)?.role;
